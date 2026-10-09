@@ -6,6 +6,7 @@ import { fishingFeature } from './fishing';
 import { journalFeature } from './journal';
 import { mapFeature } from './map';
 import { offlineFeature } from './offline';
+import { settingsFeature } from './settings';
 import { upgradesFeature } from './upgrades';
 
 export const FEATURES: GameFeature[] = [
@@ -15,4 +16,5 @@ export const FEATURES: GameFeature[] = [
   crewFeature,
   mapFeature,
   offlineFeature,
+  settingsFeature,
 ];
