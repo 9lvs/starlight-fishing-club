@@ -30,7 +30,7 @@ export interface BootResult {
 
 export interface BootOptions {
   features: readonly GameFeature[];
-  loadContent: (extra: Record<string, ZodType>) => { content: ParsedContent; errors: ContentError[] };
+  loadContent: (extra: Record<string, ZodType>, featureIds: readonly string[]) => { content: ParsedContent; errors: ContentError[] };
   storage: StorageLike;
   debug: boolean;
   flags?: Record<string, boolean>;
@@ -81,7 +81,10 @@ function registerCoreEffects(r: Registries): void {
 export function bootstrap(opts: BootOptions): BootResult {
   const extraSchemas: Record<string, ZodType> = {};
   for (const f of opts.features) Object.assign(extraSchemas, f.contentTypes ?? {});
-  const { content, errors } = opts.loadContent(extraSchemas);
+  const { content, errors } = opts.loadContent(
+    extraSchemas,
+    opts.features.map((f) => f.id),
+  );
   if (errors.length > 0) return { ctx: null, errors: errors.map(formatContentError) };
 
   const bus = new EventBus<GameEvents>();

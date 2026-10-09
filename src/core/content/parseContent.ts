@@ -69,6 +69,8 @@ function emptyContent(): ParsedContent {
 export function parseContent(
   files: Record<string, unknown>,
   extraSchemas: Record<string, ZodType> = {},
+  /** Registered feature ids; packs that require a missing feature are skipped. Undefined skips the check. */
+  featureIds?: readonly string[],
 ): ParseResult {
   const errors: ContentError[] = [];
   const content = emptyContent();
@@ -89,12 +91,13 @@ export function parseContent(
     packDefs.set(info.pack, res.data);
   }
   const packOf = (name: string): PackDef =>
-    packDefs.get(name) ?? { id: name, name, order: name === 'base' ? -1000 : 0, enabled: true };
+    packDefs.get(name) ?? { id: name, name, order: name === 'base' ? -1000 : 0, enabled: true, requires: [] };
+  const available = (p: PackDef) => !featureIds || p.requires.every((f) => featureIds.includes(f));
 
   const packNames = [...new Set(infos.map((f) => f.pack))]
     .map(packOf)
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
-  content.packs = packNames.filter((p) => p.enabled);
+  content.packs = packNames.filter((p) => p.enabled && available(p));
   const enabledPacks = new Set(content.packs.map((p) => p.id));
 
   const ordered = infos

@@ -1,0 +1,4 @@
+[
+  { "id": "club_mailbox", "branch": "club", "name": "Club Mailbox", "description": "A bigger mailbox. Daily gifts grow.", "maxLevel": 4, "baseCost": 300, "costGrowth": 1.9, "icon": "icon_gift",
+    "modifiers": [{ "stat": "dailyGiftCoins", "op": "add", "value": 40 }] }
+]

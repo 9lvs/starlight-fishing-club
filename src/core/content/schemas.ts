@@ -162,6 +162,8 @@ export const packSchema = z.object({
   name: z.string().min(1),
   order: z.number().int().default(0),
   enabled: z.boolean().default(true),
+  /** Feature ids this pack needs. The pack is skipped when any is not registered. */
+  requires: z.array(z.string()).default([]),
 });
 
 export type RarityDef = z.infer<typeof raritySchema>;

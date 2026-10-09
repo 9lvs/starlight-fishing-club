@@ -5,6 +5,6 @@ import { parseContent, type ParseResult } from './parseContent';
 
 const modules = import.meta.glob('../../content/*/*.json', { eager: true, import: 'default' });
 
-export function loadContent(extraSchemas: Record<string, ZodType> = {}): ParseResult {
-  return parseContent(modules as Record<string, unknown>, extraSchemas);
+export function loadContent(extraSchemas: Record<string, ZodType> = {}, featureIds?: readonly string[]): ParseResult {
+  return parseContent(modules as Record<string, unknown>, extraSchemas, featureIds);
 }
