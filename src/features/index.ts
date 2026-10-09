@@ -3,5 +3,6 @@
 import type { GameFeature } from '../core/feature';
 import { fishingFeature } from './fishing';
 import { journalFeature } from './journal';
+import { upgradesFeature } from './upgrades';
 
-export const FEATURES: GameFeature[] = [fishingFeature, journalFeature];
+export const FEATURES: GameFeature[] = [fishingFeature, upgradesFeature, journalFeature];

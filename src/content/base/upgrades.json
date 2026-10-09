@@ -1,5 +1,5 @@
 [
-  { "id": "cork_grip", "branch": "gear", "name": "Cork Grip", "description": "A comfy grip. Bites wait a little longer for you.", "maxLevel": 5, "baseCost": 12, "costGrowth": 1.6, "icon": "icon_rod",
+  { "id": "cork_grip", "branch": "gear", "name": "Cork Grip", "description": "A comfy grip. Bites wait a little longer for you.", "maxLevel": 5, "baseCost": 20, "costGrowth": 1.6, "icon": "icon_rod",
     "modifiers": [{ "stat": "biteWindowMs", "op": "add", "value": 150 }] },
   { "id": "smooth_reel", "branch": "gear", "name": "Smooth Reel", "description": "Fish find your line sooner.", "prerequisites": ["cork_grip"], "maxLevel": 5, "baseCost": 40, "costGrowth": 1.7, "icon": "icon_rod",
     "modifiers": [{ "stat": "castSpeed", "op": "add", "value": 0.08 }] },
@@ -18,12 +18,12 @@
     "modifiers": [{ "stat": "storageCap", "op": "add", "value": 3 }] },
   { "id": "swift_hull", "branch": "boat", "name": "Swift Hull", "description": "Zip to fresh spots. Fish bite sooner.", "prerequisites": ["patched_hull"], "maxLevel": 5, "baseCost": 80, "costGrowth": 1.7, "icon": "icon_boat",
     "modifiers": [{ "stat": "castSpeed", "op": "add", "value": 0.06 }] },
-  { "id": "river_charts", "branch": "boat", "name": "River Charts", "description": "Maps to Whisper River. Unlocks a new water.", "prerequisites": ["patched_hull"], "maxLevel": 1, "baseCost": 900, "icon": "icon_map",
+  { "id": "river_charts", "branch": "boat", "name": "River Charts", "description": "Maps to Whisper River. Unlocks a new water.", "prerequisites": ["patched_hull"], "maxLevel": 1, "baseCost": 1100, "icon": "icon_map",
     "modifiers": [{ "stat": "boatRange", "op": "add", "value": 1 }] },
   { "id": "moon_charts", "branch": "boat", "name": "Moon Charts", "description": "Maps to Moonlit Cove. Unlocks a new water.", "prerequisites": ["river_charts", { "id": "swift_hull", "level": 2 }], "maxLevel": 1, "baseCost": 12000, "icon": "icon_map",
     "modifiers": [{ "stat": "boatRange", "op": "add", "value": 1 }] },
 
-  { "id": "hire_help", "branch": "club", "name": "Hire Help", "description": "A crew bunk. Each level lets you hire one helper.", "maxLevel": 3, "baseCost": 1600, "costGrowth": 4, "icon": "icon_crew",
+  { "id": "hire_help", "branch": "club", "name": "Hire Help", "description": "A crew bunk. Each level lets you hire one helper.", "maxLevel": 3, "baseCost": 1800, "costGrowth": 4, "icon": "icon_crew",
     "modifiers": [{ "stat": "crewSlots", "op": "add", "value": 1 }] },
   { "id": "sea_shanties", "branch": "club", "name": "Sea Shanties", "description": "Crew work faster when they sing.", "prerequisites": ["hire_help"], "maxLevel": 5, "baseCost": 2000, "costGrowth": 1.8, "icon": "icon_note",
     "modifiers": [{ "stat": "crewIntervalMs", "op": "mult", "value": 0.9 }] },

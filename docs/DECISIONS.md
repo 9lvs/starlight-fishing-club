@@ -15,3 +15,5 @@ One line per decision, with the reason. Newest at the bottom.
 - Debug panel is plain DOM so it can use real inputs and copyable output; it is only mounted in dev builds or with `?debug=1`.
 - Gates (typecheck, tests, build) run on a mirror of the project in the session scratchpad with its own `npm install`, because the Desktop folder is iCloud-synced on a 99%-full disk and evicted files block reads inside the sandbox. Each phase commit is exported with `git checkout-index` and gated before committing.
 - Journal learns about first catches by annotating `catch.flags.new` in its `catchLanded` listener; the popup reads the flag. No feature imports another.
+- Pacing is checked with a goal-directed player model (saves for the next water or crew slot, buys small upgrades under 20% of that goal). A purely greedy "cheapest first" model delayed the first water to 38 min and does not match how people play.
+- Tuned: Cork Grip base cost 12 -> 20, River Charts 900 -> 1100, Hire Help 1600 -> 1800 to hit the pacing targets.
