@@ -1,0 +1,5 @@
+[
+  { "id": "gear", "name": "Gear", "icon": "icon_rod", "order": 0 },
+  { "id": "boat", "name": "Boat", "icon": "icon_boat", "order": 1 },
+  { "id": "club", "name": "Club", "icon": "icon_crew", "order": 2 }
+]

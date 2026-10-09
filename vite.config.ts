@@ -14,5 +14,10 @@ export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',
+    // Tests are pure logic with no shared globals, so one worker is enough and
+    // avoids paying worker start-up cost per file.
+    pool: 'threads',
+    isolate: false,
+    fileParallelism: false,
   },
 });

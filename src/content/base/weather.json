@@ -1,0 +1,5 @@
+[
+  { "id": "clear", "name": "Clear", "icon": "icon_clear", "weight": 6, "visuals": { "rain": 0, "fog": 0, "clouds": 0.3, "dim": 0 } },
+  { "id": "rain", "name": "Gentle Rain", "icon": "icon_rain", "weight": 2, "visuals": { "rain": 0.7, "fog": 0, "clouds": 0.9, "dim": 0.25 } },
+  { "id": "fog", "name": "Fog", "icon": "icon_fog", "weight": 2, "visuals": { "rain": 0, "fog": 0.6, "clouds": 0.5, "dim": 0.1 } }
+]

@@ -1,0 +1,5 @@
+[
+  { "id": "deckhand", "name": "Deckhand Pip", "description": "Eager and cheerful. Fishes at a steady pace.", "spriteKey": "crew_deckhand", "hireCost": 100, "intervalMult": 1, "valueMult": 1, "luck": 0, "order": 0 },
+  { "id": "old_salt", "name": "Old Salt Marge", "description": "Has fished every water twice. A bit faster.", "spriteKey": "crew_old_salt", "hireCost": 4000, "intervalMult": 0.85, "valueMult": 1.1, "luck": 1, "order": 1 },
+  { "id": "otter", "name": "Otto the Otter", "description": "Not technically a member. Very good at fish.", "spriteKey": "crew_otter", "hireCost": 15000, "intervalMult": 0.7, "valueMult": 1, "luck": 3, "order": 2 }
+]

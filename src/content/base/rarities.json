@@ -1,0 +1,7 @@
+[
+  { "id": "common", "name": "Common", "tier": 0, "weight": 60, "baseValue": 2, "luckShare": 0, "color": "slate", "frame": "dusk", "glow": 0, "pips": 1, "shape": "circle", "sting": "sting_common" },
+  { "id": "uncommon", "name": "Uncommon", "tier": 1, "weight": 25, "baseValue": 6, "luckShare": 0.4, "color": "sage", "frame": "moss", "glow": 1, "pips": 2, "shape": "diamond", "sting": "sting_uncommon" },
+  { "id": "rare", "name": "Rare", "tier": 2, "weight": 10, "baseValue": 25, "luckShare": 0.3, "color": "sky", "frame": "dusk", "glow": 2, "pips": 3, "shape": "star", "sting": "sting_rare" },
+  { "id": "epic", "name": "Epic", "tier": 3, "weight": 4, "baseValue": 100, "luckShare": 0.2, "color": "lavender", "frame": "plum", "glow": 3, "pips": 4, "shape": "crown", "sting": "sting_epic" },
+  { "id": "legendary", "name": "Legendary", "tier": 4, "weight": 1, "baseValue": 500, "luckShare": 0.1, "maxChance": 0.06, "color": "gold", "frame": "coral", "glow": 4, "pips": 5, "shape": "sun", "sting": "sting_legendary" }
+]

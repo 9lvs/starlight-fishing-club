@@ -1,0 +1,27 @@
+[
+  {
+    "id": "pond", "name": "Willow Pond", "order": 0, "rangeRequired": 0, "spriteKey": "water_pond",
+    "description": "A sleepy pond under weeping willows. A good place to learn.",
+    "scene": { "hills": "rolling", "foreground": "reeds" }
+  },
+  {
+    "id": "river", "name": "Whisper River", "order": 1, "rangeRequired": 1, "spriteKey": "water_river",
+    "description": "A slow river through pine woods. Trout and salmon drift here.",
+    "scene": { "hills": "pines", "foreground": "rocks" }
+  },
+  {
+    "id": "cove", "name": "Moonlit Cove", "order": 2, "rangeRequired": 2, "spriteKey": "water_cove",
+    "description": "A quiet sea cove where the moon pulls up strange and lovely things.",
+    "scene": { "hills": "cliffs", "foreground": "lilies", "tint": { "night": { "waterTop": "teal" } } }
+  },
+  {
+    "id": "glowing_cave", "name": "Glowing Cave", "order": 3, "rangeRequired": 3, "comingSoon": true, "spriteKey": "water_cave",
+    "description": "Mushrooms glow on the walls of an underground lake.",
+    "scene": { "hills": "none", "foreground": "rocks" }
+  },
+  {
+    "id": "sky_lake", "name": "Sky Lake", "order": 4, "rangeRequired": 4, "comingSoon": true, "spriteKey": "water_sky",
+    "description": "A lake high above the clouds. Nobody knows how the fish got there.",
+    "scene": { "hills": "none", "foreground": "none" }
+  }
+]

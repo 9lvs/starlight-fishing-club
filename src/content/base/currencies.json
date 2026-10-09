@@ -1,0 +1,3 @@
+[
+  { "id": "coins", "name": "Coins", "icon": "icon_coin", "color": "gold", "start": 0, "order": 0 }
+]
