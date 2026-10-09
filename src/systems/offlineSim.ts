@@ -1,8 +1,9 @@
 // Offline crew simulation with math instead of a tick loop. Time is split into
 // segments of constant time-of-day and weather; each crew member's roll count per
 // segment is computed directly, then multiplied by exact per-fish chances.
-// Expected counts are rounded with the largest remainder method so the integer
-// catches always add up to the number of rolls.
+// Coins are the exact expected value of those rolls (no luck swing either way).
+// Fish counts for the journal are rounded with the largest remainder method so
+// they always add up to the number of rolls.
 import { fishChances, type LootConfig, type LootFish, type LootRarity } from './lootTable';
 import { segmentsBetween, type TimeConfig, type WeatherConfig, type WeightedWeather } from './timeOfDay';
 import { sellValue } from './economy';
@@ -50,11 +51,11 @@ export interface OfflineSimResult {
   perCrew: CrewSimResult[];
 }
 
-/** Number of k >= 0 with a <= first + k * interval < b. */
-export function rollsInWindow(first: number, interval: number, a: number, b: number): number {
-  if (b <= a) return 0;
+/** Number of k >= 0 with a <= first + k * interval < b (or <= b when inclusiveEnd). */
+export function rollsInWindow(first: number, interval: number, a: number, b: number, inclusiveEnd = false): number {
+  if (b < a || (b === a && !inclusiveEnd)) return 0;
   const kMin = Math.max(0, Math.ceil((a - first) / interval));
-  const kMax = Math.ceil((b - first) / interval) - 1;
+  const kMax = inclusiveEnd ? Math.floor((b - first) / interval) : Math.ceil((b - first) / interval) - 1;
   return Math.max(0, kMax - kMin + 1);
 }
 
@@ -83,9 +84,9 @@ export function simulateOffline(input: OfflineSimInput): OfflineSimResult {
     const first = input.startMs + (interval - Math.min(member.progressMs, interval));
     const expected = new Map<string, number>();
     let rolls = 0;
-    for (const seg of segments) {
-      const n = rollsInWindow(first, interval, seg.start, seg.end);
-      if (n === 0) continue;
+    segments.forEach((seg, i) => {
+      const n = rollsInWindow(first, interval, seg.start, seg.end, i === segments.length - 1);
+      if (n === 0) return;
       rolls += n;
       const key = `${member.waterId}|${seg.phase}|${seg.weather}|${member.luck}`;
       let chances = chanceCache.get(key);
@@ -100,13 +101,14 @@ export function simulateOffline(input: OfflineSimInput): OfflineSimResult {
         chanceCache.set(key, chances);
       }
       for (const [fishId, p] of chances) expected.set(fishId, (expected.get(fishId) ?? 0) + n * p);
-    }
+    });
     const catches = largestRemainder(expected, rolls);
-    let coins = 0;
-    for (const [fishId, count] of Object.entries(catches)) {
+    let ev = 0;
+    for (const [fishId, e] of expected) {
       const f = fishById.get(fishId);
-      if (f) coins += count * sellValue(f.baseValue, input.valueMult * member.valueMult);
+      if (f) ev += e * sellValue(f.baseValue, input.valueMult * member.valueMult);
     }
+    const coins = Math.round(ev);
     // Whatever time was not spent on counted rolls carries over to the live tick.
     const progressMs = Math.min(member.progressMs, interval) + input.elapsedMs - rolls * interval;
     return { id: member.id, rolls, coins, catches, progressMs };

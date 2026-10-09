@@ -17,3 +17,5 @@ One line per decision, with the reason. Newest at the bottom.
 - Journal learns about first catches by annotating `catch.flags.new` in its `catchLanded` listener; the popup reads the flag. No feature imports another.
 - Pacing is checked with a goal-directed player model (saves for the next water or crew slot, buys small upgrades under 20% of that goal). A purely greedy "cheapest first" model delayed the first water to 38 min and does not match how people play.
 - Tuned: Cork Grip base cost 12 -> 20, River Charts 900 -> 1100, Hire Help 1600 -> 1800 to hit the pacing targets.
+- Offline coins are the exact expected value of the simulated rolls (no luck either way); journal counts use largest-remainder rounding so they sum to the roll count. Rounding catches first and pricing them biased short absences upward (one lucky legendary).
+- Offline time and the live tick share one path: any wall-clock gap over 5 s triggers catch-up, so closing the tab, a background tab, laptop sleep, and the debug fast-forward behave the same.
