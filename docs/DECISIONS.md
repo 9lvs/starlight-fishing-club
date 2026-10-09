@@ -19,3 +19,4 @@ One line per decision, with the reason. Newest at the bottom.
 - Tuned: Cork Grip base cost 12 -> 20, River Charts 900 -> 1100, Hire Help 1600 -> 1800 to hit the pacing targets.
 - Offline coins are the exact expected value of the simulated rolls (no luck either way); journal counts use largest-remainder rounding so they sum to the roll count. Rounding catches first and pricing them biased short absences upward (one lucky legendary).
 - Offline time and the live tick share one path: any wall-clock gap over 5 s triggers catch-up, so closing the tab, a background tab, laptop sleep, and the debug fast-forward behave the same.
+- Audio placeholders are soft synthesized pentatonic tones instead of pure silence (`AUDIO.placeholder = 'synth'`, switch to `'silent'` in `src/config/audio.ts`), so the game can be judged by ear before real files exist. Nothing plays before a user gesture.

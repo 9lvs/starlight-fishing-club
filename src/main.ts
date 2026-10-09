@@ -13,6 +13,8 @@ import { showErrorScreen } from './debug/errorScreen';
 import { FEATURES } from './features';
 import { MemoryStorage, type StorageLike } from './systems/saveManager';
 import { uiSignals } from './ui/uiSignals';
+import { AudioManager } from './systems/audioManager';
+import { wireAudio } from './core/audioWiring';
 import './style.css';
 
 const params = new URLSearchParams(location.search);
@@ -49,6 +51,7 @@ function main(): void {
   uiSignals.reducedMotion = () => ctx.flags.reducedMotion === true;
   uiSignals.click = () => ctx.bus.emit('ui:click', {});
 
+  wireAudio(ctx, new AudioManager());
   const ticker = new TickDriver(ctx, FEATURES);
   let vp = currentViewport();
   updateLayout(vp);
@@ -99,7 +102,7 @@ function main(): void {
   document.addEventListener('dblclick', (e) => e.preventDefault());
 
   if (debug && !styleguide) mountDebugPanel(ctx, withContentOptions(ctx, [...coreDebugCommands(), ...ctx.features.debugCommands()]));
-  (window as unknown as { sfc?: unknown }).sfc = debug ? { ctx, game } : undefined;
+  (window as unknown as { sfc?: unknown }).sfc = debug ? { ctx, game, ticker } : undefined;
 }
 
 main();

@@ -23,6 +23,8 @@ export class TreeNode extends Phaser.GameObjects.Container {
   private gfx: Phaser.GameObjects.Graphics;
   private icon: Phaser.GameObjects.Image;
   private lock: Phaser.GameObjects.Image | null = null;
+  /** Shape cue for "you can buy this", so the state never relies on color alone. */
+  private buyable: Phaser.GameObjects.Image | null = null;
   private levelText: PixelText;
   private hit: Button;
   private pulse: Phaser.Tweens.Tween | null = null;
@@ -62,6 +64,13 @@ export class TreeNode extends Phaser.GameObjects.Container {
     } else if (state !== 'locked' && this.lock) {
       this.lock.destroy();
       this.lock = null;
+    }
+    if (state === 'affordable' && !this.buyable && this.scene.textures.exists('icon_coin')) {
+      this.buyable = this.scene.add.image(-3, -3, 'icon_coin').setOrigin(0, 0);
+      this.add(this.buyable);
+    } else if (state !== 'affordable' && this.buyable) {
+      this.buyable.destroy();
+      this.buyable = null;
     }
     this.glow.clear();
     this.pulse?.stop();
