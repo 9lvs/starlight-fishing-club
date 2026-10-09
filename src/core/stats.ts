@@ -175,7 +175,7 @@ export class StatsService {
 export function formatStat(def: StatDef, value: number): string {
   switch (def.format) {
     case 'ms':
-      return `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}s`;
+      return `${(value / 1000).toFixed(2).replace(/\.?0+$/, '')}s`;
     case 'mult':
       return `x${value.toFixed(2).replace(/\.?0+$/, '')}`;
     case 'percent':

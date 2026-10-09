@@ -16,7 +16,7 @@ import type { GameFeature, SaveSliceDef } from './feature';
 import { Registry } from './registry';
 import { mathRng } from './rng';
 import { StatsService } from './stats';
-import type { OfflineReport } from './types';
+import type { OfflineReport, ToastRequest } from './types';
 import { WorldState, worldSliceDef } from './world';
 
 export interface WalletSlice {
@@ -115,6 +115,8 @@ export function bootstrap(opts: BootOptions): BootResult {
   );
   const world = new WorldState(save.slice('world'), registries, stats, clock, bus);
 
+  const pendingToasts: ToastRequest[] = [];
+  const pendingPanels: { sceneKey: string; data?: unknown }[] = [];
   const ctx: GameContext = {
     bus,
     stats,
@@ -128,8 +130,16 @@ export function bootstrap(opts: BootOptions): BootResult {
     debug: opts.debug,
     flags: { ...(opts.flags ?? {}) },
     ui: {
-      toast: (text, o) => bus.emit('ui:toast', { text, ...(o ?? {}) }),
-      openPanel: (sceneKey, data) => bus.emit('ui:openPanel', { sceneKey, data }),
+      toast: (text, o) => {
+        const t = { text, ...(o ?? {}) };
+        if (bus.listenerCount('ui:toast') > 0) bus.emit('ui:toast', t);
+        else pendingToasts.push(t);
+      },
+      openPanel: (sceneKey, data) => {
+        if (bus.listenerCount('ui:openPanel') > 0) bus.emit('ui:openPanel', { sceneKey, data });
+        else pendingPanels.push({ sceneKey, data });
+      },
+      drainPending: () => ({ toasts: pendingToasts.splice(0), panels: pendingPanels.splice(0) }),
     },
     features: {
       ids: () => opts.features.map((f) => f.id),

@@ -73,6 +73,9 @@ export class HudScene extends Phaser.Scene {
       bus.on('viewportChanged', () => this.scene.restart()),
     );
     this.events.once('shutdown', () => this.offs.forEach((off) => off()));
+    const pending = this.ctx.ui.drainPending();
+    pending.toasts.forEach((t) => this.toasts.push({ text: t.text, icon: t.icon, color: t.color as never }));
+    pending.panels.forEach((p) => this.openPanel(p.sceneKey, p.data));
   }
 
   private buildCurrencies(): void {

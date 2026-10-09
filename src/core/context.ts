@@ -49,6 +49,8 @@ export interface Registries {
 export interface UiApi {
   toast(text: string, opts?: Omit<ToastRequest, 'text'>): void;
   openPanel(sceneKey: string, data?: unknown): void;
+  /** Requests made before the HUD was listening; the HUD replays them when it starts. */
+  drainPending(): { toasts: ToastRequest[]; panels: { sceneKey: string; data?: unknown }[] };
 }
 
 export interface FeatureHostApi {

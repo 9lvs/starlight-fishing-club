@@ -13,3 +13,5 @@ One line per decision, with the reason. Newest at the bottom.
 - Fishing save slice is v2 (creel items with size); v1 (creel as id list) migrates automatically.
 - Vitest runs in one thread with `isolate: false` because worker start-up is very slow in the build sandbox; the tests are pure and share no globals.
 - Debug panel is plain DOM so it can use real inputs and copyable output; it is only mounted in dev builds or with `?debug=1`.
+- Gates (typecheck, tests, build) run on a mirror of the project in the session scratchpad with its own `npm install`, because the Desktop folder is iCloud-synced on a 99%-full disk and evicted files block reads inside the sandbox. Each phase commit is exported with `git checkout-index` and gated before committing.
+- Journal learns about first catches by annotating `catch.flags.new` in its `catchLanded` listener; the popup reads the flag. No feature imports another.

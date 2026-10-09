@@ -2,5 +2,6 @@
 // line here removes that feature cleanly; the core never imports a feature.
 import type { GameFeature } from '../core/feature';
 import { fishingFeature } from './fishing';
+import { journalFeature } from './journal';
 
-export const FEATURES: GameFeature[] = [fishingFeature];
+export const FEATURES: GameFeature[] = [fishingFeature, journalFeature];

@@ -15,6 +15,8 @@ export interface GameEvents {
   catchLanded: { catch: CatchResult; source: 'hand' | 'crew'; crewId?: string };
   fishSold: { fishId: string; value: number; currency: string; source: 'hand' | 'crew' | 'creel' };
   fishKept: { catch: CatchResult };
+  /** Many catches at once (offline catch-up). One entry per fish type. */
+  catchesBatched: { source: 'crew'; entries: { fishId: string; count: number; size: number }[]; at: number };
 
   // Economy and progression
   currencyChanged: { currency: string; amount: number; delta: number };
