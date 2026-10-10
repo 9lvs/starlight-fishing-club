@@ -10,6 +10,9 @@ import { MOTION, UI, color } from '../design/tokens';
 import { Panel } from '../ui/Panel';
 import { uiSignals } from '../ui/uiSignals';
 
+/** Marks a rebuild (new data, money changed) so the panel does not animate in again. */
+const REFRESH = '__panelRefresh';
+
 export abstract class PanelScene<D = unknown> extends Phaser.Scene {
   protected ctx!: GameContext;
   protected L!: Layout;
@@ -25,6 +28,7 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
   protected abstract build(area: Rect, data: D | undefined): void;
 
   create(data: D | undefined): void {
+    const quiet = (data as { [REFRESH]?: boolean } | undefined)?.[REFRESH] === true;
     this.ctx = getContext();
     this.L = getLayout();
     this.data_ = data;
@@ -61,17 +65,24 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
     const c = this.panel.content;
     this.build({ x: this.panel.x + c.x, y: this.panel.y + c.y, w: c.w, h: c.h }, data);
 
-    if (!uiSignals.reducedMotion()) {
+    this.cameras.main.setAlpha(1).setScroll(0, 0);
+    if (!quiet && !uiSignals.reducedMotion()) {
       this.cameras.main.setAlpha(0);
       this.cameras.main.scrollY = -6;
       this.tweens.add({ targets: this.cameras.main, alpha: 1, scrollY: 0, duration: MOTION.panelOpen, ease: MOTION.easeOut });
     }
     this.input.keyboard?.on('keydown-ESC', () => this.close());
-    this.offs.push(this.ctx.bus.on('viewportChanged', () => this.scene.restart(this.data_ as object | undefined)));
+    this.offs.push(this.ctx.bus.on('viewportChanged', () => this.refresh(this.data_)));
     this.events.once('shutdown', () => {
       this.offs.forEach((off) => off());
       if (uiState.openPanel === this.scene.key) uiState.openPanel = null;
     });
+  }
+
+  /** Rebuild with new data, without replaying the opening animation. */
+  protected refresh(data?: D): void {
+    if (this.closing) return;
+    this.scene.restart({ ...((data ?? {}) as object), [REFRESH]: true });
   }
 
   /** Subscribe to a bus event for the lifetime of this panel. */

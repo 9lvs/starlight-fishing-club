@@ -59,6 +59,12 @@ export function collectSpriteEntries(): SpriteEntry[] {
   r.weather.list().forEach((w) => keys.add(w.icon));
   r.branches.list().forEach((b) => keys.add(b.icon));
   r.upgrades.list().forEach((u) => u.icon && keys.add(u.icon));
+  // Look effects (boat tiers) name their sprites in args.
+  r.upgrades.list().forEach((u) =>
+    u.effects.forEach((e) => {
+      for (const k of ['sprite', 'rig']) if (typeof e.args?.[k] === 'string') keys.add(e.args[k] as string);
+    }),
+  );
   ctx.features.menuEntries().forEach((m) => keys.add(m.icon));
   return [...keys].map(resolveSprite);
 }

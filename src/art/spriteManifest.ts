@@ -56,6 +56,9 @@ export const PREFIX_RULES: { prefix: string; width: number; height: number; fram
   { prefix: 'water_', width: 32, height: 24, frames: 1, kind: 'water' },
   { prefix: 'decor_', width: 20, height: 12, frames: 1, kind: 'decor' },
   { prefix: 'icon_', width: 12, height: 12, frames: 1, kind: 'icon' },
+  // Boat tiers: boat_N is the hull, rig_N the mast and sail drawn behind the fisher.
+  { prefix: 'boat_', width: 32, height: 32, frames: 1, kind: 'boat' },
+  { prefix: 'rig_', width: 32, height: 32, frames: 1, kind: 'boat' },
 ];
 
 export function staticSprites(): SpriteEntry[] {

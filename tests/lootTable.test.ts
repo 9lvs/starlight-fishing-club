@@ -44,6 +44,19 @@ describe('rarity weights', () => {
     }
   });
 
+  it('lures move weight into one rarity only, taken from the lowest tier', () => {
+    const byId = Object.fromEntries(rarityWeights(rarities, 0, LOOT, { rare: 6 }).map((x) => [x.id, x.weight]));
+    expect(byId).toEqual({ common: 54, uncommon: 25, rare: 16, epic: 4, legendary: 1 });
+  });
+
+  it('lures never push the lowest tier below zero or a tier past its cap', () => {
+    const w = rarityWeights(rarities, 50, LOOT, { uncommon: 500, legendary: 500 });
+    const total = w.reduce((s, x) => s + x.weight, 0);
+    expect(total).toBeCloseTo(100);
+    for (const x of w) expect(x.weight).toBeGreaterThanOrEqual(0);
+    expect(rarityChances(rarities, 50, LOOT, { legendary: 500 }).get('legendary')!).toBeLessThanOrEqual(0.06 + 1e-9);
+  });
+
   it('treats negative luck as zero', () => {
     expect(rarityChances(rarities, -10, LOOT).get('common')).toBeCloseTo(0.6);
   });

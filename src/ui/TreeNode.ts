@@ -45,7 +45,7 @@ export class TreeNode extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
-  setNode(state: NodeState, level: number, maxLevel: number, selected: boolean): void {
+  setNode(state: NodeState, level: number, maxLevel: number, selected: boolean, label?: string): void {
     this._state = state;
     this._selected = selected;
     const look = LOOK[state];
@@ -56,7 +56,7 @@ export class TreeNode extends Phaser.GameObjects.Container {
       highlight: state === 'locked' ? undefined : 'dusk',
     });
     this.icon.setAlpha(state === 'locked' ? 0.35 : 1);
-    this.levelText.setText(maxLevel > 1 ? `${level}/${maxLevel}` : level > 0 ? 'OK' : '-');
+    this.levelText.setText(maxLevel > 1 ? `${level}/${maxLevel}` : (label ?? (level > 0 ? 'OK' : '-')));
     this.levelText.setColor(look.text);
     if (state === 'locked' && !this.lock) {
       this.lock = this.scene.add.image(TREE_NODE.w - 10, -2, 'icon_lock').setOrigin(0, 0);

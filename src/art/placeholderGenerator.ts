@@ -34,7 +34,9 @@ export function generatePlaceholder(entry: SpriteEntry, hints: PlaceholderHints)
         drawFish(f, entry.key, hints.fish.get(entry.key) ?? {});
         break;
       case 'boat':
-        drawBoat(f);
+        if (entry.key.startsWith('rig_')) drawRig(f, tierOf(entry.key));
+        else if (entry.key.startsWith('boat_')) drawBoatTier(f, tierOf(entry.key));
+        else drawBoat(f);
         break;
       case 'fisher':
         drawFisher(f, i);
@@ -162,6 +164,88 @@ function drawFish(f: FrameCanvas, key: string, hint: FishArtHint): void {
 }
 
 // ---------------------------------------------------------------- boat and fisher
+
+/** Looks for the ten boat tiers: hull colors, trim, and how much sail. */
+interface BoatStyle {
+  hull: PaletteName;
+  band: PaletteName;
+  trim: PaletteName;
+  /** 0 no sail, 1 small, 2 big. */
+  sail: 0 | 1 | 2;
+  sailColor: PaletteName;
+  flag?: PaletteName;
+  patch?: boolean;
+  lamp?: boolean;
+  star?: boolean;
+}
+
+const BOAT_STYLES: BoatStyle[] = [
+  { hull: 'bark', band: 'plum', trim: 'sand', sail: 0, sailColor: 'mist', patch: true },
+  { hull: 'coral', band: 'bark', trim: 'mist', sail: 0, sailColor: 'mist', flag: 'gold' },
+  { hull: 'teal', band: 'midnight', trim: 'sand', sail: 0, sailColor: 'mist', flag: 'coral' },
+  { hull: 'moss', band: 'bark', trim: 'sand', sail: 1, sailColor: 'mist' },
+  { hull: 'dusk', band: 'midnight', trim: 'sand', sail: 1, sailColor: 'sand', flag: 'coral' },
+  { hull: 'midnight', band: 'ink', trim: 'gold', sail: 2, sailColor: 'mist' },
+  { hull: 'plum', band: 'ink', trim: 'gold', sail: 2, sailColor: 'sand', lamp: true },
+  { hull: 'lavender', band: 'plum', trim: 'mist', sail: 2, sailColor: 'mist', lamp: true },
+  { hull: 'mist', band: 'sky', trim: 'sky', sail: 2, sailColor: 'sky', flag: 'gold' },
+  { hull: 'midnight', band: 'plum', trim: 'gold', sail: 2, sailColor: 'gold', flag: 'coral', star: true, lamp: true },
+];
+
+function tierOf(key: string): number {
+  const n = Number(key.split('_').pop());
+  return Number.isFinite(n) ? Math.max(1, Math.min(BOAT_STYLES.length, n)) : 1;
+}
+
+/** Hull only; the mast and sail are a separate sprite drawn behind the fisher. */
+function drawBoatTier(f: FrameCanvas, tier: number): void {
+  const s = BOAT_STYLES[tier - 1]!;
+  // Bigger boats sit a touch longer in the water.
+  const bow = tier >= 6 ? 31 : 30;
+  f.poly([[1, 19], [bow - 3, 17.5], [bow, 15.5], [27, 26], [6, 26]], s.hull);
+  for (let x = 0; x < 32; x++) for (let y = 24; y < 27; y++) if (f.get(x, y) === s.hull) f.px(x, y, s.band);
+  f.line(2, 20, 28, 18, s.trim);
+  if (tier >= 4) f.line(5, 23, 27, 22, s.trim);
+  f.outline((n) => SHADE_DOWN[n]);
+  f.rect(8, 18, 4, 1, s.trim);
+  if (s.patch) {
+    f.rect(19, 21, 3, 2, 'sand');
+    f.px(20, 21, 'bark');
+  }
+  if (s.lamp) {
+    f.px(bow - 2, 14, 'gold');
+    f.px(bow - 2, 13, 'sand');
+  }
+  // Portholes on the bigger boats.
+  if (tier >= 6) for (const x of [14, 19, 24]) f.px(x, 21, tier >= 9 ? 'gold' : 'sky');
+}
+
+function drawRig(f: FrameCanvas, tier: number): void {
+  const s = BOAT_STYLES[tier - 1]!;
+  const top = s.sail === 2 ? 1 : 3;
+  f.rect(17, top, 1, 20 - top, 'bark');
+  if (s.sail === 1) {
+    f.poly([[18, 4], [18, 15], [26, 15]], s.sailColor);
+    f.line(18, 15, 26, 15, SHADE_DOWN[s.sailColor]);
+  } else if (s.sail === 2) {
+    f.poly([[18, 2], [18, 16], [29, 16]], s.sailColor);
+    f.poly([[16, 4], [16, 15], [10, 15]], s.sailColor);
+    f.line(18, 16, 29, 16, SHADE_DOWN[s.sailColor]);
+    f.line(19, 9, 24, 13, SHADE_UP[s.sailColor]);
+  }
+  if (s.star) {
+    f.px(21, 10, 'mist');
+    f.px(20, 10, 'gold');
+    f.px(22, 10, 'gold');
+    f.px(21, 9, 'gold');
+    f.px(21, 11, 'gold');
+  }
+  if (s.flag) {
+    f.rect(18, top, 4, 1, s.flag);
+    f.rect(18, top + 1, 3, 1, s.flag);
+    f.px(18, top + 2, s.flag);
+  }
+}
 
 function drawBoat(f: FrameCanvas): void {
   // Mast first so the hull overlaps its foot.
@@ -319,6 +403,24 @@ function drawDecor(f: FrameCanvas, key: string): void {
       f.outline((n) => SHADE_DOWN[n]);
       f.px(13, 5, 'ink');
       f.px(15, 5, 'ink');
+      return;
+    case 'decor_flowers':
+      f.rect(2, 8, 10, 4, 'bark');
+      f.line(2, 8, 11, 8, 'sand');
+      for (const [x, c] of [[3, 'rose'], [6, 'gold'], [9, 'coral'], [11, 'lavender']] as [number, PaletteName][]) {
+        f.line(x, 7, x, 5, 'moss');
+        f.px(x, 4, c);
+      }
+      f.px(5, 6, 'sage');
+      f.px(8, 5, 'sage');
+      return;
+    case 'decor_fairy_lights':
+      // A sagging string from the mast down to the bow, with tiny bulbs.
+      for (let x = 0; x < 16; x++) {
+        const y = Math.round(1 + (x / 15) * 6 + Math.sin((x / 15) * Math.PI) * 2);
+        f.px(x, y, 'sand');
+        if (x % 2 === 1) f.px(x, y + 1, (['gold', 'rose', 'sky', 'sage'] as PaletteName[])[((x / 2) | 0) % 4]!);
+      }
       return;
     case 'decor_pennant':
       f.poly([[0, 0], [12, 3], [0, 7]], 'coral');

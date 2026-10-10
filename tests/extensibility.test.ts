@@ -3,6 +3,7 @@
 // world state without touching any code.
 import { describe, expect, it } from 'vitest';
 import { bootstrap } from '../src/core/bootstrap';
+import { moveClub } from '../src/core/club';
 import { parseContent } from '../src/core/content/parseContent';
 import { UpgradeService } from '../src/features/upgrades/service';
 import { MemoryStorage } from '../src/systems/saveManager';
@@ -10,7 +11,7 @@ import { readContentFiles } from './helpers/content';
 
 const newUpgrade = {
   id: 'tackle_box',
-  branch: 'gear',
+  branch: 'bait',
   name: 'Tackle Box',
   description: 'Neatly sorted hooks. Fish bite a little sooner.',
   prerequisites: ['cork_grip'],
@@ -24,7 +25,8 @@ const newWater = {
   name: 'Lantern Lake',
   description: 'Paper lanterns float on the water all year round.',
   order: 5,
-  rangeRequired: 1,
+  rangeRequired: 5,
+  clubBonus: 80,
   spriteKey: 'water_lantern_lake',
   scene: { hills: 'pines', foreground: 'lilies' },
 };
@@ -61,19 +63,21 @@ describe('adding content with JSON only', () => {
     expect(ctx.wallet.get('coins')).toBe(1000 - 50 - Math.round(50 * 1.15));
   });
 
-  it('a new water appears, unlocks with boat range, and has its own fish pool', () => {
+  it('a new water joins the end of the journey, opens with boat range, and has its own fish pool', () => {
     const ctx = boot({
       '../../content/mypack/waters.json': [newWater],
       '../../content/mypack/fish.json': [newFish],
     });
-    expect(ctx.world.isUnlocked('lantern_lake')).toBe(false);
+    expect(moveClub(ctx, 'sky_lake', { force: true })).toBe(true);
+    expect(ctx.world.nextWater()).toBe('lantern_lake');
+    expect(ctx.world.canMoveTo('lantern_lake')).toBe(false);
     const unlocked: string[] = [];
     ctx.bus.on('waterUnlocked', (e) => unlocked.push(e.waterId));
-    ctx.stats.setSource('test', [{ stat: 'boatRange', op: 'add', value: 1 }]);
-    expect(ctx.world.isUnlocked('lantern_lake')).toBe(true);
+    ctx.stats.setSource('test', [{ stat: 'boatRange', op: 'add', value: 5 }]);
     expect(unlocked).toContain('lantern_lake');
-    expect(ctx.world.setWater('lantern_lake')).toBe(true);
+    expect(moveClub(ctx, 'lantern_lake')).toBe(true);
     expect(ctx.world.conditions().waterId).toBe('lantern_lake');
+    expect(ctx.stats.get('sellValueMult')).toBeCloseTo(81);
   });
 
   it('bad JSON in a new pack stops boot with a precise message', () => {

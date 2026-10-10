@@ -66,16 +66,26 @@ export const waterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1).max(140),
   order: z.number().int(),
-  /** Unlocks when the boatRange stat reaches this value. */
+  /**
+   * The water's place in the club's journey (0 = the starting water). The club
+   * can move here once boatRange reaches this value and it is the next stop.
+   */
   rangeRequired: z.number().int().min(0).default(0),
+  /** Extra coins earned everywhere once the club has moved here (1 = +100%). */
+  clubBonus: z.number().min(0).default(0),
   comingSoon: z.boolean().default(false),
   spriteKey,
   scene: z
     .object({
-      hills: z.enum(['rolling', 'pines', 'cliffs', 'none']).default('rolling'),
-      foreground: z.enum(['reeds', 'rocks', 'lilies', 'none']).default('reeds'),
-      /** Optional palette overrides per phase, e.g. { "night": { "waterTop": "teal" } }. */
-      tint: z.record(z.string(), z.record(z.string(), paletteName)).default({}),
+      hills: z.enum(['rolling', 'pines', 'cliffs', 'cave', 'clouds', 'none']).default('rolling'),
+      foreground: z.enum(['reeds', 'rocks', 'lilies', 'crystals', 'none']).default('reeds'),
+      /**
+       * Optional scene palette overrides per phase, e.g. { "night": { "waterTop": "teal" } }.
+       * Values are palette names, lists of palette names (skyBands), or numbers (stars, fireflies).
+       */
+      tint: z
+        .record(z.string(), z.record(z.string(), z.union([paletteName, z.array(paletteName).min(1), z.number().min(0).max(1)])))
+        .default({}),
     })
     .default({ hills: 'rolling', foreground: 'reeds', tint: {} }),
 });
@@ -85,6 +95,8 @@ export const branchSchema = z.object({
   name: z.string().min(1),
   icon: spriteKey,
   order: z.number().int(),
+  /** Upgrades in this branch stay owned when the club moves to a new water. */
+  keepOnMove: z.boolean().default(false),
 });
 
 const prerequisite = z.union([id, z.object({ id, level: z.number().int().min(1) })]);
@@ -102,6 +114,10 @@ export const upgradeSchema = z.object({
   modifiers: z.array(modifierSchema).default([]),
   effects: z.array(effectRefSchema).default([]),
   icon: spriteKey.optional(),
+  /** Short tag on the tree node (e.g. "T3" for a rod tier). */
+  label: z.string().max(3).optional(),
+  /** The club must have reached this water rank (0 = starting water) before it can be bought. */
+  requiresRank: z.number().int().min(0).default(0),
   /** Optional tree slot; nodes without one are laid out by prerequisite depth. */
   position: z.object({ row: z.number().int().min(0), col: z.number().int().min(0) }).optional(),
 });
@@ -155,6 +171,8 @@ export const currencySchema = z.object({
   order: z.number().int().default(0),
   /** Hidden currencies stay off the HUD until the player has some. */
   hidden: z.boolean().default(false),
+  /** Keep the balance when the club moves to a new water (otherwise it resets to start). */
+  keepOnMove: z.boolean().default(false),
 });
 
 export const packSchema = z.object({

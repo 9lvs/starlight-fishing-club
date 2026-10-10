@@ -1,6 +1,7 @@
 // Heads-up display: currencies, water name, time of day and weather, the menu
 // bar built from every feature's menu entries, toasts, and the panel host.
 import Phaser from 'phaser';
+import { clubBonus } from '../core/club';
 import { getContext, type GameContext } from '../core/context';
 import { getLayout, type Layout } from '../core/layout';
 import { uiState } from '../core/sceneState';
@@ -26,6 +27,7 @@ export class HudScene extends Phaser.Scene {
   private L!: Layout;
   private currencies: CurrencyView[] = [];
   private waterText!: PixelText;
+  private bonusText!: PixelText;
   private phaseIcon!: Phaser.GameObjects.Image;
   private weatherIcon!: Phaser.GameObjects.Image;
   private toasts!: ToastLayer;
@@ -56,7 +58,8 @@ export class HudScene extends Phaser.Scene {
     this.weatherIcon.setInteractive();
     attachTooltip(this, this.phaseIcon, () => TIME.phases.find((p) => p.id === this.ctx.world.phase)?.name ?? '');
     attachTooltip(this, this.weatherIcon, () => this.ctx.registries.weather.tryGet(this.ctx.world.weather)?.name ?? '');
-    this.waterText = addText(this, this.L.width / 2, topBar.y + topBar.h + 2, '', { originX: 0.5, color: 'mist' });
+    this.waterText = addText(this, this.L.width / 2, topBar.y + topBar.h + 2, '', { color: 'mist' });
+    this.bonusText = addText(this, this.L.width / 2, topBar.y + topBar.h + 2, '', { color: 'gold' });
     this.refreshWorld();
 
     this.buildMenu(menuBar.x, menuBar.y, menuBar.w, menuBar.h);
@@ -68,6 +71,12 @@ export class HudScene extends Phaser.Scene {
       bus.on('timeOfDayChanged', () => this.refreshWorld()),
       bus.on('weatherChanged', () => this.refreshWorld()),
       bus.on('waterChanged', () => this.refreshWorld()),
+      bus.on('clubMoved', () => {
+        // A fresh start: show the new balance at once rather than counting down.
+        for (const v of this.currencies) v.shown = this.ctx.wallet.get(v.id);
+        this.layoutCurrencies();
+        this.refreshWorld();
+      }),
       bus.on('ui:openPanel', ({ sceneKey, data }) => this.openPanel(sceneKey, data)),
       bus.on('currencyChanged', () => this.layoutCurrencies()),
       bus.on('viewportChanged', () => this.scene.restart()),
@@ -106,6 +115,13 @@ export class HudScene extends Phaser.Scene {
   private refreshWorld(): void {
     const w = this.ctx.registries.waters.tryGet(this.ctx.world.waterId);
     this.waterText.setText(w?.name ?? '');
+    // The club bonus sits next to the water name so the reward for moving stays in view.
+    const bonus = clubBonus(this.ctx);
+    this.bonusText.setText(bonus > 0 ? `+${Math.round(bonus * 100)}%` : '');
+    const total = this.waterText.textWidth + (bonus > 0 ? 4 + this.bonusText.textWidth : 0);
+    const x = Math.round(this.L.width / 2 - total / 2);
+    this.waterText.setX(x);
+    this.bonusText.setX(x + this.waterText.textWidth + 4);
     const phase = TIME.phases.find((p) => p.id === this.ctx.world.phase);
     if (phase && this.textures.exists(phase.icon)) this.phaseIcon.setTexture(phase.icon);
     const weather = this.ctx.registries.weather.tryGet(this.ctx.world.weather);

@@ -19,7 +19,9 @@ Facing: fish face right; the boat faces right with the bow on the right; the fis
 
 | Key | Size (px) | Frames | Notes |
 |---|---|---|---|
-| `boat` | 32x32 | 1 | Hull bottom near y=26, rail around y=18-20, mast at x=17 from y=3. Fisher stands behind the hull. |
+| `boat` | 32x32 | 1 | Starter boat. Hull bottom near y=26, rail around y=18-20, mast at x=17 from y=3. Fisher stands behind the hull. |
+| `boat_1` .. `boat_10` | 32x32 | 1 | Boat tier hulls (Patched Dinghy to Starlight Schooner). Same footprint as `boat`; no mast. |
+| `rig_1` .. `rig_10` | 32x32 | 1 | Mast and sail for each tier, drawn BEHIND the fisher. Mast at x=17 so mast decorations line up. |
 | `fisher` | 16x24 | 4 | 0 idle, 1 idle breathing (1 px lower), 2 cast (arm forward), 3 reel/cheer (arm up). Hand positions for the rod are in `FISHER_HAND` in `placeholderGenerator.ts`. |
 | `bobber` | 8x8 | 2 | 0 floating, 1 dipped (bite). |
 | `fx_sparkle` | 5x5 | 2 | Rarity sparkle, two twinkle frames. |
@@ -72,6 +74,30 @@ Idle frame; a second swim frame (32x16 strip) can be added later. Keep the fish 
 | `fish_pearl_dragonet` | Pearl Dragonet | legendary | cove |
 | `fish_starwhale` | Starwhale | legendary | cove |
 | `fish_sunrise_smelt` | Sunrise Smelt | uncommon | river |
+| `fish_pale_tetra` | Pale Tetra | common | glowing_cave |
+| `fish_pebble_blindfish` | Pebble Blindfish | common | glowing_cave |
+| `fish_drip_minnow` | Drip Minnow | common | glowing_cave |
+| `fish_glowcap_loach` | Glowcap Loach | uncommon | glowing_cave |
+| `fish_crystal_shrimpfish` | Crystal Shrimpfish | uncommon | glowing_cave |
+| `fish_echo_bass` | Echo Bass | uncommon | glowing_cave |
+| `fish_lantern_eel` | Lantern Eel | rare | glowing_cave |
+| `fish_amethyst_cichlid` | Amethyst Cichlid | rare | glowing_cave |
+| `fish_mist_wraith` | Mist Wraith | rare | glowing_cave |
+| `fish_opal_arowana` | Opal Arowana | epic | glowing_cave |
+| `fish_spore_puffer` | Spore Puffer | epic | glowing_cave |
+| `fish_deep_lantern` | The Deep Lantern | legendary | glowing_cave |
+| `fish_puff_minnow` | Puff Minnow | common | sky_lake |
+| `fish_breeze_dace` | Breeze Dace | common | sky_lake |
+| `fish_cloud_bream` | Cloud Bream | common | sky_lake |
+| `fish_kite_fin` | Kite Fin | uncommon | sky_lake |
+| `fish_sunbeam_perch` | Sunbeam Perch | uncommon | sky_lake |
+| `fish_drizzle_swift` | Drizzle Swift | uncommon | sky_lake |
+| `fish_rainbow_ray` | Rainbow Ray | rare | sky_lake |
+| `fish_zephyr_eel` | Zephyr Eel | rare | sky_lake |
+| `fish_comet_koi` | Comet Koi | epic | sky_lake |
+| `fish_halo_marlin` | Halo Marlin | epic | sky_lake |
+| `fish_sky_leviathan` | Sky Leviathan | legendary | sky_lake |
+| `fish_dawn_carp` | Dawn Carp | legendary | sky_lake |
 
 ## Crew portraits (16x24, 2 frames)
 
@@ -90,8 +116,8 @@ Frame 0 idle, frame 1 one pixel lower (breathing).
 | `water_pond` | Willow Pond |
 | `water_river` | Whisper River |
 | `water_cove` | Moonlit Cove |
-| `water_cave` | Glowing Cave (coming soon) |
-| `water_sky` | Sky Lake (coming soon) |
+| `water_cave` | Glowing Cave |
+| `water_sky` | Sky Lake |
 
 ## Boat decorations (20x12, 1 frame)
 
@@ -103,6 +129,8 @@ Placed by `anchor` and `offset` in `decorations.json`. Mast anchors align the sp
 | `decor_chimes` | Wind Chimes | stern |
 | `decor_cat` | Ship Cat | bow |
 | `decor_pennant` | Club Pennant | mast |
+| `decor_flowers` | Flower Box | stern |
+| `decor_fairy_lights` | Fairy Lights | mast (strung toward the bow) |
 
 ## Icons (12x12, 1 frame)
 
@@ -113,14 +141,14 @@ Used in the HUD, menu bar, buttons, and upgrade nodes. Keep a 1 px margin.
 | `icon_coin` | Coins currency, sell buttons |
 | `icon_rod` | Cast button, Gear upgrades |
 | `icon_boat` | Boat branch, Sail here |
-| `icon_crew` | Crew menu, Club branch |
+| `icon_crew` | Crew menu, Crew branch |
 | `icon_journal` | Journal menu |
 | `icon_settings` | Settings menu |
 | `icon_mute` | Sound off |
 | `icon_sound` | Sound on |
 | `icon_lock` | Locked nodes and waters |
 | `icon_map` | Map menu, chart upgrades |
-| `icon_star` | Upgrades menu, Lucky Charm |
+| `icon_star` | Upgrades menu, lures |
 | `icon_bait` | Bait upgrades |
 | `icon_creel` | Creel button, storage upgrades |
 | `icon_note` | Sea Shanties, Wind Chimes |

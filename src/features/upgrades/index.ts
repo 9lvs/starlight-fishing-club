@@ -22,6 +22,7 @@ export const upgradesFeature: GameFeature = {
     const svc = new UpgradeService(ctx, ctx.save.slice<UpgradesSlice>('upgrades'));
     setUpgradeService(svc);
     svc.applyAll();
+    ctx.bus.on('clubMoved', () => svc.resetForMove());
   },
   debugCommands: [
     {

@@ -13,7 +13,9 @@ export const fishingFeature: GameFeature = {
     { key: 'Creel', scene: CreelScene, kind: 'panel' },
   ],
   init(ctx) {
-    setFishingController(new FishingController(ctx, ctx.save.slice<FishingSlice>('fishing')));
+    const ctl = new FishingController(ctx, ctx.save.slice<FishingSlice>('fishing'));
+    setFishingController(ctl);
+    ctx.bus.on('clubMoved', () => ctl.resetForMove());
   },
   onTick(dt) {
     getFishingController().update(dt);

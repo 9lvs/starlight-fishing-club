@@ -54,9 +54,31 @@ function bands(ctx: CanvasRenderingContext2D, w: number, y0: number, y1: number,
   }
 }
 
-export const paintSky: Painter = (ctx, w, h, pal) => {
+export const paintSky: Painter = (ctx, w, h, pal, s) => {
   bands(ctx, w, 0, h, pal.skyBands, 10);
+  if (s.hills === 'cave') paintCeiling(ctx, w, h, pal, s);
 };
+
+/** A rock ceiling with stalactites, for underground waters. */
+function paintCeiling(ctx: CanvasRenderingContext2D, w: number, h: number, pal: ScenePalette, s: SceneShape): void {
+  const rng = seededRng(s.seed + 5);
+  for (let x = 0; x < w; x++) {
+    const depth = Math.round(5 + ridge(x, w, s.seed % 13, 3, [2, 5, 9]));
+    rect(ctx, x, 0, 1, depth, pal.hillsFar);
+  }
+  let x = 0;
+  while (x < w) {
+    const len = 6 + Math.floor(rng() * h * 0.3);
+    const half = 1 + Math.floor(rng() * 3);
+    for (let y = 0; y < len; y++) {
+      const span = Math.max(0, Math.round(half * (1 - y / len)));
+      rect(ctx, x - span, y, span * 2 + 1, 1, pal.hillsFar);
+    }
+    // A glowing drip at some tips.
+    if (rng() < 0.4) rect(ctx, x, len, 1, 1, pal.foregroundAccent);
+    x += 6 + Math.floor(rng() * 14);
+  }
+}
 
 /** Periodic in x over the layer width so the layer tiles while drifting. */
 function ridge(x: number, w: number, seed: number, amp: number, waves: number[]): number {
@@ -71,6 +93,19 @@ export const paintHillsFar: Painter = (ctx, w, h, pal, s) => {
   if (s.hills === 'none') return;
   const base = h;
   const rng = seededRng(s.seed);
+  if (s.hills === 'clouds') {
+    paintCloudBank(ctx, w, h, pal.hillsFar, s.seed, 0.45, 5);
+    return;
+  }
+  if (s.hills === 'cave') {
+    // A rough rock wall at the back of the cavern, with a few glowing veins.
+    for (let x = 0; x < w; x++) {
+      const top = Math.round(h * 0.3 + ridge(x, w, s.seed % 7, h * 0.14, [2, 5, 11, 17]));
+      rect(ctx, x, top, 1, base - top, pal.hillsFar);
+      if (bayer(x, top) < 2) rect(ctx, x, top + 2 + (x % 5), 1, 1, pal.foregroundAccent);
+    }
+    return;
+  }
   if (s.hills === 'cliffs') {
     let x = 0;
     while (x < w) {
@@ -87,9 +122,43 @@ export const paintHillsFar: Painter = (ctx, w, h, pal, s) => {
   }
 };
 
+/** Puffy cloud tops seen from above, for the sky lake: overlapping round puffs. Tiles across the width. */
+function paintCloudBank(ctx: CanvasRenderingContext2D, w: number, h: number, c: PaletteName, seed: number, top: number, maxR: number): void {
+  const rng = seededRng(seed + 31);
+  const baseY = Math.round(h * top) + maxR;
+  rect(ctx, 0, baseY, w, h - baseY, c);
+  let x = 0;
+  while (x < w + maxR) {
+    const r = Math.max(2, Math.round(maxR * (0.5 + rng() * 0.8)));
+    for (let dy = -r; dy <= 0; dy++) {
+      const half = Math.round(Math.sqrt(r * r - dy * dy) * 1.3);
+      for (let dx = -half; dx <= half; dx++) rect(ctx, (x + dx + w) % w, baseY + dy, 1, 1, c);
+    }
+    x += Math.max(3, Math.round(r * 1.6));
+  }
+}
+
 export const paintHillsNear: Painter = (ctx, w, h, pal, s) => {
   if (s.hills === 'none') return;
   const rng = seededRng(s.seed + 11);
+  if (s.hills === 'clouds') {
+    paintCloudBank(ctx, w, h, pal.hillsNear, s.seed + 3, 0.6, 6);
+    return;
+  }
+  if (s.hills === 'cave') {
+    // Low rocks along the shore with glowing mushrooms.
+    for (let x = 0; x < w; x++) {
+      const top = Math.round(h * 0.78 + ridge(x, w, s.seed % 5, h * 0.06, [4, 9]));
+      rect(ctx, x, top, 1, h - top, pal.hillsNear);
+    }
+    for (let i = 0; i < Math.floor(w / 18); i++) {
+      const cx = Math.floor(rng() * w);
+      const top = Math.round(h * 0.78 + ridge(cx, w, s.seed % 5, h * 0.06, [4, 9]));
+      rect(ctx, cx, top - 2, 1, 2, pal.hillsNear);
+      rect(ctx, cx - 1, top - 3, 3, 1, pal.foregroundAccent);
+    }
+    return;
+  }
   if (s.hills === 'pines') {
     for (let x = 0; x < w; x++) {
       const top = Math.round(h * 0.7 + ridge(x, w, s.seed % 5, h * 0.08, [2, 3]));
@@ -129,6 +198,7 @@ export const paintHillsNear: Painter = (ctx, w, h, pal, s) => {
 };
 
 export const paintClouds: Painter = (ctx, w, h, pal, s) => {
+  if (s.hills === 'cave') return;
   const rng = seededRng(s.seed + 23);
   const count = Math.max(2, Math.floor(w / 45));
   for (let i = 0; i < count; i++) {
@@ -195,6 +265,17 @@ export const paintForeground: Painter = (ctx, w, h, pal, s) => {
         for (let y = -r; y <= 0; y++) {
           const half = Math.round(Math.sqrt(r * r - y * y) * 1.4);
           rect(ctx, cx - half, h + y, half * 2 + 1, 1, y < -r + 2 ? pal.foregroundAccent : pal.foreground);
+        }
+      }
+    } else if (s.foreground === 'crystals') {
+      for (let i = 0; i < 4; i++) {
+        const cx = c.x + Math.floor(rng() * c.span);
+        const tall = 6 + Math.floor(rng() * h * 0.5);
+        const lean = rng() < 0.5 ? -1 : 1;
+        for (let y = 0; y < tall; y++) {
+          const half = Math.max(0, Math.round(2 * (1 - y / tall)));
+          const x = cx + Math.round((y / tall) * lean * 2);
+          rect(ctx, x - half, h - y, half * 2 + 1, 1, y > tall - 3 ? pal.foregroundAccent : pal.foreground);
         }
       }
     } else if (s.foreground === 'lilies') {

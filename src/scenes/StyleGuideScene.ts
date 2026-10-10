@@ -130,6 +130,18 @@ export class StyleGuideScene extends Phaser.Scene {
     });
     y += Math.ceil(icons.length / 8) * 16 + 4;
 
+    heading('Boat tiers');
+    // Each tier's rig (mast and sail) drawn behind its hull, as on the water.
+    const tiers = entries.filter((e) => /^boat_\d+$/.test(e.key)).sort((a, b) => Number(a.key.slice(5)) - Number(b.key.slice(5)));
+    tiers.forEach((e, i) => {
+      const x = pad + (i % 5) * 34;
+      const yy = y + Math.floor(i / 5) * 36;
+      const rig = `rig_${e.key.slice(5)}`;
+      if (this.textures.exists(rig)) add(this.add.image(x, yy, rig).setOrigin(0, 0));
+      add(this.add.image(x, yy, e.key).setOrigin(0, 0));
+    });
+    y += Math.ceil(tiers.length / 5) * 36 + 4;
+
     heading('Sprites');
     for (const kind of ['boat', 'fisher', 'bobber', 'crew', 'water', 'decor', 'fx', 'fish'] as const) {
       const list = entries.filter((e) => e.kind === kind);

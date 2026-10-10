@@ -68,6 +68,11 @@ export class CrewService {
     this.ctx.bus.emit('crewAssigned', { crewId, waterId });
   }
 
+  /** The club moved: helpers stay behind, and new ones are hired at the new water. */
+  resetForMove(): void {
+    this.slice.members.length = 0;
+  }
+
   /** Live fishing: one real roll each time a helper's timer fills. */
   tick(dt: number): void {
     for (const m of this.slice.members) {
@@ -111,7 +116,7 @@ export class CrewService {
       rarities: lootRarities(this.ctx),
       fish: lootFish(this.ctx),
       lootCfg: LOOT,
-      valueMult: this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('crewSellMult'),
+      valueMult: this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('crewSellMult') * this.ctx.stats.get('offlineValueMult'),
     });
     const lines: string[] = [];
     for (const r of result.perCrew) {

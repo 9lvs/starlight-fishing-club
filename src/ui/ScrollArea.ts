@@ -69,6 +69,11 @@ export class ScrollArea {
     this.scrollTo(this.scrollY);
   }
 
+  /** Current scroll offset, so a rebuilt panel can come back to the same place. */
+  get position(): number {
+    return this.scrollY;
+  }
+
   scrollTo(y: number): void {
     const max = Math.max(0, this.contentHeight - this.rect.h);
     this.scrollY = Math.max(0, Math.min(max, y));

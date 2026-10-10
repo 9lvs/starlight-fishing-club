@@ -1,27 +1,43 @@
 [
   {
-    "id": "pond", "name": "Willow Pond", "order": 0, "rangeRequired": 0, "spriteKey": "water_pond",
+    "id": "pond", "name": "Willow Pond", "order": 0, "rangeRequired": 0, "clubBonus": 0, "spriteKey": "water_pond",
     "description": "A sleepy pond under weeping willows. A good place to learn.",
     "scene": { "hills": "rolling", "foreground": "reeds" }
   },
   {
-    "id": "river", "name": "Whisper River", "order": 1, "rangeRequired": 1, "spriteKey": "water_river",
+    "id": "river", "name": "Whisper River", "order": 1, "rangeRequired": 1, "clubBonus": 1, "spriteKey": "water_river",
     "description": "A slow river through pine woods. Trout and salmon drift here.",
     "scene": { "hills": "pines", "foreground": "rocks" }
   },
   {
-    "id": "cove", "name": "Moonlit Cove", "order": 2, "rangeRequired": 2, "spriteKey": "water_cove",
+    "id": "cove", "name": "Moonlit Cove", "order": 2, "rangeRequired": 2, "clubBonus": 4, "spriteKey": "water_cove",
     "description": "A quiet sea cove where the moon pulls up strange and lovely things.",
     "scene": { "hills": "cliffs", "foreground": "lilies", "tint": { "night": { "waterTop": "teal" } } }
   },
   {
-    "id": "glowing_cave", "name": "Glowing Cave", "order": 3, "rangeRequired": 3, "comingSoon": true, "spriteKey": "water_cave",
+    "id": "glowing_cave", "name": "Glowing Cave", "order": 3, "rangeRequired": 3, "clubBonus": 9, "spriteKey": "water_cave",
     "description": "Mushrooms glow on the walls of an underground lake.",
-    "scene": { "hills": "none", "foreground": "rocks" }
+    "scene": {
+      "hills": "cave", "foreground": "crystals",
+      "tint": {
+        "day": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.5, "fireflies": 1 },
+        "dusk": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.6, "fireflies": 1 },
+        "night": { "skyBands": ["ink", "ink", "ink"], "clouds": "midnight", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "midnight", "waterDeep": "ink", "waterShine": "sage", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.8, "fireflies": 1 },
+        "dawn": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.6, "fireflies": 1 }
+      }
+    }
   },
   {
-    "id": "sky_lake", "name": "Sky Lake", "order": 4, "rangeRequired": 4, "comingSoon": true, "spriteKey": "water_sky",
+    "id": "sky_lake", "name": "Sky Lake", "order": 4, "rangeRequired": 4, "clubBonus": 24, "spriteKey": "water_sky",
     "description": "A lake high above the clouds. Nobody knows how the fish got there.",
-    "scene": { "hills": "none", "foreground": "none" }
+    "scene": {
+      "hills": "clouds", "foreground": "none",
+      "tint": {
+        "day": { "skyBands": ["sky", "sky", "sky"], "hillsFar": "mist", "hillsNear": "lavender", "waterTop": "mist", "waterDeep": "sky" },
+        "dusk": { "hillsFar": "lavender", "hillsNear": "rose", "waterDeep": "plum" },
+        "night": { "hillsFar": "dusk", "hillsNear": "slate", "stars": 1 },
+        "dawn": { "hillsFar": "lavender", "hillsNear": "mist" }
+      }
+    }
   }
 ]

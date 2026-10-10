@@ -10,8 +10,10 @@ Ideas the architecture is ready for. None are built yet; each note says where it
 | Achievements | Not built | Feature listening to `catchLanded`, `upgradePurchased`, `waterUnlocked`; definitions as content. |
 | Seasons and holidays | Not built | Content packs per season with `order`, `enabled`, and `"override": true`; optional feature to switch packs by date. |
 | Daily rewards beyond the gift | Partly (daily gift) | Extend `dailyGift` content and stats. No streak penalties. |
-| Prestige ("retire to a new club") | Not built | New currency in `currencies.json`, a slice storing prestige level, permanent stat sources. |
-| More waters: Glowing Cave, Sky Lake | Teased on the map | Set `comingSoon` to false, add fish, add a range upgrade. New scene presets (cave ceiling, cloud sea) would be new painters. |
+| Moving the club (prestige) | Built | Five waters; each move resets coins, gear, and crew for a bigger permanent coin bonus (`core/club.ts`, `clubBonus` in `waters.json`). |
+| More waters after Sky Lake | Ready | Add a water with `rangeRequired: 5`, fish, a reach boat at `requiresRank: 4`, and higher tiers at `requiresRank: 5`. |
+| Boat paint and other cosmetic choices | Not built | Club branch items are kept across moves; a paint would be a `look` effect on a new slot. |
+| Equip a chosen bait or lure | Not built | Today every owned bait and lure applies. A picker would set one `bait` stat source at a time. |
 | Second currency (Star Pearls) | Not built | Add to `currencies.json` (`hidden: true`), grant from legendary catches via a small feature. |
 | Fish size records | Partly (best size in journal) | Leaderboard-free personal records; journal already stores `bestSize`. |
 | Cloud save | Not built | Wrap `SaveManager.exportString` / `importString` with a sync feature. |

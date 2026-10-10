@@ -2,7 +2,7 @@
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
 import { FISHING } from '../../config/tuning';
-import { fishValue, makeCatch } from '../../core/catching';
+import { fishValue, makeCatch, rarityBoosts } from '../../core/catching';
 import type { GameContext } from '../../core/context';
 import type { CatchResult } from '../../core/types';
 import { FishingSession, type SessionEvent } from './fishingSession';
@@ -68,6 +68,8 @@ export class FishingController {
           luck: this.ctx.stats.get('luck'),
           valueMult: this.ctx.stats.get('sellValueMult'),
           pity: this.state.pity,
+          boosts: rarityBoosts(this.ctx),
+          sizeMult: this.ctx.stats.get('fishSizeMult'),
         });
         this.pending = made?.result ?? null;
         if (made?.pity !== undefined) this.state.pity = made.pity;
@@ -114,7 +116,7 @@ export class FishingController {
   creelValue(index: number): number {
     const item = this.state.creel[index];
     if (!item || !this.ctx.registries.fish.has(item.fishId)) return 0;
-    return fishValue(this.ctx, item.fishId, this.ctx.stats.get('sellValueMult'));
+    return fishValue(this.ctx, item.fishId, this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('fishSizeMult'));
   }
 
   sellFromCreel(index: number): void {
@@ -124,6 +126,11 @@ export class FishingController {
     this.state.creel.splice(index, 1);
     this.ctx.wallet.add(ECONOMY.defaultCurrency, value);
     this.ctx.bus.emit('fishSold', { fishId: item.fishId, value, currency: ECONOMY.defaultCurrency, source: 'creel' });
+  }
+
+  /** The club moved to a new water: the creel starts empty there. */
+  resetForMove(): void {
+    this.state.creel.length = 0;
   }
 
   sellAllCreel(): number {

@@ -88,7 +88,8 @@ comments that explain *why*. Small files.
 ## How to add X (short version, full recipes in docs/)
 
 - **Fish**: add an entry to `src/content/base/fish.json` (or a new pack). See `docs/ADDING_CONTENT.md`.
-- **Water**: add to `waters.json`, give it a `rangeRequired`, and use an existing scene preset.
+- **Water**: add to `waters.json` with the next `rangeRequired`, a `clubBonus` above the last water's,
+  a reach boat for it, and an existing scene preset.
 - **Upgrade**: add to `upgrades.json` with `modifiers: [{ "stat": "luck", "op": "add", "value": 1 }]`.
 - **Crew type / weather / rarity / decoration / currency**: add to the matching JSON file.
 - **Content pack**: create `src/content/<pack>/pack.json` plus any content files. Content that
@@ -108,11 +109,15 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, crew, map, offline, settings, dailyGift. 80 unit tests. Fills the
+upgrades, journal, crew, map, offline, settings, dailyGift. 92 unit tests. Five-water journey with
+moving the club (prestige), 10 rod and 10 boat tiers, bait and lures (see `docs/DECISIONS.md`). Fills the
 whole screen on every device (see the post v0.1.0 entry in `docs/BUILD_LOG.md`).
 
 ## Gotchas
 
+- Moving the club resets progress through the `clubMoved` event: each feature resets its own
+  slice. A new feature with run progress should listen for it; anything meant to last goes in a
+  `keepOnMove` branch or currency.
 - Keep the internal game size even: an odd size makes Phaser's pixel rounding leave a
   1 px gap at one edge. `computeViewport` already does this.
 - Layout must work from about 180 px wide to 640+ px wide. Read positions from

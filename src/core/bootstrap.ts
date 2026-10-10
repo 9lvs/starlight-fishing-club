@@ -1,7 +1,8 @@
 // Builds the GameContext: loads and validates content, fills registries, loads
 // the save, and initialises features. No Phaser here, so it is easy to reason about.
 import type { ZodType } from 'zod';
-import { CORE_STATS } from '../config/stats';
+import { CORE_STATS, rarityBoostStats } from '../config/stats';
+import { applyClubBonus } from './club';
 import { OFFLINE, SAVE } from '../config/tuning';
 import { PHASE_IDS } from '../config/time';
 import { Wallet } from '../systems/economy';
@@ -62,6 +63,17 @@ export function buildRegistries(content: ParsedContent): Registries {
 }
 
 function registerCoreEffects(r: Registries): void {
+  // A look (rod, boat) shown while the upgrade is owned. The highest priority wins,
+  // so owning several rod tiers shows the best one.
+  r.effects.register({
+    id: 'look',
+    apply(ctx, args, level) {
+      const { slot, ...value } = args as { slot?: unknown; priority?: unknown };
+      if (typeof slot !== 'string') return;
+      const priority = Number(value.priority ?? 0);
+      ctx.world.setLook(slot, `look:${slot}:${priority}`, level > 0 ? value : null, priority);
+    },
+  });
   // Shows a decoration from decorations.json on the boat while the upgrade is owned.
   r.effects.register({
     id: 'decoration',
@@ -93,6 +105,7 @@ export function bootstrap(opts: BootOptions): BootResult {
 
   const registries = buildRegistries(content);
   registerCoreEffects(registries);
+  rarityBoostStats(registries.rarities.list()).forEach((s) => stats.define(s));
 
   const clock = new Clock();
   const save = new SaveManager(opts.storage, () => clock.now(), SAVE);
@@ -169,6 +182,7 @@ export function bootstrap(opts: BootOptions): BootResult {
   if (initErrors.length > 0 || refErrors.length > 0) {
     return { ctx: null, errors: [...initErrors, ...refErrors.map(formatContentError)] };
   }
+  applyClubBonus(ctx);
   world.checkUnlocks(false);
   for (const f of opts.features) f.start?.(ctx);
   if (loadResult.recovered) {

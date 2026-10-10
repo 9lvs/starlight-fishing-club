@@ -31,6 +31,13 @@ export interface GameEvents {
   timeOfDayChanged: { phase: string; previous: string };
   weatherChanged: { weather: string; previous: string };
   decorationsChanged: { ids: string[] };
+  /** A look slot (rod, boat) changed; read it with world.look(slot). */
+  lookChanged: { slot: string };
+  /**
+   * The club moved to a new water (the opt-in fresh start). Coins have already
+   * reset; each feature resets its own progress when it hears this.
+   */
+  clubMoved: { waterId: string; rank: number; previousRank: number };
 
   // Lifecycle
   saveLoaded: { fresh: boolean };

@@ -26,10 +26,15 @@ export function missingPrereqs(u: UpgradeDef, levels: Levels): { id: string; lev
   return prereqList(u).filter((p) => levelOf(levels, p.id) < p.level);
 }
 
-export function nodeState(u: UpgradeDef, levels: Levels, balance: (currency: string) => number): NodeState {
+/** Upgrades held back until the club reaches a bigger water. */
+export function rankLocked(u: UpgradeDef, clubRank: number): boolean {
+  return clubRank < u.requiresRank;
+}
+
+export function nodeState(u: UpgradeDef, levels: Levels, balance: (currency: string) => number, clubRank = 0): NodeState {
   const level = levelOf(levels, u.id);
   if (level >= u.maxLevel) return 'maxed';
-  if (missingPrereqs(u, levels).length > 0) return 'locked';
+  if (missingPrereqs(u, levels).length > 0 || rankLocked(u, clubRank)) return 'locked';
   if (balance(currencyOf(u)) >= nextCost(u, level)) return 'affordable';
   return level > 0 ? 'owned' : 'available';
 }

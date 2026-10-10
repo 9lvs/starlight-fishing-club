@@ -7,7 +7,7 @@ import { getLayout, type Layout } from '../core/layout';
 import { worldAnchors } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { FISHING } from '../config/tuning';
-import { MOTION, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
+import { MOTION, PALETTE_NAMES, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
 import { FISHER_HAND } from '../art/placeholderGenerator';
 import { phaseAt } from '../systems/timeOfDay';
 import { drawPixelLine } from '../ui/pixelDraw';
@@ -31,6 +31,13 @@ const ANCHORS: Record<string, { x: number; y: number; ox: number; oy: number }> 
   water: { x: 16, y: 30, ox: 0.5, oy: 0 },
   sky: { x: 16, y: -30, ox: 0.5, oy: 0.5 },
 };
+
+/** Rod length the ROD table was drawn for; rod looks give their own length. */
+const ROD_BASE_LEN = 17;
+
+function isPalette(v: unknown): v is PaletteName {
+  return typeof v === 'string' && (PALETTE_NAMES as readonly string[]).includes(v);
+}
 
 /** Rod angle (radians, 0 = right, negative = up) and length per fisher pose. */
 const ROD = [
@@ -60,6 +67,8 @@ export class WorldScene extends Phaser.Scene {
   private shimmer!: Phaser.GameObjects.Graphics;
   private boat!: Phaser.GameObjects.Container;
   private fisher!: Phaser.GameObjects.Sprite;
+  private hull!: Phaser.GameObjects.Image;
+  private rig!: Phaser.GameObjects.Image;
   private rod!: Phaser.GameObjects.Graphics;
   private decorations: Phaser.GameObjects.Image[] = [];
   private weatherGfx!: Phaser.GameObjects.Graphics;
@@ -132,6 +141,9 @@ export class WorldScene extends Phaser.Scene {
       }),
       bus.on('weatherChanged', () => this.applyWeather()),
       bus.on('decorationsChanged', () => this.applyDecorations()),
+      bus.on('lookChanged', ({ slot }) => {
+        if (slot === 'boat') this.applyBoatLook();
+      }),
       bus.on('cast', () => this.setPose(2, FISHING.castAnimMs)),
       bus.on('reel', () => this.setPose(3, FISHING.reelAnimMs)),
       bus.on('viewportChanged', () => this.scene.restart()),
@@ -196,6 +208,8 @@ export class WorldScene extends Phaser.Scene {
       });
     }
     this.celestial.setTexture(this.pal.celestialKind === 'moon' ? 'world_moon' : 'world_sun');
+    // Underground there is no sun or moon; the glowing specks do the work.
+    this.celestial.setVisible(this.shapeCache.hills !== 'cave');
     this.drawStars();
   }
 
@@ -257,8 +271,21 @@ export class WorldScene extends Phaser.Scene {
     this.boat = this.add.container(boat.x - 16, top);
     this.fisher = this.add.sprite(5, -2, 'fisher', 0).setOrigin(0, 0);
     this.rod = this.add.graphics();
-    const hull = this.add.image(0, 0, 'boat').setOrigin(0, 0);
-    this.boat.add([this.rod, this.fisher, hull]);
+    // Mast and sail sit behind the fisher; the hull sits in front.
+    this.rig = this.add.image(0, 0, '__DEFAULT').setOrigin(0, 0).setVisible(false);
+    this.hull = this.add.image(0, 0, 'boat').setOrigin(0, 0);
+    this.boat.add([this.rig, this.rod, this.fisher, this.hull]);
+    this.applyBoatLook();
+  }
+
+  /** The best boat tier owned (a look from upgrades), or the starter boat. */
+  private applyBoatLook(): void {
+    const look = this.ctx.world.look('boat');
+    const sprite = typeof look?.sprite === 'string' && this.textures.exists(look.sprite) ? look.sprite : 'boat';
+    const rig = typeof look?.rig === 'string' && this.textures.exists(look.rig) ? look.rig : null;
+    this.hull.setTexture(sprite);
+    this.rig.setVisible(!!rig);
+    if (rig) this.rig.setTexture(rig);
   }
 
   private applyDecorations(): void {
@@ -363,20 +390,30 @@ export class WorldScene extends Phaser.Scene {
     }
     this.updateWeather(delta, W, H);
     this.updateFireflies(delta, reduced);
-    if (!reduced && isNight) this.updateShootingStar(delta);
+    if (!reduced && isNight && this.shapeCache.hills !== 'cave') this.updateShootingStar(delta);
   }
 
   private drawRod(): void {
     const hand = FISHER_HAND[this.pose] ?? FISHER_HAND[0]!;
     const rod = ROD[this.pose] ?? ROD[0]!;
+    // Better rods are longer and take on their own colors (rod tier looks).
+    const look = this.ctx.world.look('rod');
+    const len = rod.len + (typeof look?.length === 'number' ? look.length - ROD_BASE_LEN : 0);
+    const shaft = isPalette(look?.color) ? look.color : 'bark';
+    const tip = isPalette(look?.tip) ? look.tip : 'sand';
     const hx = 5 + hand.x;
     const hy = -2 + hand.y;
-    const tx = Math.round(hx + Math.cos(rod.angle) * rod.len);
-    const ty = Math.round(hy + Math.sin(rod.angle) * rod.len);
+    const tx = Math.round(hx + Math.cos(rod.angle) * len);
+    const ty = Math.round(hy + Math.sin(rod.angle) * len);
     this.rod.clear();
-    drawPixelLine(this.rod, hx, hy, tx, ty, 'bark');
-    this.rod.fillStyle(color('sand'));
+    drawPixelLine(this.rod, hx, hy, tx, ty, shaft);
+    this.rod.fillStyle(color(tip));
     this.rod.fillRect(tx, ty, 1, 1);
+    // A small reel on rods from the third tier up.
+    if (typeof look?.priority === 'number' && look.priority >= 3) {
+      this.rod.fillStyle(color(tip));
+      this.rod.fillRect(hx + 1, hy - 2, 1, 1);
+    }
     worldAnchors.rodTip.x = this.boat.x + tx;
     worldAnchors.rodTip.y = this.boat.y + ty;
   }
@@ -386,8 +423,8 @@ export class WorldScene extends Phaser.Scene {
     const { width: W, height: H, horizonY } = this.L;
     g.clear();
     const shine = this.pal.waterShine;
-    // Reflection column under the sun or moon.
-    for (let i = 0; i < 6; i++) {
+    // Reflection column under the sun or moon (none underground).
+    for (let i = 0; i < (this.shapeCache.hills === 'cave' ? 0 : 6); i++) {
       const y = horizonY + 2 + i * 3 + (i > 2 ? i : 0);
       const len = 2 + ((i * 7 + Math.floor(this.elapsed / 400)) % 4);
       g.fillStyle(color(shine), 0.9 - i * 0.12);

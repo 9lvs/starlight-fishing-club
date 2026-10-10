@@ -2,7 +2,8 @@
 // catch-up, and debug tools all use these so they agree on odds and values.
 import { LOOT, SIZE } from '../config/balance';
 import { ECONOMY } from '../config/balance';
-import { rollCatch, type LootFish } from '../systems/lootTable';
+import { rollCatch, type LootFish, type RarityBoosts } from '../systems/lootTable';
+import { rarityBoostStat } from '../config/stats';
 import { sellValue } from '../systems/economy';
 import type { FishDef, RarityDef } from './content/schemas';
 import type { GameContext } from './context';
@@ -37,7 +38,21 @@ export interface MakeCatchOptions {
   valueMult: number;
   /** Pity counter; omit for crew and offline rolls. */
   pity?: number;
+  /** Lure bonuses per rarity (hand fishing). */
+  boosts?: RarityBoosts;
+  /** Bait: fish come out this much bigger and sell for this much more. */
+  sizeMult?: number;
   rng?: Rng;
+}
+
+/** Lure bonuses from the boost_<rarity> stats. */
+export function rarityBoosts(ctx: GameContext): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const r of ctx.registries.rarities.list()) {
+    const id = rarityBoostStat(r.id);
+    if (ctx.stats.has(id)) out[r.id] = ctx.stats.get(id);
+  }
+  return out;
 }
 
 export function makeCatch(ctx: GameContext, o: MakeCatchOptions): { result: CatchResult; pity: number | undefined } | null {
@@ -52,13 +67,16 @@ export function makeCatch(ctx: GameContext, o: MakeCatchOptions): { result: Catc
     rng,
     cfg: LOOT,
     pity: o.pity,
+    boosts: o.boosts,
   });
   if (!roll) return null;
+  const sizeMult = o.sizeMult ?? 1;
+  const f = Math.pow(10, SIZE.decimals);
   const result: CatchResult = {
     fishId: roll.fish.id,
     rarityId: roll.rarityId,
-    size: rollSize(roll.fish, rng),
-    value: sellValue(roll.fish.baseValue, o.valueMult),
+    size: Math.round(rollSize(roll.fish, rng) * sizeMult * f) / f,
+    value: sellValue(roll.fish.baseValue, o.valueMult * sizeMult),
     currency: ECONOMY.defaultCurrency,
     waterId: o.waterId,
     phase: conditions.phase,

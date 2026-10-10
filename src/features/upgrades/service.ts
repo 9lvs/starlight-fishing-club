@@ -3,7 +3,7 @@
 import type { GameContext } from '../../core/context';
 import type { UpgradeDef } from '../../core/content/schemas';
 import { modifierAtLevel } from '../../core/stats';
-import { currencyOf, levelOf, missingPrereqs, nextCost, nodeState, type Levels, type NodeState } from './logic';
+import { currencyOf, levelOf, missingPrereqs, nextCost, nodeState, rankLocked, type Levels, type NodeState } from './logic';
 
 export interface UpgradesSlice {
   levels: Levels;
@@ -42,7 +42,25 @@ export class UpgradeService {
   }
 
   state(u: UpgradeDef): NodeState {
-    return nodeState(u, this.slice.levels, (c) => this.ctx.wallet.get(c));
+    return nodeState(u, this.slice.levels, (c) => this.ctx.wallet.get(c), this.ctx.world.clubRank);
+  }
+
+  /** Name of the water the club must reach first, or null when the rank is already met. */
+  rankNeeded(u: UpgradeDef): string | null {
+    if (!rankLocked(u, this.ctx.world.clubRank)) return null;
+    const w = this.ctx.registries.waters.list().find((x) => x.rangeRequired === u.requiresRank);
+    return w?.name ?? `club rank ${u.requiresRank}`;
+  }
+
+  /** The club moved: everything outside keepOnMove branches starts over. */
+  resetForMove(): void {
+    const keep = new Set(this.ctx.registries.branches.list().filter((b) => b.keepOnMove).map((b) => b.id));
+    this.ctx.stats.batch(() => {
+      for (const u of this.ctx.registries.upgrades.list()) {
+        if (keep.has(u.branch) || this.level(u.id) === 0) continue;
+        this.setLevel(u.id, 0);
+      }
+    });
   }
 
   missing(u: UpgradeDef): UpgradeDef[] {
@@ -70,7 +88,8 @@ export class UpgradeService {
   setLevel(id: string, level: number): void {
     const u = this.ctx.registries.upgrades.get(id);
     const clamped = Math.max(0, Math.min(u.maxLevel, level));
-    this.slice.levels[id] = clamped;
+    if (clamped === 0) delete this.slice.levels[id];
+    else this.slice.levels[id] = clamped;
     this.apply(u, clamped);
   }
 }

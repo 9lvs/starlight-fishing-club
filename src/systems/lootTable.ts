@@ -60,18 +60,27 @@ export function maxEffectiveLuck(rarities: readonly LootRarity[], cfg: Pick<Loot
   return Math.max(0, limit);
 }
 
-/** Final rarity weights for a luck value. Total weight is conserved. */
+/** Lure bonuses: rarity id -> weight moved from the lowest tier into that tier. */
+export type RarityBoosts = Readonly<Record<string, number>>;
+
+/**
+ * Final rarity weights for a luck value and optional lures. Total weight is
+ * conserved: luck and lures both take weight from the lowest tier, which never
+ * goes below zero, and no tier ever passes its maxChance (the excess goes back
+ * to the lowest tier).
+ */
 export function rarityWeights(
   rarities: readonly LootRarity[],
   luck: number,
   cfg: Pick<LootConfig, 'luckWeightPerPoint'>,
+  boosts: RarityBoosts = {},
 ): { id: string; tier: number; weight: number }[] {
   const sorted = byTier(rarities);
   const effective = Math.min(Math.max(0, luck), maxEffectiveLuck(sorted, cfg));
   const shift = effective * cfg.luckWeightPerPoint;
   const takers = sorted.slice(1);
   const shareSum = takers.reduce((s, r) => s + r.luckShare, 0);
-  return sorted.map((r, i) => {
+  const out = sorted.map((r, i) => {
     let weight = r.weight;
     if (shareSum > 0) {
       if (i === 0) weight -= shift;
@@ -79,14 +88,34 @@ export function rarityWeights(
     }
     return { id: r.id, tier: r.tier, weight: Math.max(0, weight) };
   });
+  const donor = out[0];
+  if (!donor) return out;
+  for (let i = 1; i < out.length; i++) {
+    const want = Math.max(0, boosts[out[i]!.id] ?? 0);
+    const take = Math.min(want, donor.weight);
+    out[i]!.weight += take;
+    donor.weight -= take;
+  }
+  const total = out.reduce((s, w) => s + w.weight, 0);
+  for (let i = 1; i < out.length; i++) {
+    const cap = sorted[i]!.maxChance;
+    if (cap === undefined) continue;
+    const excess = out[i]!.weight - cap * total;
+    if (excess > 1e-9) {
+      out[i]!.weight -= excess;
+      donor.weight += excess;
+    }
+  }
+  return out;
 }
 
 export function rarityChances(
   rarities: readonly LootRarity[],
   luck: number,
   cfg: Pick<LootConfig, 'luckWeightPerPoint'>,
+  boosts: RarityBoosts = {},
 ): Map<string, number> {
-  const weights = rarityWeights(rarities, luck, cfg);
+  const weights = rarityWeights(rarities, luck, cfg, boosts);
   const total = weights.reduce((s, w) => s + w.weight, 0) || 1;
   return new Map(weights.map((w) => [w.id, w.weight / total]));
 }
@@ -128,6 +157,8 @@ export interface RollInput<F extends LootFish> {
   cfg: LootConfig;
   /** Current pity counter. Pass undefined to skip pity (crew, offline). */
   pity?: number;
+  /** Lure bonuses (hand fishing). */
+  boosts?: RarityBoosts;
 }
 
 export interface RollOutput<F extends LootFish> {
@@ -145,7 +176,7 @@ export function rollCatch<F extends LootFish>(input: RollInput<F>): RollOutput<F
   const pool = filterPool(input.fish, input.conditions);
   if (pool.length === 0) return null;
 
-  let weights = rarityWeights(sorted, input.luck, cfg);
+  let weights = rarityWeights(sorted, input.luck, cfg, input.boosts);
   const pityTriggered = input.pity !== undefined && input.pity >= cfg.pityThreshold;
   if (pityTriggered) weights = weights.filter((w) => w.tier >= cfg.pityMinTier);
 
@@ -181,11 +212,12 @@ export function fishChances<F extends LootFish>(
   conditions: Conditions,
   luck: number,
   cfg: Pick<LootConfig, 'luckWeightPerPoint'>,
+  boosts: RarityBoosts = {},
 ): Map<string, number> {
   const sorted = byTier(rarities);
   const pool = filterPool(fish, conditions);
   const out = new Map<string, number>();
-  for (const [rarityId, p] of rarityChances(sorted, luck, cfg)) {
+  for (const [rarityId, p] of rarityChances(sorted, luck, cfg, boosts)) {
     if (p <= 0) continue;
     const tierId = resolveTier(pool, rarityId, sorted);
     if (!tierId) continue;

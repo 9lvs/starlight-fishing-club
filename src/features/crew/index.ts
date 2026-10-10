@@ -23,7 +23,9 @@ export const crewFeature: GameFeature = {
     },
   ],
   init(ctx) {
-    setCrewService(new CrewService(ctx, ctx.save.slice<CrewSlice>('crew')));
+    const svc = new CrewService(ctx, ctx.save.slice<CrewSlice>('crew'));
+    setCrewService(svc);
+    ctx.bus.on('clubMoved', () => svc.resetForMove());
   },
   onTick(dt) {
     getCrewService().tick(dt);

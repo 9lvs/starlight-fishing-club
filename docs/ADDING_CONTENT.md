@@ -60,10 +60,17 @@ After adding content, run `npm test` (the content tests validate every pack) and
 }
 ```
 
-- It unlocks when the `boatRange` stat reaches `rangeRequired`. Give it a way to get
-  there: an upgrade with `{ "stat": "boatRange", "op": "add", "value": 1 }`.
-- `scene.hills`: `rolling, pines, cliffs, none`. `scene.foreground`: `reeds, rocks, lilies, none`.
-- `scene.tint` overrides any scene palette color per time of day (see `ScenePalette` in tokens).
+- Waters form the club's journey, ordered by `rangeRequired` (0 is the starting water).
+  The club can move to the next water once the `boatRange` stat reaches its
+  `rangeRequired`, so give it a boat tier with `{ "stat": "boatRange", "op": "add", "value": 1 }`
+  (bought at the water before, with `"requiresRank"` one lower).
+- `clubBonus` is the extra coin share once the club lives here (`1` = +100%). Keep it
+  rising along the journey; it is the reward for starting over.
+- `scene.hills`: `rolling, pines, cliffs, cave, clouds, none` (`cave` adds a rock ceiling and
+  hides the sun and moon; `clouds` is a sea of clouds). `scene.foreground`:
+  `reeds, rocks, lilies, crystals, none`.
+- `scene.tint` overrides scene palette values per time of day (see `ScenePalette` in tokens):
+  palette names, a list for `skyBands`, or numbers for `stars` and `fireflies`.
 - `"comingSoon": true` shows it on the map as a teaser that cannot be visited.
 - Add at least one always-available fish with `"waters": ["lantern_lake"]`.
 
@@ -74,10 +81,10 @@ After adding content, run `npm test` (the content tests validate every pack) and
 ```json
 {
   "id": "tackle_box",
-  "branch": "gear",
+  "branch": "bait",
   "name": "Tackle Box",
   "description": "Neatly sorted hooks. Fish bite a little sooner.",
-  "prerequisites": ["cork_grip", { "id": "smooth_reel", "level": 2 }],
+  "prerequisites": ["cork_grip", { "id": "scented_oil", "level": 2 }],
   "maxLevel": 3,
   "baseCost": 150,
   "costGrowth": 1.5,
@@ -93,6 +100,16 @@ After adding content, run `npm test` (the content tests validate every pack) and
 - `effects` run named handlers for things that are not stats, for example
   `{ "handler": "decoration", "args": { "id": "lanterns" } }` shows a decoration on the boat.
 - `position: { "row": 0, "col": 2 }` pins a node in the tree; otherwise it is placed by prerequisite depth.
+- `requiresRank` (default 0) holds an upgrade until the club has moved that far
+  (1 = Whisper River, 2 = Moonlit Cove, ...). Rod, boat, and bait tiers use it.
+- `label` (up to 3 characters) is shown on the node, e.g. `"T4"` for a tier.
+- `{ "handler": "look", "args": { "slot": "rod", "priority": 4, "color": "coral", "tip": "sand", "length": 18 } }`
+  changes how the rod looks while owned; the highest `priority` wins. Boats use
+  `{ "slot": "boat", "priority": 4, "sprite": "boat_4", "rig": "rig_4" }`.
+- Lures: each rarity above the lowest gets a stat `boost_<rarity>` (e.g. `boost_rare`)
+  that moves that much weight from the lowest tier to that rarity, for hand fishing.
+- Branches (`branches.json`) with `"keepOnMove": true` keep their upgrades when the
+  club moves (the Club branch: cosmetics). Everything else starts over.
 - `currency` (optional) pays with another registered currency.
 
 ## Add a crew type

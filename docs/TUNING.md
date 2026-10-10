@@ -32,12 +32,15 @@ Base values; upgrades and features change them only through modifiers.
 | `luck` | 0 | Hand-fishing luck (see loot). |
 | `sellValueMult` | 1 | Multiplies every sale. |
 | `storageCap` | 6 | Creel capacity. |
-| `boatRange` | 0 | Waters with `rangeRequired` at or below this are unlocked. |
+| `boatRange` | 0 | The club can move to the next water once this reaches its `rangeRequired`. |
 | `crewSlots` | 0 | How many helpers can be hired. |
 | `crewIntervalMs` | 12000 | Time between crew rolls (times the helper's `intervalMult`). |
 | `crewSellMult` | 0.5 | Share of value crew catches sell for. |
 | `crewLuck` | 0 | Luck for crew rolls (plus the helper's `luck`). |
 | `offlineCapHours` | 8 | Longest absence that earns (24 max). |
+| `offlineValueMult` | 1 | Multiplies what crew earn while you are away. |
+| `fishSizeMult` | 1 | Bait: hand-caught fish are this much bigger and sell for this much more. |
+| `boost_<rarity>` | 0 | Lures: weight moved from common to that rarity (hand fishing). One per rarity. |
 | `dailyGiftCoins` | 60 | Defined by the daily gift feature. |
 
 ## Loot: `src/config/balance.ts` (`LOOT`) and `rarities.json`
@@ -56,8 +59,17 @@ Base values; upgrades and features change them only through modifiers.
 - Cost of the next level = `round(baseCost * costGrowth ^ ownedLevel)`;
   `ECONOMY.defaultCostGrowth` is 1.15 when an upgrade omits it.
 - `ECONOMY.minSellValue` (1): no sale is worth less.
-- Pacing levers: `cork_grip.baseCost` (first upgrade), `river_charts.baseCost`
-  (first water), `hire_help.baseCost` and `crew.json` `deckhand.hireCost` (first crew).
+- Pacing levers: `rod_1` / `cork_grip` costs (first upgrade), `boat_3` (first move),
+  the reach boats `boat_5`, `boat_7`, `boat_9` (later moves), `hire_help.baseCost` and
+  `crew.json` `deckhand.hireCost` (first crew), and `clubBonus` in `waters.json`.
+- The journey: Willow Pond (+0%), Whisper River (+100%), Moonlit Cove (+400%),
+  Glowing Cave (+900%), Sky Lake (+2400%). Tier costs rise about 6x per water
+  (36x and 600x of the pond for cove and cave, 4000x for the Sky Lake finale).
+- `tests/pacing.test.ts` plays the whole journey with a goal-directed player model
+  (`tests/helpers/journeySim.ts`) and checks: first upgrade under 1.5 min, first move
+  15 to 28 min, each later water a little longer but under 80 min, the first boats
+  coming back in under half the time after a move, and a Sky Lake finale of 30 to
+  150 min. Current median: 23, 39, 45, 50 min per water, an 88 min finale, about 4 h total.
 - Crew helpers in `crew.json`: `hireCost`, `intervalMult`, `valueMult`, `luck`.
 
 ## Time and weather: `src/config/time.ts`

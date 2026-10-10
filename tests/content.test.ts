@@ -1,22 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { CORE_STATS } from '../src/config/stats';
+import { CORE_STATS, rarityBoostStats } from '../src/config/stats';
 import { PHASE_IDS } from '../src/config/time';
 import { formatContentError, parseContent, validateReferences } from '../src/core/content/parseContent';
 import { loadBaseContent } from './helpers/content';
 
-const refs = { statIds: CORE_STATS.map((s) => s.id), effectIds: ['decoration'], phaseIds: PHASE_IDS };
+const base = loadBaseContent();
+const refs = {
+  statIds: [...CORE_STATS, ...rarityBoostStats(base.content.rarities)].map((s) => s.id),
+  effectIds: ['decoration', 'look'],
+  phaseIds: PHASE_IDS,
+};
 
 describe('base content', () => {
-  const { content, errors } = loadBaseContent();
+  const { content, errors } = base;
 
   it('parses with no schema errors and no broken references', () => {
     expect(errors.map(formatContentError)).toEqual([]);
     expect(validateReferences(content, refs).map(formatContentError)).toEqual([]);
   });
 
-  it('has at least 30 fish across the three starter waters with a good rarity spread', () => {
-    expect(content.fish.length).toBeGreaterThanOrEqual(30);
-    for (const w of ['pond', 'river', 'cove']) {
+  it('has fish of every rarity in every water', () => {
+    expect(content.fish.length).toBeGreaterThanOrEqual(60);
+    for (const w of content.waters.map((x) => x.id)) {
       const inWater = content.fish.filter((f) => f.waters.includes(w));
       expect(new Set(inWater.map((f) => f.rarity))).toEqual(new Set(['common', 'uncommon', 'rare', 'epic', 'legendary']));
     }
@@ -24,8 +29,25 @@ describe('base content', () => {
     expect(content.fish.some((f) => f.weather.length > 0)).toBe(true);
   });
 
-  it('shows two coming-soon waters', () => {
-    expect(content.waters.filter((w) => w.comingSoon).map((w) => w.id)).toEqual(['glowing_cave', 'sky_lake']);
+  it('is a five-water journey where each move pays a bigger coin bonus', () => {
+    const journey = [...content.waters].sort((a, b) => a.rangeRequired - b.rangeRequired);
+    expect(journey.map((w) => w.id)).toEqual(['pond', 'river', 'cove', 'glowing_cave', 'sky_lake']);
+    expect(journey.map((w) => w.rangeRequired)).toEqual([0, 1, 2, 3, 4]);
+    for (let i = 1; i < journey.length; i++) expect(journey[i]!.clubBonus).toBeGreaterThan(journey[i - 1]!.clubBonus);
+  });
+
+  it('has ten rod tiers and ten boat tiers, with higher tiers held for bigger waters', () => {
+    for (const prefix of ['rod_', 'boat_']) {
+      const tiers = content.upgrades.filter((u) => u.id.startsWith(prefix));
+      expect(tiers).toHaveLength(10);
+      const ranks = tiers.map((u) => u.requiresRank);
+      expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+      expect(ranks[0]).toBe(0);
+      expect(ranks[9]).toBe(4);
+    }
+    // Each move needs the boat that reaches the next water, bought at the current one.
+    const reach = content.upgrades.filter((u) => u.modifiers.some((m) => m.stat === 'boatRange'));
+    expect(reach.map((u) => u.requiresRank)).toEqual([0, 1, 2, 3]);
   });
 });
 
