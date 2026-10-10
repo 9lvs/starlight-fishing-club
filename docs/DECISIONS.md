@@ -20,3 +20,5 @@ One line per decision, with the reason. Newest at the bottom.
 - Offline coins are the exact expected value of the simulated rolls (no luck either way); journal counts use largest-remainder rounding so they sum to the roll count. Rounding catches first and pricing them biased short absences upward (one lucky legendary).
 - Offline time and the live tick share one path: any wall-clock gap over 5 s triggers catch-up, so closing the tab, a background tab, laptop sleep, and the debug fast-forward behave the same.
 - Audio placeholders are soft synthesized pentatonic tones instead of pure silence (`AUDIO.placeholder = 'synth'`, switch to `'silent'` in `src/config/audio.ts`), so the game can be judged by ear before real files exist. Nothing plays before a user gesture.
+- Content packs can declare `requires` (feature ids). Feature-dependent content lives in its own pack so removing a feature never breaks boot.
+- Daily gift has no streak, so skipping days never costs anything (no-punishment pillar).

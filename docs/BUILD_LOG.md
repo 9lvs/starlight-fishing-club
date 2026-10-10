@@ -36,8 +36,12 @@
 - Verified: frame cost in the browser (WebGL) about 0.07 ms per update+render step with rain or fog, a dither dissolve step about 0.9 ms (every 500 ms), and a full layer repaint about 10 ms once per time-of-day change. Audio tests confirm it is silent and safe before a gesture and that every rarity sting in content has a sound. 74 tests, typecheck, and build pass on the committed tree.
 - Only you can verify: how the sounds feel, and real phone behavior (notch, home bar, touch feel).
 
-## Phase 8: Extensibility proof (IN PROGRESS, not tagged)
-- Done so far: `docs/ADDING_CONTENT.md` recipes; daily gift feature (own save slice, new stat `dailyGiftCoins`, new bus event by declaration merging, own content type `gifts.json`, panel scene, menu entry with badge, debug command, no streaks); new upgrade "Club Mailbox" added only as JSON in a `dailygift` pack.
-- Architecture fix found while building it: content that references a feature's stat would break boot if that feature were removed. Packs can now declare `"requires": ["featureId"]` in `pack.json` and are skipped when the feature is not registered.
-- Verified: 74 tests, typecheck, and build pass on this tree. Not yet checked in the browser.
-- Left: `docs/ADDING_FEATURES.md` worked example, one new fish by data only, browser check, friction report, tag phase-8.
+## Phase 8: Extensibility proof
+- Built only from the recipes: daily gift feature (`src/features/dailyGift/`: own save slice, new stat `dailyGiftCoins`, a new `dailyGiftClaimed` event by declaration merging, its own content type `gifts.json`, a panel scene, a menu entry with badge, a debug command; once per calendar day, no streaks, nothing lost by skipping); one new upgrade by data only ("Club Mailbox" in `src/content/dailygift/upgrades.json`, raises the gift); one new fish by data only ("Sunrise Smelt", dawn-only uncommon in Whisper River, appended to `fish.json`). Wrote `docs/ADDING_CONTENT.md` and `docs/ADDING_FEATURES.md` (with the daily gift as the worked example).
+- Verified: in the browser the gift menu badge shows, the panel opens, claiming adds 60 coins once, shows a note from `gifts.json`, and the badge clears; Club Mailbox and Sunrise Smelt are registered with no code changes. Tests cover the day rules, once-per-day claims at the stat-driven amount, and that the gift's pack is skipped when the feature is not registered. 77 tests, typecheck, and build pass on the committed tree.
+- Harder than it should have been, and what changed:
+  1. Content that references a feature's stat (the Mailbox upgrade) would stop boot with "unknown stat" if the feature were removed. Fixed: `pack.json` can declare `"requires": ["featureId"]`, and such packs are skipped when the feature is not registered.
+  2. Tests that load every pack hit the same problem. Fixed: the test content helper skips feature-gated packs, matching the game with no features.
+  3. Events added by declaration merging are only typed where the feature module is part of the compile; a pure unit test that does not import the feature needs a cast. Documented; acceptable.
+  4. Scenes reach their feature's service through a small module-level set/get pair. It is a few lines of boilerplate per feature; documented as part of the recipe rather than adding a service locator.
+  5. Known limit, not yet hit: the menu bar fits about 7 buttons at 180 px before touch targets drop under 24 px. Listed in the roadmap (an overflow "More" panel).
