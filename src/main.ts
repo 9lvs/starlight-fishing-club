@@ -85,6 +85,11 @@ function main(): void {
   };
   window.addEventListener('resize', onResize);
   window.visualViewport?.addEventListener('resize', onResize);
+  // Some mobile browsers report the new size a moment after rotating.
+  window.addEventListener('orientationchange', () => {
+    onResize();
+    window.setTimeout(onResize, DISPLAY.orientationSettleMs);
+  });
 
   // Autosave on a timer and whenever the page is hidden or closed.
   const save = () => {

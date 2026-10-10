@@ -143,6 +143,13 @@ export const UI = {
   iconSize: 12,
   menuBarHeight: 28,
   topBarHeight: 18,
+  /** Widest a menu bar slot gets, so wide screens keep the icons grouped. */
+  menuSlotMax: 40,
+  /** Boat x sits this far left of center so boat plus bobber look centered. */
+  boatGroupOffset: 25,
+  /** Panels never grow past this, so text lines stay short on big screens. */
+  panelMaxWidth: 200,
+  panelMaxHeight: 340,
   scrollFriction: 0.9,
 } as const;
 
@@ -209,6 +216,10 @@ export const MOTION = {
   toastHold: 2200,
   toastOut: 600,
   popupIn: 280,
+  popupOut: 160,
+  panelClose: 140,
+  /** One twinkle of a catch sparkle (half fades in, half fades out). */
+  sparkleTwinkle: 900,
   buttonPress: 80,
   bobPeriod: 2600,
   shimmerPeriod: 3200,

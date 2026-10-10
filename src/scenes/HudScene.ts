@@ -6,7 +6,7 @@ import { getLayout, type Layout } from '../core/layout';
 import { uiState } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { UI_TIMING } from '../config/tuning';
-import { color } from '../design/tokens';
+import { UI, color } from '../design/tokens';
 import { Button } from '../ui/Button';
 import { addIcon } from '../ui/Icon';
 import { ToastLayer } from '../ui/Toast';
@@ -120,10 +120,11 @@ export class HudScene extends Phaser.Scene {
     g.fillRect(0, y, this.L.width, 1);
     const entries = this.ctx.features.menuEntries();
     if (entries.length === 0) return;
-    const slot = Math.floor(w / entries.length);
+    const slot = Math.min(UI.menuSlotMax, Math.floor(w / entries.length));
     const bw = Math.min(30, slot - 2);
+    const left = x + Math.floor((w - slot * entries.length) / 2);
     entries.forEach((e, i) => {
-      const bx = x + i * slot + Math.round((slot - bw) / 2);
+      const bx = left + i * slot + Math.round((slot - bw) / 2);
       const btn = new Button(this, {
         x: bx,
         y: y + 2,

@@ -4,7 +4,7 @@
 import Phaser from 'phaser';
 import { getContext } from '../core/context';
 import { getLayout } from '../core/layout';
-import { PALETTE_NAMES, SCENE_PALETTES, color, type PaletteName } from '../design/tokens';
+import { PALETTE_NAMES, SCENE_PALETTES, UI, color, type PaletteName } from '../design/tokens';
 import { collectSpriteEntries } from './BootScene';
 import { Button, type ButtonState, type ButtonVariant } from '../ui/Button';
 import { Panel } from '../ui/Panel';
@@ -43,7 +43,7 @@ export class StyleGuideScene extends Phaser.Scene {
     PALETTE_NAMES.forEach((name, i) => {
       const col = i % 2;
       const row = Math.floor(i / 2);
-      const x = pad + col * (W / 2);
+      const x = pad + col * Math.min(W / 2, 84);
       const yy = y + row * 14;
       add(this.add.rectangle(x, yy, 12, 12, color(name)).setOrigin(0, 0).setStrokeStyle(1, color('dusk')));
       add(addText(this, x + 15, yy + 1, name, { shadow: false, color: 'sky' }));
@@ -85,7 +85,7 @@ export class StyleGuideScene extends Phaser.Scene {
     y += 40;
 
     heading('Panel, progress, tooltip');
-    const panel = new Panel(this, { x: pad, y, w: W, h: 60, title: 'Panel title', icon: 'icon_journal', onClose: () => {} });
+    const panel = new Panel(this, { x: pad, y, w: Math.min(W, UI.panelMaxWidth), h: 60, title: 'Panel title', icon: 'icon_journal', onClose: () => {} });
     add(panel);
     y += 66;
     [0, 0.35, 0.7, 1].forEach((v, i) => add(new ProgressBar(this, pad + i * 42, y, 40, 6).setValue(v)));

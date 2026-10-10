@@ -6,7 +6,7 @@ import { getContext, type GameContext } from '../core/context';
 import type { GameEvents } from '../core/events';
 import { getLayout, type Layout, type Rect } from '../core/layout';
 import { uiState } from '../core/sceneState';
-import { MOTION, color } from '../design/tokens';
+import { MOTION, UI, color } from '../design/tokens';
 import { Panel } from '../ui/Panel';
 import { uiSignals } from '../ui/uiSignals';
 
@@ -16,6 +16,7 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
   protected panel!: Panel;
   protected data_: D | undefined;
   private offs: (() => void)[] = [];
+  private closing = false;
 
   abstract readonly title: string;
   readonly icon?: string;
@@ -28,6 +29,8 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
     this.L = getLayout();
     this.data_ = data;
     this.offs = [];
+    this.closing = false;
+    this.input.enabled = true;
     uiState.openPanel = this.scene.key;
     const { width: W, menuBar, safe } = this.L;
 
@@ -41,9 +44,11 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
       if (!b.contains(p.x, p.y) && p.getDistance() < 6) this.close();
     });
 
-    const w = Math.min(W - 6, 200);
-    const top = safe.top + 3;
-    const h = menuBar.y - top - 3;
+    // Capped in both directions and centered, so big screens get a tidy card.
+    const w = Math.min(W - 6, UI.panelMaxWidth);
+    const room = menuBar.y - safe.top - 6;
+    const h = Math.min(room, UI.panelMaxHeight);
+    const top = safe.top + 3 + Math.floor((room - h) / 2);
     this.panel = new Panel(this, {
       x: Math.round((W - w) / 2),
       y: top,
@@ -75,8 +80,24 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
   }
 
   close(): void {
+    if (this.closing) return;
+    this.closing = true;
     const key = this.scene.key;
-    this.scene.stop();
+    // Fishing taps work again right away; the panel just fades out on top.
+    if (uiState.openPanel === key) uiState.openPanel = null;
     this.ctx.bus.emit('ui:panelClosed', { sceneKey: key });
+    if (uiSignals.reducedMotion()) {
+      this.scene.stop();
+      return;
+    }
+    this.input.enabled = false;
+    this.tweens.add({
+      targets: this.cameras.main,
+      alpha: 0,
+      scrollY: -4,
+      duration: MOTION.panelClose,
+      ease: MOTION.ease,
+      onComplete: () => this.scene.stop(),
+    });
   }
 }

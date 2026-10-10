@@ -22,3 +22,5 @@ One line per decision, with the reason. Newest at the bottom.
 - Audio placeholders are soft synthesized pentatonic tones instead of pure silence (`AUDIO.placeholder = 'synth'`, switch to `'silent'` in `src/config/audio.ts`), so the game can be judged by ear before real files exist. Nothing plays before a user gesture.
 - Content packs can declare `requires` (feature ids). Feature-dependent content lives in its own pack so removing a feature never breaks boot.
 - Daily gift has no streak, so skipping days never costs anything (no-punishment pillar).
+- The game fills the whole screen on every device (replaces the touch-only fill and desktop letterbox). Zoom is the largest whole number of device pixels per game pixel that still leaves 180x320 (portrait) or 320x240 (landscape); the internal size is rounded up to an even number, so the canvas overhangs the screen by under two game pixels instead of showing bars. Even sizes avoid a 1 px edge gap from Phaser's pixel rounding.
+- On wide screens UI groups stay centered (boat with bobber, Cast with the creel beside it, menu bar slots capped at 40 px, panels capped at 200x340) so nothing drifts to far edges.

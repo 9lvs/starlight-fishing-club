@@ -31,6 +31,22 @@ export function drawPanelBox(g: Phaser.GameObjects.Graphics, x: number, y: numbe
   }
 }
 
+/** Filled pixel disc, one row at a time so the edge stays crisp. */
+export function fillPixelDisc(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  cy: number,
+  r: number,
+  c: PaletteName,
+  alpha = 1,
+): void {
+  g.fillStyle(color(c), alpha);
+  for (let dy = -r; dy <= r; dy++) {
+    const half = Math.floor(Math.sqrt(r * r - dy * dy) + 0.3);
+    g.fillRect(cx - half, cy + dy, half * 2 + 1, 1);
+  }
+}
+
 /** 1px pixel ellipse outline (midpoint algorithm), for ripples and rings. */
 export function drawPixelEllipse(
   g: Phaser.GameObjects.Graphics,

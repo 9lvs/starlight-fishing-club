@@ -17,9 +17,10 @@ fail states), **Rewarding** (frequent small wins, exciting rare catches),
 ## Stack
 
 - TypeScript (strict), Phaser 3.90, Vite, Vitest, zod. Ask before adding any other dependency.
-- Internal resolution 180x320 portrait (`src/config/display.ts`), integer scaling,
-  pixel art rendering. On touch devices the canvas grows on the free axis to fill
-  the screen; on desktop it is letterboxed.
+- Design size 180x320 portrait (`src/config/display.ts`), whole-number device-pixel
+  scaling, pixel art rendering. The canvas always fills the whole screen (phone,
+  tablet, desktop, either orientation): the zoom keeps at least 180x320 in portrait
+  or 320x240 in landscape, and the internal size grows (rounded up to even) to cover the rest.
 - Font: Pixelify Sans (SIL OFL 1.1), in `public/fonts/`, baked at boot into a crisp bitmap font.
 - Save: localStorage, versioned slices.
 
@@ -107,10 +108,15 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, crew, map, offline, settings, dailyGift. 77 unit tests.
+upgrades, journal, crew, map, offline, settings, dailyGift. 80 unit tests. Fills the
+whole screen on every device (see the post v0.1.0 entry in `docs/BUILD_LOG.md`).
 
 ## Gotchas
 
+- Keep the internal game size even: an odd size makes Phaser's pixel rounding leave a
+  1 px gap at one edge. `computeViewport` already does this.
+- Layout must work from about 180 px wide to 640+ px wide. Read positions from
+  `getLayout()` and center groups (menu bar, boat, panels) rather than spreading them.
 - Phaser 3 `TileSprite` resamples non power-of-two textures (blurry pixels). Drifting
   layers use two wrapping images instead; only 4x4 dither tiles use TileSprite.
 - Use `PixelText` (`src/ui/text.ts`), never `scene.add.text`: canvas text anti-aliases.

@@ -69,8 +69,11 @@ Base values; upgrades and features change them only through modifiers.
 
 ## Display and look
 
-- `src/config/display.ts`: base resolution (180x320), fill mode, how far phones may grow
-  the canvas (`maxExtendRatio` 1.6).
+- `src/config/display.ts`: design size (180x320) and `minGame`, the least room kept per
+  orientation (portrait 180x320, landscape 320x240). Lower these to make everything
+  bigger on screen, raise them to show more world.
+- `UI.menuSlotMax`, `UI.panelMaxWidth`, `UI.panelMaxHeight`, `UI.boatGroupOffset` in
+  `src/design/tokens.ts`: how the layout behaves on wide screens.
 - `src/design/tokens.ts`: palette, scene palettes per time of day, UI metrics
   (`UI.minTouch` 24), motion timings, typography bake settings.
 - `src/config/audio.ts`: volumes, the `masterCeiling` (0.6), placeholder mode, and files.

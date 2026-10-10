@@ -5,11 +5,11 @@ export interface ViewportInput {
   cssWidth: number;
   cssHeight: number;
   dpr: number;
-  baseWidth: number;
-  baseHeight: number;
-  /** Grow the internal size on the free axis to fill the screen. */
-  fill: boolean;
-  maxExtendRatio: number;
+  /** Smallest internal size worth keeping, per orientation. */
+  minGame: {
+    portrait: { width: number; height: number };
+    landscape: { width: number; height: number };
+  };
   maxZoom: number;
 }
 
@@ -25,19 +25,24 @@ export interface Viewport {
   cssHeight: number;
 }
 
+/**
+ * Fill the whole screen. The zoom is the largest whole number of device pixels
+ * per game pixel that still leaves the orientation's minimum room. The internal
+ * size is rounded UP (to an even number), so the canvas covers the screen and
+ * overhangs it by under two game pixels, split across both edges, instead of
+ * leaving bars.
+ */
 export function computeViewport(v: ViewportInput): Viewport {
   const devW = Math.max(1, Math.floor(v.cssWidth * v.dpr));
   const devH = Math.max(1, Math.floor(v.cssHeight * v.dpr));
-  const fit = Math.min(Math.floor(devW / v.baseWidth), Math.floor(devH / v.baseHeight));
+  const min = devH >= devW ? v.minGame.portrait : v.minGame.landscape;
+  const fit = Math.min(Math.floor(devW / min.width), Math.floor(devH / min.height));
   const deviceZoom = Math.max(1, Math.min(v.maxZoom, fit));
-  let width = v.baseWidth;
-  let height = v.baseHeight;
-  if (v.fill) {
-    width = Math.min(Math.floor(devW / deviceZoom), Math.floor(v.baseWidth * v.maxExtendRatio));
-    height = Math.min(Math.floor(devH / deviceZoom), Math.floor(v.baseHeight * v.maxExtendRatio));
-    width = Math.max(v.baseWidth, width);
-    height = Math.max(v.baseHeight, height);
-  }
+  // Even sizes: Phaser's pixel rounding leaves a 1 px gap at the edge when the
+  // camera center lands on a half pixel.
+  const even = (n: number) => Math.ceil(n / 2) * 2;
+  const width = even(devW / deviceZoom);
+  const height = even(devH / deviceZoom);
   const cssZoom = deviceZoom / v.dpr;
   return { width, height, deviceZoom, cssZoom, cssWidth: width * cssZoom, cssHeight: height * cssZoom };
 }

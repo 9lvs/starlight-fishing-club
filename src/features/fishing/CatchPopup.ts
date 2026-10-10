@@ -5,9 +5,9 @@ import Phaser from 'phaser';
 import type { GameContext } from '../../core/context';
 import type { Layout } from '../../core/layout';
 import type { CatchResult } from '../../core/types';
-import { MOTION, color } from '../../design/tokens';
+import { MOTION, color, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
-import { drawPanelBox } from '../../ui/pixelDraw';
+import { drawPanelBox, fillPixelDisc } from '../../ui/pixelDraw';
 import { RarityBanner } from '../../ui/RarityBanner';
 import { addText } from '../../ui/text';
 import { uiSignals } from '../../ui/uiSignals';
@@ -23,6 +23,7 @@ export const POPUP = { w: 150, h: 156, spriteScale: 3 } as const;
 
 export class CatchPopup extends Phaser.GameObjects.Container {
   private closed = false;
+  private blocker!: Phaser.GameObjects.Zone;
 
   constructor(scene: Phaser.Scene, ctx: GameContext, L: Layout, c: CatchResult, h: CatchPopupHandlers) {
     super(scene, 0, 0);
@@ -37,6 +38,7 @@ export class CatchPopup extends Phaser.GameObjects.Container {
     blocker.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (p.getDistance() < 6) this.finish(h.onSell);
     });
+    this.blocker = blocker;
     this.add([backdrop, blocker]);
 
     const px = Math.round((W - POPUP.w) / 2);
@@ -44,10 +46,14 @@ export class CatchPopup extends Phaser.GameObjects.Container {
     const card = scene.add.container(px, py);
     const g = scene.add.graphics();
     drawPanelBox(g, 0, 0, POPUP.w, POPUP.h, { fill: 'midnight', border: rarity.frame, highlight: 'dusk', shadow: 'ink' });
-    // Soft halo behind the fish in the rarity color.
-    g.fillStyle(color(rarity.color), 0.18);
-    g.fillRect(POPUP.w / 2 - 30, 10, 60, 50);
+    // Soft round halo behind the fish in the rarity color, in stepped rings
+    // (no gradients); rarer fish get a bigger, brighter glow.
+    const haloR = 18 + rarity.glow * 2;
+    fillPixelDisc(g, POPUP.w / 2, 36, haloR, rarity.color, 0.1);
+    fillPixelDisc(g, POPUP.w / 2, 36, haloR - 5, rarity.color, 0.12 + rarity.glow * 0.02);
+    fillPixelDisc(g, POPUP.w / 2, 36, haloR - 10, rarity.color, 0.14 + rarity.glow * 0.03);
     card.add(g);
+    this.addSparkles(scene, card, rarity.glow, rarity.color);
 
     const sprite = scene.add.image(POPUP.w / 2, 36, fish.spriteKey).setScale(POPUP.spriteScale);
     card.add(sprite);
@@ -102,18 +108,58 @@ export class CatchPopup extends Phaser.GameObjects.Container {
     this.add(card);
 
     if (!uiSignals.reducedMotion()) {
+      backdrop.setAlpha(0);
+      scene.tweens.add({ targets: backdrop, alpha: 0.7, duration: MOTION.popupIn, ease: MOTION.easeOut });
       card.setAlpha(0);
       card.y += 8;
       scene.tweens.add({ targets: card, alpha: 1, y: py, duration: MOTION.popupIn, ease: MOTION.easeOut });
+      // The fish lands a beat after the card, so the eye goes to it.
+      sprite.setAlpha(0).setY(42);
+      scene.tweens.add({ targets: sprite, alpha: 1, y: 36, delay: MOTION.popupIn / 2, duration: MOTION.popupIn, ease: MOTION.easeOut });
     }
     scene.add.existing(this);
+  }
+
+  /** Little four-point stars that twinkle around rarer fish. */
+  private addSparkles(scene: Phaser.Scene, card: Phaser.GameObjects.Container, glow: number, tint: PaletteName): void {
+    const count = glow * 2;
+    const reduced = uiSignals.reducedMotion();
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + 0.4;
+      const dist = 24 + (i % 2) * 6;
+      const x = Math.round(POPUP.w / 2 + Math.cos(angle) * dist * 1.5);
+      const y = Math.round(36 + Math.sin(angle) * dist * 0.55);
+      const s = scene.add.graphics({ x, y });
+      s.fillStyle(color(i % 3 === 0 ? 'mist' : tint));
+      s.fillRect(0, -1, 1, 3);
+      s.fillRect(-1, 0, 3, 1);
+      card.add(s);
+      if (reduced) continue;
+      s.setAlpha(0);
+      scene.tweens.add({
+        targets: s,
+        alpha: 1,
+        delay: MOTION.popupIn + i * (MOTION.sparkleTwinkle / count),
+        duration: MOTION.sparkleTwinkle / 2,
+        yoyo: true,
+        repeat: -1,
+        repeatDelay: MOTION.sparkleTwinkle / 2,
+        ease: MOTION.ease,
+      });
+    }
   }
 
   private finish(fn: () => void): void {
     if (this.closed) return;
     this.closed = true;
     fn();
-    this.destroy();
+    if (uiSignals.reducedMotion() || !this.scene) {
+      this.destroy();
+      return;
+    }
+    // A short fade so the card does not just blink away.
+    this.blocker.disableInteractive();
+    this.scene.tweens.add({ targets: this, alpha: 0, duration: MOTION.popupOut, ease: MOTION.ease, onComplete: () => this.destroy() });
   }
 
   /** Keyboard shortcuts route here. */

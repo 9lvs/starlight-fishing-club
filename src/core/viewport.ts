@@ -5,12 +5,6 @@ import { DISPLAY } from '../config/display';
 import { computeLayout, setLayout } from './layout';
 import { computeViewport, insetsToGame, type SafeInsets, type Viewport } from './scaling';
 
-export function shouldFill(): boolean {
-  if (DISPLAY.fillMode === 'always') return true;
-  if (DISPLAY.fillMode === 'never') return false;
-  return window.matchMedia?.('(pointer: coarse)').matches ?? false;
-}
-
 export function measureSafeArea(): SafeInsets {
   const probe = document.getElementById('safe-area-probe');
   if (!probe) return { top: 0, right: 0, bottom: 0, left: 0 };
@@ -25,10 +19,7 @@ export function currentViewport(): Viewport {
     cssWidth: vv?.width ?? window.innerWidth,
     cssHeight: vv?.height ?? window.innerHeight,
     dpr: window.devicePixelRatio || 1,
-    baseWidth: DISPLAY.baseWidth,
-    baseHeight: DISPLAY.baseHeight,
-    fill: shouldFill(),
-    maxExtendRatio: DISPLAY.maxExtendRatio,
+    minGame: DISPLAY.minGame,
     maxZoom: DISPLAY.maxZoom,
   });
 }

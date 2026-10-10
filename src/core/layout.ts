@@ -26,6 +26,8 @@ export interface Layout {
   topBar: Rect;
   menuBar: Rect;
   castButton: Rect;
+  /** The creel button, tucked just left of the Cast button. */
+  creelButton: Rect;
   /** Area where a tap counts as a fishing tap. */
   fishingZone: Rect;
 }
@@ -38,7 +40,8 @@ export function computeLayout(width: number, height: number, safe: SafeInsets): 
   const frame = { x: Math.floor((width - fw) / 2), y: Math.floor((height - fh) / 2), w: fw, h: fh };
   const horizonY = Math.round(height * 0.42);
   const waterlineY = Math.round(height * 0.62);
-  const boat = { x: Math.round(width * 0.36), y: waterlineY };
+  // The boat and its bobber read as one group, centered on any width.
+  const boat = { x: Math.round(width / 2) - UI.boatGroupOffset, y: waterlineY };
   const rodTip = { x: boat.x + 22, y: boat.y - 30 };
   const bobber = { x: Math.min(width - 16, rodTip.x + 46), y: waterlineY + 10 };
   const topBar = { x: safe.left, y: safe.top, w: width - safe.left - safe.right, h: UI.topBarHeight };
@@ -55,8 +58,15 @@ export function computeLayout(width: number, height: number, safe: SafeInsets): 
     w: castW,
     h: UI.bigButtonHeight,
   };
+  const creelW = 40;
+  const creelButton = {
+    x: Math.max(safe.left + 4, castButton.x - creelW - 6),
+    y: castButton.y + 4,
+    w: creelW,
+    h: UI.buttonHeight,
+  };
   const fishingZone = { x: 0, y: topBar.y + topBar.h, w: width, h: menuBar.y - (topBar.y + topBar.h) };
-  return { width, height, safe, frame, horizonY, waterlineY, boat, rodTip, bobber, topBar, menuBar, castButton, fishingZone };
+  return { width, height, safe, frame, horizonY, waterlineY, boat, rodTip, bobber, topBar, menuBar, castButton, creelButton, fishingZone };
 }
 
 export function setLayout(l: Layout): void {

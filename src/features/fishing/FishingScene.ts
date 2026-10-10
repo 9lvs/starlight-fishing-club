@@ -5,7 +5,7 @@ import { getContext, type GameContext } from '../../core/context';
 import { getLayout, type Layout } from '../../core/layout';
 import { uiState, worldAnchors } from '../../core/sceneState';
 import { FISHING } from '../../config/tuning';
-import { MOTION, UI, type PaletteName } from '../../design/tokens';
+import { MOTION, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
 import { drawPixelEllipse, drawSaggingLine } from '../../ui/pixelDraw';
 import { addText, type PixelText } from '../../ui/text';
@@ -84,11 +84,12 @@ export class FishingScene extends Phaser.Scene {
       fireOnDown: true,
       onClick: () => this.tap(),
     });
+    const cr = this.L.creelButton;
     this.creelButton = new Button(this, {
-      x: this.L.safe.left + 4,
-      y: cb.y + 4,
-      w: 40,
-      h: UI.buttonHeight,
+      x: cr.x,
+      y: cr.y,
+      w: cr.w,
+      h: cr.h,
       icon: 'icon_creel',
       label: '0',
       variant: 'secondary',
