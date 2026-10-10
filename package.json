@@ -1,7 +1,7 @@
 {
   "name": "starlight-fishing-club",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "A calm pixel art fishing idle game for the web.",
   "scripts": {
@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run test && npm run build"
+    "check": "npm run typecheck && npm run test && npm run build",
+    "package:itch": "npm run build && cd dist && rm -f ../starlight-fishing-club-itch.zip && zip -qr ../starlight-fishing-club-itch.zip ."
   },
   "dependencies": {
     "phaser": "^3.90.0",
@@ -21,5 +22,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

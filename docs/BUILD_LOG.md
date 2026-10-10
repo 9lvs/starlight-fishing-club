@@ -45,3 +45,8 @@
   3. Events added by declaration merging are only typed where the feature module is part of the compile; a pure unit test that does not import the feature needs a cast. Documented; acceptable.
   4. Scenes reach their feature's service through a small module-level set/get pair. It is a few lines of boilerplate per feature; documented as part of the recipe rather than adding a service locator.
   5. Known limit, not yet hit: the menu bar fits about 7 buttons at 180 px before touch targets drop under 24 px. Listed in the roadmap (an overflow "More" panel).
+
+## Phase 9: Production build, deploy, docs, v0.1.0
+- Built: `.github/workflows/deploy.yml` (on push to main: `npm ci`, `npm run check`, publish `dist/` to GitHub Pages); `npm run package:itch` (builds and zips `dist/` with `index.html` at the root for an itch.io HTML upload); version 0.1.0; final docs: README (run, phone over LAN, test, build, deploy to Pages and itch.io, manual repo commands), `docs/SPRITES.md` (every sprite key with size and frames, generated from the manifest and content), `docs/TUNING.md`, `docs/ROADMAP.md`, `docs/ADDING_CONTENT.md` (pack `requires`), `CLAUDE.md` status and gotchas; READMEs in `public/sprites/` and `public/audio/`.
+- Verified: the production build served from a sub-folder (`/starlight-fishing-club/`, like GitHub Pages) loads every asset with relative paths, loads Pixelify Sans, renders the game, shows queued toasts, and has no debug panel or `window.sfc`. 77 tests, typecheck, and build pass on the committed tree.
+- Notable: `gh` is still not installed, so no GitHub repo was created or pushed. Commands are in the README.

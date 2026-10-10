@@ -37,3 +37,6 @@ desktop.ini
 # tool caches
 .vite/
 *.tsbuildinfo
+
+# packaged builds
+*.zip

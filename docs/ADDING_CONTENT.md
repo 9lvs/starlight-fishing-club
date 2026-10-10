@@ -173,6 +173,9 @@ Create a folder, for example `src/content/winter/`:
 Add any content files to it (`fish.json`, `waters.json`, ...). Packs load in `order`
 (base is -1000). To replace an entry from an earlier pack on purpose, repeat its id
 and add `"override": true`. Set `"enabled": false` to switch a pack off.
+If the pack's content depends on a feature (for example an upgrade that modifies a stat
+that feature defines), add `"requires": ["featureId"]`; the pack is skipped when that
+feature is not registered, so removing the feature never breaks boot.
 
 ## Add or replace a sprite
 

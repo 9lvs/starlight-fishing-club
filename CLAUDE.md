@@ -46,11 +46,11 @@ src/
   content/    content packs: <pack>/*.json (fish, waters, upgrades, crew, weather, rarities, ...)
   features/   index.ts (the ONLY feature registry) + one folder per feature
   systems/    pure logic: lootTable, economy, offlineSim, saveManager, timeOfDay, audioManager
-  scenes/     Boot, World, Hud, StyleGuide, Error (core scenes only)
+  scenes/     Boot, World, Hud, StyleGuide, PanelScene base (core scenes only)
   ui/         reusable components: Button, Panel, ProgressBar, Tooltip, Toast, Icon, TreeNode, text
   design/     tokens.ts: palette, spacing, typography, rarity styles
   art/        spriteManifest.ts, placeholderGenerator.ts
-  debug/      debug panel and core debug commands
+  debug/      debug panel, core debug commands, content error screen (DOM)
 docs/         ARCHITECTURE, ADDING_CONTENT, ADDING_FEATURES, SPRITES, TUNING, ROADMAP, DECISIONS, BUILD_LOG
 tests/        vitest unit tests (pure logic only)
 public/       fonts/, sprites/ (real art PNGs), audio/ (real sound files)
@@ -90,10 +90,12 @@ comments that explain *why*. Small files.
 - **Water**: add to `waters.json`, give it a `rangeRequired`, and use an existing scene preset.
 - **Upgrade**: add to `upgrades.json` with `modifiers: [{ "stat": "luck", "op": "add", "value": 1 }]`.
 - **Crew type / weather / rarity / decoration / currency**: add to the matching JSON file.
-- **Content pack**: create `src/content/<pack>/pack.json` plus any content files.
+- **Content pack**: create `src/content/<pack>/pack.json` plus any content files. Content that
+  needs a feature (e.g. an upgrade on that feature's stat) goes in a pack with `"requires": ["featureId"]`.
 - **Feature**: create `src/features/<name>/index.ts` exporting a `GameFeature`, add it to
   `src/features/index.ts`. See `docs/ADDING_FEATURES.md` (worked example: daily gift).
-- **Sprite**: drop a PNG in `public/sprites/` and add an `image` entry in `src/art/spriteManifest.ts`.
+- **Sprite**: drop a PNG in `public/sprites/` and add its key and path to `ART_FILES` in
+  `src/art/spriteManifest.ts`. Sizes in `docs/SPRITES.md`.
 - **Sound**: drop files in `public/audio/` and set `files` in `src/config/audio.ts`.
 
 ## Workflow
@@ -101,3 +103,23 @@ comments that explain *why*. Small files.
 - `main` is always playable; features go on `feature/<name>` branches (CONTRIBUTING.md).
 - Run `npm run check` before every commit.
 - Record decisions in `docs/DECISIONS.md` and progress in `docs/BUILD_LOG.md`.
+
+## Status
+
+v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
+upgrades, journal, crew, map, offline, settings, dailyGift. 77 unit tests.
+
+## Gotchas
+
+- Phaser 3 `TileSprite` resamples non power-of-two textures (blurry pixels). Drifting
+  layers use two wrapping images instead; only 4x4 dither tiles use TileSprite.
+- Use `PixelText` (`src/ui/text.ts`), never `scene.add.text`: canvas text anti-aliases.
+- Feature scenes reach their feature through a module-level `set/get` pair in the
+  feature's `service.ts`/`controller.ts`; dynamic `import()` in the browser console
+  gets a different module instance under Vite, so use `window.sfc` (debug builds) or
+  debug commands to poke at state.
+- When the Browser pane is hidden, `requestAnimationFrame` stops; step manually with
+  `sfc.game.step(performance.now(), 16)` and drive the tick with `sfc.ticker.tick()`.
+- This folder sits on an iCloud-synced Desktop. When the disk is nearly full, macOS
+  evicts files ("dataless") and sandboxed reads of them hang. `brctl download <file>`
+  brings one back; running gates on a copy outside iCloud avoids the problem.
