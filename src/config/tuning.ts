@@ -32,6 +32,21 @@ export const OFFLINE = {
   maxTickMs: 1000,
 } as const;
 
+/** Daily Catch: one shared fish a day at the starting water, Wordle style. */
+export const DAILY_CATCH = {
+  /** Rarity tiers the daily fish is drawn from (1 uncommon, 2 rare): findable in a few minutes. */
+  tiers: [1, 2],
+  /** The daily fish sells for this many times its value (the extra is paid as a bonus). */
+  valueMult: 3,
+  /** Casts kept for the share grid. */
+  gridMax: 40,
+  gridRow: 10,
+  /** Share grid squares by rarity tier; a miss and the daily fish have their own. */
+  tierEmoji: ['⬜', '🟩', '🟦', '🟪', '🟨'],
+  missEmoji: '⬛',
+  targetEmoji: '🎣',
+} as const;
+
 export const UI_TIMING = {
   toastStackMax: 3,
   coinTickMs: 400,

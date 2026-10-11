@@ -220,25 +220,32 @@ function drawBoatTier(f: FrameCanvas, tier: number): void {
   if (tier >= 6) for (const x of [14, 19, 24]) f.px(x, 21, tier >= 9 ? 'gold' : 'sky');
 }
 
+/** Rig sprites are taller than the hull: RIG_RAISE extra rows above, so sails clear the fisher's head. */
+export const RIG_RAISE = 16;
+
 function drawRig(f: FrameCanvas, tier: number): void {
   const s = BOAT_STYLES[tier - 1]!;
-  const top = s.sail === 2 ? 1 : 3;
-  f.rect(17, top, 1, 20 - top, 'bark');
+  const o = RIG_RAISE;
+  const deck = o + 20;
+  const top = s.sail === 2 ? 2 : s.sail === 1 ? 8 : o + 3;
+  f.rect(17, top, 1, deck - top, 'bark');
   if (s.sail === 1) {
-    f.poly([[18, 4], [18, 15], [26, 15]], s.sailColor);
-    f.line(18, 15, 26, 15, SHADE_DOWN[s.sailColor]);
+    f.poly([[18, top + 1], [18, deck - 4], [27, deck - 4]], s.sailColor);
+    f.line(18, deck - 4, 27, deck - 4, SHADE_DOWN[s.sailColor]);
   } else if (s.sail === 2) {
-    f.poly([[18, 2], [18, 16], [29, 16]], s.sailColor);
-    f.poly([[16, 4], [16, 15], [10, 15]], s.sailColor);
-    f.line(18, 16, 29, 16, SHADE_DOWN[s.sailColor]);
-    f.line(19, 9, 24, 13, SHADE_UP[s.sailColor]);
+    f.poly([[18, top + 1], [18, deck - 4], [30, deck - 4]], s.sailColor);
+    f.poly([[16, top + 5], [16, deck - 5], [7, deck - 5]], s.sailColor);
+    f.line(18, deck - 4, 30, deck - 4, SHADE_DOWN[s.sailColor]);
+    f.line(19, top + 10, 25, deck - 8, SHADE_UP[s.sailColor]);
   }
   if (s.star) {
-    f.px(21, 10, 'mist');
-    f.px(20, 10, 'gold');
-    f.px(22, 10, 'gold');
-    f.px(21, 9, 'gold');
-    f.px(21, 11, 'gold');
+    const sx = 21;
+    const sy = top + 12;
+    f.px(sx, sy, 'mist');
+    f.px(sx - 1, sy, 'gold');
+    f.px(sx + 1, sy, 'gold');
+    f.px(sx, sy - 1, 'gold');
+    f.px(sx, sy + 1, 'gold');
   }
   if (s.flag) {
     f.rect(18, top, 4, 1, s.flag);
@@ -673,6 +680,18 @@ function drawIcon(f: FrameCanvas, name: string): void {
       f.px(4, 2, 'gold');
       f.px(8, 1, 'gold');
       f.px(7, 2, 'gold');
+      return;
+    case 'daily':
+      // A little fish under a star: today's fish.
+      f.ellipse(5.5, 8, 4, 2.4, 'sky');
+      f.poly([[9, 8], [11.5, 5.5], [11.5, 10.5]], 'sky');
+      f.outline('dusk');
+      f.px(3, 7, 'ink');
+      f.px(9, 1, 'gold');
+      f.px(8, 2, 'gold');
+      f.px(10, 2, 'gold');
+      f.px(9, 3, 'gold');
+      f.px(9, 2, 'mist');
       return;
     case 'arrow':
       f.poly([[3, 1], [9, 6], [3, 11]], 'mist');

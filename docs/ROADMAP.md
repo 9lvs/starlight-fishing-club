@@ -9,7 +9,9 @@ Ideas the architecture is ready for. None are built yet; each note says where it
 | Aquarium or cabin decorating | Not built | Kept creel fish plus `decorations.json`; a panel scene to place them; `decoration` effect handler already exists. |
 | Achievements | Not built | Feature listening to `catchLanded`, `upgradePurchased`, `waterUnlocked`; definitions as content. |
 | Seasons and holidays | Not built | Content packs per season with `order`, `enabled`, and `"override": true`; optional feature to switch packs by date. |
-| Daily rewards beyond the gift | Partly (daily gift) | Extend `dailyGift` content and stats. No streak penalties. |
+| Daily rewards beyond the gift | Built (daily gift, Daily Catch) | `dailyCatch` feature: one shared fish a day with a share grid. A board of fewest casts would need a small backend. |
+| Translations (Spanish first) | Not built | Move UI strings to a strings file per language; content names could come from a pack per language. |
+| Share card image of a big catch | Not built | Render the catch card to a canvas and use the Web Share API with a file. |
 | Moving the club (prestige) | Built | Five waters; each move resets coins, gear, and crew for a bigger permanent coin bonus (`core/club.ts`, `clubBonus` in `waters.json`). |
 | More waters after Sky Lake | Ready | Add a water with `rangeRequired: 5`, fish, a reach boat at `requiresRank: 4`, and higher tiers at `requiresRank: 5`. |
 | Boat paint and other cosmetic choices | Not built | Club branch items are kept across moves; a paint would be a `look` effect on a new slot. |

@@ -52,7 +52,7 @@ src/
   design/     tokens.ts: palette, spacing, typography, rarity styles
   art/        spriteManifest.ts, placeholderGenerator.ts
   debug/      debug panel, core debug commands, content error screen (DOM)
-docs/         ARCHITECTURE, ADDING_CONTENT, ADDING_FEATURES, SPRITES, TUNING, ROADMAP, DECISIONS, BUILD_LOG
+docs/         ARCHITECTURE, ADDING_CONTENT, ADDING_FEATURES, SPRITES, TUNING, ROADMAP, DECISIONS, BUILD_LOG, LAUNCH
 tests/        vitest unit tests (pure logic only)
 public/       fonts/, sprites/ (real art PNGs), audio/ (real sound files)
 ```
@@ -109,7 +109,8 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, crew, map, offline, settings, dailyGift. 92 unit tests. Five-water journey with
+upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch. 97 unit tests. Launch
+plan, deploy steps, and marketing notes in `docs/LAUNCH.md`. Five-water journey with
 moving the club (prestige), 10 rod and 10 boat tiers, bait and lures (see `docs/DECISIONS.md`). Fills the
 whole screen on every device (see the post v0.1.0 entry in `docs/BUILD_LOG.md`).
 
@@ -118,6 +119,8 @@ whole screen on every device (see the post v0.1.0 entry in `docs/BUILD_LOG.md`).
 - Moving the club resets progress through the `clubMoved` event: each feature resets its own
   slice. A new feature with run progress should listen for it; anything meant to last goes in a
   `keepOnMove` branch or currency.
+- `public/sw.js` serves cached files first in production. After shipping a change, a player
+  sees it on their second load. Bump `CACHE` in `sw.js` to force old files out.
 - Keep the internal game size even: an odd size makes Phaser's pixel rounding leave a
   1 px gap at one edge. `computeViewport` already does this.
 - Layout must work from about 180 px wide to 640+ px wide. Read positions from

@@ -8,7 +8,7 @@ import { worldAnchors } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { FISHING } from '../config/tuning';
 import { MOTION, PALETTE_NAMES, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
-import { FISHER_HAND } from '../art/placeholderGenerator';
+import { FISHER_HAND, RIG_RAISE } from '../art/placeholderGenerator';
 import { phaseAt } from '../systems/timeOfDay';
 import { drawPixelLine } from '../ui/pixelDraw';
 import { uiSignals } from '../ui/uiSignals';
@@ -272,7 +272,7 @@ export class WorldScene extends Phaser.Scene {
     this.fisher = this.add.sprite(5, -2, 'fisher', 0).setOrigin(0, 0);
     this.rod = this.add.graphics();
     // Mast and sail sit behind the fisher; the hull sits in front.
-    this.rig = this.add.image(0, 0, '__DEFAULT').setOrigin(0, 0).setVisible(false);
+    this.rig = this.add.image(0, -RIG_RAISE, '__DEFAULT').setOrigin(0, 0).setVisible(false);
     this.hull = this.add.image(0, 0, 'boat').setOrigin(0, 0);
     this.boat.add([this.rig, this.rod, this.fisher, this.hull]);
     this.applyBoatLook();

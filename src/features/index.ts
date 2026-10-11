@@ -2,6 +2,7 @@
 // line here removes that feature cleanly; the core never imports a feature.
 import type { GameFeature } from '../core/feature';
 import { crewFeature } from './crew';
+import { dailyCatchFeature } from './dailyCatch';
 import { dailyGiftFeature } from './dailyGift';
 import { fishingFeature } from './fishing';
 import { journalFeature } from './journal';
@@ -19,4 +20,5 @@ export const FEATURES: GameFeature[] = [
   offlineFeature,
   settingsFeature,
   dailyGiftFeature,
+  dailyCatchFeature,
 ];

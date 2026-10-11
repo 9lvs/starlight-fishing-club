@@ -111,3 +111,10 @@ function main(): void {
 }
 
 main();
+
+// Offline play and "Add to Home Screen" (production builds only, so dev always loads fresh files).
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('[sw] not registered', err));
+  });
+}

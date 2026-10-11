@@ -8,6 +8,10 @@ with a visible upgrade tree, and hire a crew who keep fishing while you are away
 - 63 fish across five waters, with time-of-day and weather exclusives.
 - Ten rod tiers, ten boat tiers, and six baits; bigger waters unlock the higher tiers.
 - Move the club to the next water for a fresh start and a bigger coin bonus, all the way to Sky Lake.
+- A Daily Catch: one shared fish a day, with a spoiler-free grid to share.
+- Installable from the browser and playable offline.
+
+Launching it, testing on phones, and finding players: see `docs/LAUNCH.md`.
 - 10-minute day cycle with dithered palette shifts, rain, fog, fireflies, and shooting stars.
 - Crew auto-fishing and offline progress (up to 8 hours, 24 with upgrades).
 - Built to grow: content is JSON, systems are plug-in features (see `CLAUDE.md` and `docs/`).

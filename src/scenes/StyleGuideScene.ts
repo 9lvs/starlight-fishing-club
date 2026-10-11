@@ -2,6 +2,7 @@
 // every state, rarity banners, and every placeholder sprite. Use it to check
 // the look in one place and to review real art as it replaces placeholders.
 import Phaser from 'phaser';
+import { RIG_RAISE } from '../art/placeholderGenerator';
 import { getContext } from '../core/context';
 import { getLayout } from '../core/layout';
 import { PALETTE_NAMES, SCENE_PALETTES, UI, color, type PaletteName } from '../design/tokens';
@@ -135,12 +136,12 @@ export class StyleGuideScene extends Phaser.Scene {
     const tiers = entries.filter((e) => /^boat_\d+$/.test(e.key)).sort((a, b) => Number(a.key.slice(5)) - Number(b.key.slice(5)));
     tiers.forEach((e, i) => {
       const x = pad + (i % 5) * 34;
-      const yy = y + Math.floor(i / 5) * 36;
+      const yy = y + 16 + Math.floor(i / 5) * 52;
       const rig = `rig_${e.key.slice(5)}`;
-      if (this.textures.exists(rig)) add(this.add.image(x, yy, rig).setOrigin(0, 0));
+      if (this.textures.exists(rig)) add(this.add.image(x, yy - RIG_RAISE, rig).setOrigin(0, 0));
       add(this.add.image(x, yy, e.key).setOrigin(0, 0));
     });
-    y += Math.ceil(tiers.length / 5) * 36 + 4;
+    y += 16 + Math.ceil(tiers.length / 5) * 52 + 4;
 
     heading('Sprites');
     for (const kind of ['boat', 'fisher', 'bobber', 'crew', 'water', 'decor', 'fx', 'fish'] as const) {

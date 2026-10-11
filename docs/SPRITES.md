@@ -21,7 +21,7 @@ Facing: fish face right; the boat faces right with the bow on the right; the fis
 |---|---|---|---|
 | `boat` | 32x32 | 1 | Starter boat. Hull bottom near y=26, rail around y=18-20, mast at x=17 from y=3. Fisher stands behind the hull. |
 | `boat_1` .. `boat_10` | 32x32 | 1 | Boat tier hulls (Patched Dinghy to Starlight Schooner). Same footprint as `boat`; no mast. |
-| `rig_1` .. `rig_10` | 32x32 | 1 | Mast and sail for each tier, drawn BEHIND the fisher. Mast at x=17 so mast decorations line up. |
+| `rig_1` .. `rig_10` | 32x48 | 1 | Mast and sail for each tier, drawn BEHIND the fisher and placed 16 px above the hull (row 16 lines up with the hull top). Mast at x=17. |
 | `fisher` | 16x24 | 4 | 0 idle, 1 idle breathing (1 px lower), 2 cast (arm forward), 3 reel/cheer (arm up). Hand positions for the rod are in `FISHER_HAND` in `placeholderGenerator.ts`. |
 | `bobber` | 8x8 | 2 | 0 floating, 1 dipped (bite). |
 | `fx_sparkle` | 5x5 | 2 | Rarity sparkle, two twinkle frames. |

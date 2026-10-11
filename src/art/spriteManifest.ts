@@ -35,7 +35,7 @@ export const ART_FILES: Record<string, string> = {};
 const ICONS = [
   'coin', 'rod', 'boat', 'crew', 'journal', 'settings', 'mute', 'sound', 'lock', 'map',
   'star', 'bait', 'creel', 'note', 'moon', 'sun', 'dusk', 'dawn', 'clear', 'rain', 'fog',
-  'lantern', 'cat', 'flag', 'close', 'check', 'gift', 'arrow', 'motion',
+  'lantern', 'cat', 'flag', 'close', 'check', 'gift', 'arrow', 'motion', 'daily',
 ] as const;
 
 export type IconName = (typeof ICONS)[number];
@@ -57,8 +57,9 @@ export const PREFIX_RULES: { prefix: string; width: number; height: number; fram
   { prefix: 'decor_', width: 20, height: 12, frames: 1, kind: 'decor' },
   { prefix: 'icon_', width: 12, height: 12, frames: 1, kind: 'icon' },
   // Boat tiers: boat_N is the hull, rig_N the mast and sail drawn behind the fisher.
+  // A rig is 16 px taller than the hull and sits 16 px higher, so sails clear the fisher.
   { prefix: 'boat_', width: 32, height: 32, frames: 1, kind: 'boat' },
-  { prefix: 'rig_', width: 32, height: 32, frames: 1, kind: 'boat' },
+  { prefix: 'rig_', width: 32, height: 48, frames: 1, kind: 'boat' },
 ];
 
 export function staticSprites(): SpriteEntry[] {

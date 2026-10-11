@@ -2,7 +2,11 @@
 import type { Rect } from '../../core/layout';
 import { PanelScene } from '../../scenes/PanelScene';
 import { Button } from '../../ui/Button';
+import { LINKS } from '../../config/links';
+import type Phaser from 'phaser';
 import { openDomDialog } from '../../ui/domDialog';
+import { ScrollArea } from '../../ui/ScrollArea';
+import { gameUrl, shareText } from '../../ui/share';
 import { addText } from '../../ui/text';
 import { applySettings, VOLUME_STEP, type MotionPref, type SettingsSlice } from './state';
 
@@ -29,6 +33,23 @@ export class SettingsScene extends PanelScene {
   }
 
   protected build(area: Rect): void {
+    // Everything is laid out in panel coordinates, then moved into a scroll area
+    // so short screens (phones on their side) can still reach the bottom rows.
+    const before = new Set(this.children.list);
+    const end = this.buildRows(area);
+    const scroll = new ScrollArea(this, area);
+    for (const obj of [...this.children.list]) {
+      if (before.has(obj) || obj === scroll.content) continue;
+      const o = obj as Phaser.GameObjects.GameObject & { x: number; y: number };
+      o.x -= area.x;
+      o.y -= area.y;
+      scroll.add(obj);
+    }
+    scroll.setContentHeight(end - area.y + 4);
+  }
+
+  /** Builds every row; returns the y below the last one. */
+  private buildRows(area: Rect): number {
     const s = this.s;
     const x = area.x;
     const right = area.x + area.w;
@@ -98,15 +119,36 @@ export class SettingsScene extends PanelScene {
     });
     y += ROW + 8;
 
+    addText(this, x, y, 'Friends', { color: 'gold' });
+    y += 14;
+    const friendW = LINKS.feedbackUrl ? half : area.w;
+    new Button(this, {
+      x,
+      y,
+      w: friendW,
+      label: 'Tell a friend',
+      onClick: () => {
+        const text = `A calm little pixel fishing game you can play in your browser: Starlight Fishing Club 🎣\n${gameUrl()}`;
+        void shareText('Starlight Fishing Club', text).then((res) => {
+          if (res === 'copied') this.ctx.ui.toast('Link copied. Thank you!');
+        });
+      },
+    });
+    if (LINKS.feedbackUrl) {
+      new Button(this, { x: x + half + 4, y, w: half, label: 'Feedback', onClick: () => window.open(LINKS.feedbackUrl, '_blank', 'noopener') });
+    }
+    y += ROW + 8;
+
     addText(this, x, y, 'Credits', { color: 'gold' });
     y += 14;
-    addText(
+    const credits = addText(
       this,
       x,
       y,
       'Starlight Fishing Club\nMade with Phaser.\nFont: Pixelify Sans by the Pixelify Sans Project Authors, SIL Open Font License 1.1.',
       { color: 'sky', shadow: false, maxWidth: area.w },
     );
+    return y + credits.textHeight;
   }
 
   private setVolume(v: number): void {

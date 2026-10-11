@@ -31,3 +31,7 @@ One line per decision, with the reason. Newest at the bottom.
 - Club cosmetics are pure looks with no stats, since they survive every move.
 - Costs were tuned with a whole-journey simulation (`tests/helpers/journeySim.ts`) rather than by hand: about 23, 39, 45, and 50 minutes per water, an 88 minute Sky Lake finale, about 4 hours in all for an active player.
 - World save slice v2 adds `clubRank`. Older saves keep every water they had reached (rank from `knownUnlocked`), with that water's bonus, and keep their coins.
+- Daily Catch keys on the player's own calendar day (like Wordle) and always uses the starting water, so every player, new or late game, fishes for the same fish. It draws from uncommon and rare fish that do not depend on weather, so it can be found in a few minutes. It pays 3x and has no streak.
+- The share text is plain text with emoji squares (tier colors, a black square for a missed bite, a hook for today's fish), shared with the Web Share API on phones and the clipboard elsewhere. It never names the fish.
+- Production builds register a small hand-written service worker (no new dependency): pages network first, other files cached first and refreshed in the background. Dev builds never register it.
+- Settings scrolls (its rows are built then moved into a ScrollArea) so new rows never fall off short screens.
