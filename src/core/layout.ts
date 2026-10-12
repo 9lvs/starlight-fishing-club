@@ -69,6 +69,20 @@ export function computeLayout(width: number, height: number, safe: SafeInsets): 
   return { width, height, safe, frame, horizonY, waterlineY, boat, rodTip, bobber, topBar, menuBar, castButton, creelButton, fishingZone };
 }
 
+/** Where each menu bar button sits: slots capped in width and centered as a group. */
+export function menuSlots(menuBar: Rect, count: number): Rect[] {
+  if (count <= 0) return [];
+  const slot = Math.min(UI.menuSlotMax, Math.floor(menuBar.w / count));
+  const bw = Math.min(30, slot - 2);
+  const left = menuBar.x + Math.floor((menuBar.w - slot * count) / 2);
+  return Array.from({ length: count }, (_, i) => ({
+    x: left + i * slot + Math.round((slot - bw) / 2),
+    y: menuBar.y + 2,
+    w: bw,
+    h: menuBar.h - 4,
+  }));
+}
+
 export function setLayout(l: Layout): void {
   current = l;
 }

@@ -114,8 +114,12 @@ export class Button extends Phaser.GameObjects.Container {
       const down = this.downAt;
       this.downAt = null;
       this.setVisualState(p.wasTouch ? 'normal' : 'hover');
-      if (!down || this.disabled || !this.insideClip(p)) return;
+      if (!down || !this.insideClip(p)) return;
       if (Math.hypot(p.x - down.x, p.y - down.y) > DRAG_CANCEL_PX) return;
+      if (this.disabled) {
+        uiSignals.deny();
+        return;
+      }
       uiSignals.click();
       this.opts.onClick();
     });

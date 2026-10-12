@@ -7,14 +7,18 @@ export type MotionPref = 'system' | 'on' | 'off';
 
 export interface SettingsSlice {
   muted: boolean;
+  /** Effects: sounds, water, and rain. */
   volume: number;
+  musicVolume: number;
   reducedMotion: MotionPref;
 }
 
 export const settingsSlice: SaveSliceDef<SettingsSlice> = {
   key: 'settings',
-  version: 1,
-  defaults: () => ({ muted: false, volume: AUDIO.masterDefault, reducedMotion: 'system' }),
+  version: 2,
+  defaults: () => ({ muted: false, volume: AUDIO.masterDefault, musicVolume: AUDIO.musicDefault, reducedMotion: 'system' }),
+  // v2 adds music, on at the default level.
+  migrate: (old) => ({ musicVolume: AUDIO.musicDefault, ...(old as object) }) as SettingsSlice,
 };
 
 export const VOLUME_STEP = 0.1;
@@ -28,5 +32,6 @@ export function applySettings(ctx: GameContext, s: SettingsSlice): void {
   ctx.flags.reducedMotion = s.reducedMotion === 'system' ? systemPrefersReducedMotion() : s.reducedMotion === 'on';
   ctx.bus.emit('settingsChanged', { key: 'muted', value: s.muted });
   ctx.bus.emit('settingsChanged', { key: 'volume', value: s.volume });
+  ctx.bus.emit('settingsChanged', { key: 'musicVolume', value: s.musicVolume });
   ctx.bus.emit('settingsChanged', { key: 'reducedMotion', value: ctx.flags.reducedMotion });
 }

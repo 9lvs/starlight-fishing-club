@@ -1,0 +1,47 @@
+name: Feedback or idea
+description: Tell us what you liked, what felt off, or what you would love to see.
+title: "[Feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for playing Starlight Fishing Club! Anything helps, even one sentence.
+        Please do not include personal information: this page is public.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feedback is it?
+      options:
+        - Something I liked
+        - Something confusing
+        - A bug or glitch
+        - An idea or wish
+        - Sound or music
+        - Too slow, too fast, or too hard to read
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Tell us about it
+      description: What happened, what you expected, or what you would like. Screenshots are welcome (paste or drag them in).
+    validations:
+      required: true
+  - type: dropdown
+    id: progress
+    attributes:
+      label: How far along are you?
+      options:
+        - Just started (Willow Pond)
+        - Moved the club at least once
+        - Glowing Cave or Sky Lake
+        - Not sure
+  - type: input
+    id: device
+    attributes:
+      label: Device (filled in by the game)
+  - type: input
+    id: version
+    attributes:
+      label: Game version (filled in by the game)

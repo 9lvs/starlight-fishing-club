@@ -1,13 +1,12 @@
-// Daily Catch: everyone fishes for the same fish at the starting water today.
-// Casts there fill a little grid; catching the fish pays extra and the grid can
-// be shared without spoiling which fish it was.
+// Daily Catch: everyone fishes for the same fish at the starting water today,
+// and catching it pays extra. Your first five catches of the day (anywhere) make
+// a little row of squares with a luck score to share.
 import { DAILY_CATCH } from '../../config/tuning';
 import type { GameContext } from '../../core/context';
 import type { CatchResult } from '../../core/types';
 import type { FishDef } from '../../core/content/schemas';
 import { dayKey } from '../../systems/calendar';
-import { formatNumber } from '../../ui/format';
-import { candidates, dailyFishId, shareGrid, type DailyCatchSlice } from './state';
+import { candidates, dailyFishId, firstFiveSquares, luckLabel, luckScore, type DailyCatchSlice, type FirstCatch } from './state';
 
 export class DailyCatchService {
   constructor(
@@ -36,12 +35,13 @@ export class DailyCatchService {
     return id ? r.fish.get(id) : null;
   }
 
-  /** A new day clears yesterday's attempts. */
+  /** A new day clears yesterday's catches. */
   private roll(): void {
     const day = this.today();
     if (this.slice.day === day) return;
     this.slice.day = day;
-    this.slice.tries = [];
+    this.slice.first = [];
+    this.slice.pondCasts = 0;
     this.slice.caught = null;
   }
 
@@ -50,41 +50,56 @@ export class DailyCatchService {
     return this.slice.caught;
   }
 
-  get tries(): readonly number[] {
+  /** Your first catches today (up to DAILY_CATCH.firstCount). */
+  get first(): readonly FirstCatch[] {
     this.roll();
-    return this.slice.tries;
+    return this.slice.first;
   }
 
-  private record(tier: number): void {
+  get pondCasts(): number {
     this.roll();
-    if (this.slice.caught || this.slice.tries.length >= DAILY_CATCH.gridMax) return;
-    this.slice.tries.push(tier);
+    return this.slice.pondCasts;
   }
 
+  /** Sharing opens once the first five are in. */
+  get canShare(): boolean {
+    return this.first.length >= DAILY_CATCH.firstCount;
+  }
+
+  /** A missed bite at the daily water still counts as a try for today's fish. */
   onMiss(waterId: string): void {
-    if (waterId === this.waterId()) this.record(-1);
+    this.roll();
+    if (waterId === this.waterId() && !this.slice.caught) this.slice.pondCasts += 1;
   }
 
   onCatch(c: CatchResult): void {
-    if (c.waterId !== this.waterId() || this.caught) return;
-    this.record(this.ctx.registries.rarities.tryGet(c.rarityId)?.tier ?? 0);
-    if (c.fishId !== this.fish()?.id) return;
-    this.slice.caught = { casts: this.slice.tries.length, size: c.size };
+    this.roll();
+    const isDaily = c.waterId === this.waterId() && c.fishId === this.fish()?.id;
+    if (this.slice.first.length < DAILY_CATCH.firstCount) {
+      this.slice.first.push({ tier: this.ctx.registries.rarities.tryGet(c.rarityId)?.tier ?? 0, daily: isDaily && !this.slice.caught });
+    }
+    if (c.waterId !== this.waterId() || this.slice.caught) return;
+    this.slice.pondCasts += 1;
+    if (!isDaily) return;
+    this.slice.caught = { casts: this.slice.pondCasts, size: c.size };
     this.slice.daysCaught += 1;
     const bonus = Math.round(c.value * (DAILY_CATCH.valueMult - 1));
     if (bonus > 0) this.ctx.wallet.add(c.currency, bonus);
     this.ctx.bus.emit('dailyCatchCaught', { day: this.slice.day, casts: this.slice.caught.casts, bonus });
   }
 
-  /** Spoiler-free text for the share sheet. */
+  /** Spoiler-free text: your first five catches as squares, and a luck score. */
   shareText(url: string): string {
-    const fish = this.fish();
+    const first = this.first;
+    const score = luckScore(first);
+    const max = DAILY_CATCH.firstCount * DAILY_CATCH.tierEmoji.length;
+    const lines = [
+      `Starlight Fishing Club 🎣 First Five · ${this.slice.day}`,
+      `${firstFiveSquares(first, DAILY_CATCH)}  Luck ${score}/${max}`,
+      luckLabel(score, DAILY_CATCH.luckLabels),
+    ];
     const caught = this.caught;
-    const head = caught ? `Caught today's fish in ${caught.casts} ${caught.casts === 1 ? 'cast' : 'casts'}` : `Still fishing (${this.tries.length} casts so far)`;
-    const grid = shareGrid(this.tries, !!caught, DAILY_CATCH);
-    const lines = [`Starlight Fishing Club 🎣 Daily Catch ${this.slice.day}`, head];
-    if (grid) lines.push(grid);
-    if (caught && fish) lines.push(`${caught.size} cm · ${formatNumber(this.slice.daysCaught)} days caught`);
+    if (caught) lines.push(`Today's fish: caught in ${caught.casts} ${caught.casts === 1 ? 'cast' : 'casts'}`);
     lines.push(url);
     return lines.join('\n');
   }

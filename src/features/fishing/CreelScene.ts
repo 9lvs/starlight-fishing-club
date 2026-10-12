@@ -1,5 +1,6 @@
 // The creel: fish you chose to keep. Sell one or all at today's prices.
 import { ECONOMY } from '../../config/balance';
+import { CREEL } from '../../config/tuning';
 import type { Rect } from '../../core/layout';
 import { PanelScene } from '../../scenes/PanelScene';
 import { Button } from '../../ui/Button';
@@ -24,9 +25,16 @@ export class CreelScene extends PanelScene {
     const cap = this.ctx.stats.get('storageCap');
     const items = ctl.state.creel;
     const coinIcon = this.ctx.registries.currencies.tryGet(ECONOMY.defaultCurrency)?.icon;
-    addText(this, area.x, area.y, `${items.length} of ${cap} spaces used`, { color: 'slate', shadow: false });
+    addText(this, area.x, area.y, `${items.length} of ${cap} spaces used`, { color: 'sky', shadow: false });
+    const share = ctl.bundleShare;
+    addText(this, area.x + area.w - 3, area.y, share > 0 ? `Bundle +${Math.round(share * 100)}%` : 'Bundle: keep 2+', {
+      color: share > 0 ? 'gold' : 'slate',
+      shadow: false,
+      originX: 1,
+    });
 
-    const total = items.reduce((s, _it, i) => s + ctl.creelValue(i), 0);
+    const base = items.reduce((s, _it, i) => s + ctl.creelValue(i), 0);
+    const total = base + Math.round(base * share);
     new Button(this, {
       x: area.x,
       y: area.y + area.h - 26,
@@ -38,13 +46,17 @@ export class CreelScene extends PanelScene {
       disabled: items.length === 0,
       onClick: () => {
         const got = ctl.sellAllCreel();
-        if (got > 0) this.ctx.ui.toast(`Sold everything for ${formatNumber(got)}`, { icon: coinIcon });
-        this.scene.restart();
+        if (got > 0) {
+          const extra = got - base;
+          this.ctx.ui.toast(extra > 0 ? `Sold everything for ${formatNumber(got)} (bundle +${formatNumber(extra)})` : `Sold for ${formatNumber(got)}`, { icon: coinIcon });
+        }
+        this.refresh();
       },
     });
 
     if (items.length === 0) {
-      addText(this, area.x + area.w / 2, area.y + 40, 'Tap Keep on a catch to\nsave it here.', {
+      addText(this, area.x + area.w / 2, area.y + 40, `Tap Keep on a catch to save it here.\n\nFish sold together earn a bundle bonus: +${Math.round(CREEL.bundlePerFish * 100)}% for each fish after the first, up to +${Math.round(CREEL.bundleMax * 100)}%.\n\nKept fish also sell at the price you have later, so upgrades raise their value.`, {
+        maxWidth: area.w - 8,
         originX: 0.5,
         align: 'center',
         color: 'sky',
@@ -73,7 +85,7 @@ export class CreelScene extends PanelScene {
           variant: 'secondary',
           onClick: () => {
             ctl.sellFromCreel(i);
-            this.scene.restart();
+            this.refresh();
           },
         }),
       );

@@ -10,6 +10,34 @@ export function gameUrl(): string {
   return LINKS.gameUrl || `${location.origin}${location.pathname}`;
 }
 
+/** A short, non-identifying description of the device for feedback reports. */
+export function deviceSummary(): string {
+  const ua = navigator.userAgent;
+  const os = /iPhone|iPad|iPod/.test(ua)
+    ? 'iOS'
+    : /Android/.test(ua)
+      ? 'Android'
+      : /Mac OS X/.test(ua)
+        ? 'macOS'
+        : /Windows/.test(ua)
+          ? 'Windows'
+          : /Linux/.test(ua)
+            ? 'Linux'
+            : 'Other';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Other';
+  const orient = innerWidth >= innerHeight ? 'landscape' : 'portrait';
+  return `${os}, ${browser}, ${innerWidth}x${innerHeight} ${orient}`;
+}
+
+/** The feedback address, with the version and device filled in on GitHub's form. */
+export function feedbackLink(version: string): string | null {
+  const url = LINKS.feedbackUrl;
+  if (!url) return null;
+  if (!/github\.com\/.+\/issues\/new/.test(url)) return url;
+  const q = new URLSearchParams({ version, device: deviceSummary() });
+  return `${url}${url.includes('?') ? '&' : '?'}${q.toString()}`;
+}
+
 export async function shareText(title: string, text: string): Promise<ShareResult> {
   const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
   if (nav.share && matchMedia?.('(pointer: coarse)').matches) {

@@ -3,5 +3,6 @@
 
 export const uiSignals = {
   click: (): void => {},
+  deny: (): void => {},
   reducedMotion: (): boolean => false,
 };

@@ -34,6 +34,7 @@ export const dailyCatchFeature: GameFeature = {
       if (source === 'hand') svc.onCatch(c);
     });
     ctx.bus.on('dailyCatchCaught', ({ casts, bonus }) => {
+      ctx.bus.emit('audio:play', { key: 'daily' });
       // A toast, not a panel: the catch card is still showing.
       ctx.ui.toast(`Today's fish in ${casts} ${casts === 1 ? 'cast' : 'casts'}! +${bonus} bonus. Share it from Daily Catch.`, {
         icon: 'icon_daily',

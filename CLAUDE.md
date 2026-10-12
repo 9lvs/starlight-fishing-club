@@ -98,7 +98,10 @@ comments that explain *why*. Small files.
   `src/features/index.ts`. See `docs/ADDING_FEATURES.md` (worked example: daily gift).
 - **Sprite**: drop a PNG in `public/sprites/` and add its key and path to `ART_FILES` in
   `src/art/spriteManifest.ts`. Sizes in `docs/SPRITES.md`.
-- **Sound**: drop files in `public/audio/` and set `files` in `src/config/audio.ts`.
+- **Sound**: drop files in `public/audio/` and set `files` in `src/config/audio.ts`. Music is
+  composed live (`MUSIC` in that file); list a file in `MUSIC_FILES` to replace it.
+- **Tip**: add to `TIPS` in `src/features/tutorial/tips.ts` and queue it from an event in the
+  feature's `index.ts`.
 
 ## Workflow
 
@@ -109,7 +112,9 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch. 97 unit tests. Launch
+upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, tutorial. 109 unit tests.
+v0.2.0 adds composed music, a sound for every action, the tutorial, the creel bundle bonus, and
+the first-five Daily Catch share. Launch
 plan, deploy steps, and marketing notes in `docs/LAUNCH.md`. Five-water journey with
 moving the club (prestige), 10 rod and 10 boat tiers, bait and lures (see `docs/DECISIONS.md`). Fills the
 whole screen on every device (see the post v0.1.0 entry in `docs/BUILD_LOG.md`).
@@ -127,7 +132,10 @@ whole screen on every device (see the post v0.1.0 entry in `docs/BUILD_LOG.md`).
   `getLayout()` and center groups (menu bar, boat, panels) rather than spreading them.
 - Phaser 3 `TileSprite` resamples non power-of-two textures (blurry pixels). Drifting
   layers use two wrapping images instead; only 4x4 dither tiles use TileSprite.
-- Use `PixelText` (`src/ui/text.ts`), never `scene.add.text`: canvas text anti-aliases.
+- Use `PixelText` (`src/ui/text.ts`), never `scene.add.text`: canvas text anti-aliases. Text over
+  the moving world (HUD, messages) uses `outline: 'ink'` so it reads on any sky.
+- Every player action should make a sound: emit a bus event that `core/audioWiring.ts` maps, or
+  `audio:play` with a key from `SOUNDS`. Disabled buttons emit `ui:deny` (a soft sound).
 - Feature scenes reach their feature through a module-level `set/get` pair in the
   feature's `service.ts`/`controller.ts`; dynamic `import()` in the browser console
   gets a different module instance under Vite, so use `window.sfc` (debug builds) or

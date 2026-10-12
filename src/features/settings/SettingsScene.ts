@@ -2,11 +2,11 @@
 import type { Rect } from '../../core/layout';
 import { PanelScene } from '../../scenes/PanelScene';
 import { Button } from '../../ui/Button';
-import { LINKS } from '../../config/links';
+import { GAME_VERSION } from '../../config/links';
 import type Phaser from 'phaser';
 import { openDomDialog } from '../../ui/domDialog';
 import { ScrollArea } from '../../ui/ScrollArea';
-import { gameUrl, shareText } from '../../ui/share';
+import { feedbackLink, gameUrl, shareText } from '../../ui/share';
 import { addText } from '../../ui/text';
 import { applySettings, VOLUME_STEP, type MotionPref, type SettingsSlice } from './state';
 
@@ -29,15 +29,15 @@ export class SettingsScene extends PanelScene {
 
   private changed(): void {
     applySettings(this.ctx, this.s);
-    this.scene.restart();
+    this.refresh();
   }
 
   protected build(area: Rect): void {
     // Everything is laid out in panel coordinates, then moved into a scroll area
     // so short screens (phones on their side) can still reach the bottom rows.
+    const scroll = new ScrollArea(this, area);
     const before = new Set(this.children.list);
     const end = this.buildRows(area);
-    const scroll = new ScrollArea(this, area);
     for (const obj of [...this.children.list]) {
       if (before.has(obj) || obj === scroll.content) continue;
       const o = obj as Phaser.GameObjects.GameObject & { x: number; y: number };
@@ -70,11 +70,16 @@ export class SettingsScene extends PanelScene {
     });
     y += ROW;
 
-    label('Volume');
-    new Button(this, { x: right - 70, y, w: 24, label: '-', onClick: () => this.setVolume(s.volume - VOLUME_STEP) });
-    addText(this, right - 35, y + 6, `${Math.round(s.volume * 100)}%`, { originX: 0.5, color: 'gold', shadow: false });
-    new Button(this, { x: right - 24, y, w: 24, label: '+', onClick: () => this.setVolume(s.volume + VOLUME_STEP) });
-    y += ROW;
+    // Effects (sounds and water) and music have their own levels; music at 0% is off.
+    const level = (name: string, value: number, set: (v: number) => void) => {
+      label(name);
+      new Button(this, { x: right - 70, y, w: 24, label: '-', onClick: () => set(value - VOLUME_STEP) });
+      addText(this, right - 35, y + 6, value > 0 ? `${Math.round(value * 100)}%` : 'Off', { originX: 0.5, color: 'gold', shadow: false });
+      new Button(this, { x: right - 24, y, w: 24, label: '+', onClick: () => set(value + VOLUME_STEP) });
+      y += ROW;
+    };
+    level('Effects', s.volume, (v) => this.setLevel('volume', v));
+    level('Music', s.musicVolume, (v) => this.setLevel('musicVolume', v));
 
     label('Reduced motion');
     new Button(this, {
@@ -119,13 +124,13 @@ export class SettingsScene extends PanelScene {
     });
     y += ROW + 8;
 
-    addText(this, x, y, 'Friends', { color: 'gold' });
+    addText(this, x, y, 'Help and feedback', { color: 'gold' });
     y += 14;
-    const friendW = LINKS.feedbackUrl ? half : area.w;
+    const feedback = feedbackLink(GAME_VERSION);
     new Button(this, {
       x,
       y,
-      w: friendW,
+      w: feedback ? half : area.w,
       label: 'Tell a friend',
       onClick: () => {
         const text = `A calm little pixel fishing game you can play in your browser: Starlight Fishing Club 🎣\n${gameUrl()}`;
@@ -134,10 +139,24 @@ export class SettingsScene extends PanelScene {
         });
       },
     });
-    if (LINKS.feedbackUrl) {
-      new Button(this, { x: x + half + 4, y, w: half, label: 'Feedback', onClick: () => window.open(LINKS.feedbackUrl, '_blank', 'noopener') });
+    if (feedback) {
+      new Button(this, { x: x + half + 4, y, w: half, label: 'Feedback', variant: 'primary', onClick: () => window.open(feedback, '_blank', 'noopener') });
     }
-    y += ROW + 8;
+    y += ROW;
+    if (this.ctx.features.has('tutorial')) {
+      new Button(this, {
+        x,
+        y,
+        w: area.w,
+        label: 'Replay the tips',
+        onClick: () => {
+          this.ctx.bus.emit('help:replay', {});
+          this.close();
+        },
+      });
+      y += ROW;
+    }
+    y += 8;
 
     addText(this, x, y, 'Credits', { color: 'gold' });
     y += 14;
@@ -145,14 +164,14 @@ export class SettingsScene extends PanelScene {
       this,
       x,
       y,
-      'Starlight Fishing Club\nMade with Phaser.\nFont: Pixelify Sans by the Pixelify Sans Project Authors, SIL Open Font License 1.1.',
+      `Starlight Fishing Club v${GAME_VERSION}\nMade with Phaser.\nFont: Pixelify Sans by the Pixelify Sans Project Authors, SIL Open Font License 1.1.`,
       { color: 'sky', shadow: false, maxWidth: area.w },
     );
     return y + credits.textHeight;
   }
 
-  private setVolume(v: number): void {
-    this.s.volume = Math.round(Math.max(0, Math.min(1, v)) * 10) / 10;
+  private setLevel(key: 'volume' | 'musicVolume', v: number): void {
+    this.s[key] = Math.round(Math.max(0, Math.min(1, v)) * 10) / 10;
     this.changed();
   }
 

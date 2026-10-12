@@ -1,7 +1,8 @@
 // Glue between the pure fishing session and the rest of the game: rolls the
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
-import { FISHING } from '../../config/tuning';
+import { CREEL, FISHING } from '../../config/tuning';
+import { bundleBonus } from '../../systems/economy';
 import { fishValue, makeCatch, rarityBoosts } from '../../core/catching';
 import type { GameContext } from '../../core/context';
 import type { CatchResult } from '../../core/types';
@@ -133,13 +134,25 @@ export class FishingController {
     this.state.creel.length = 0;
   }
 
+  /** The bundle bonus share if the whole creel were sold now. */
+  get bundleShare(): number {
+    return bundleBonus(this.state.creel.length, CREEL.bundlePerFish, CREEL.bundleMax);
+  }
+
+  /** Sell everything at once: today's prices plus the bundle bonus. Returns the total paid. */
   sellAllCreel(): number {
+    const share = this.bundleShare;
     let total = 0;
     while (this.state.creel.length > 0) {
       total += this.creelValue(0);
       this.sellFromCreel(0);
     }
-    return total;
+    const bonus = Math.round(total * share);
+    if (bonus > 0) {
+      this.ctx.wallet.add(ECONOMY.defaultCurrency, bonus);
+      this.ctx.bus.emit('audio:play', { key: 'bundle' });
+    }
+    return total + bonus;
   }
 }
 

@@ -50,6 +50,7 @@ function main(): void {
   const ctx = boot.ctx;
   uiSignals.reducedMotion = () => ctx.flags.reducedMotion === true;
   uiSignals.click = () => ctx.bus.emit('ui:click', {});
+  uiSignals.deny = () => ctx.bus.emit('ui:deny', {});
 
   wireAudio(ctx, new AudioManager());
   const ticker = new TickDriver(ctx, FEATURES);

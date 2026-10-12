@@ -67,25 +67,25 @@ and `og:image` tags in `index.html` and set `LINKS.gameUrl` in `src/config/links
    points there and not at itch's game frame.
 
 ### Before you announce (you)
-- [ ] A feedback form (Google Form or the itch comments page), then set
-      `LINKS.feedbackUrl` in `src/config/links.ts` so Settings shows a Feedback button.
+- [x] Feedback: Settings > Feedback opens a short GitHub form with the version and device
+      filled in. Read replies under the repo's Issues tab. For testers without a GitHub
+      account, make a Google Form and put its link in `LINKS.feedbackUrl`
+      (`src/config/links.ts`).
 - [ ] Optional privacy-friendly analytics (GoatCounter or Plausible: no cookies, no
       banner needed). Ask Claude to wire it in once you have an account.
 - [ ] Social handles reserved (same name everywhere if you can).
 - [ ] Optional custom domain (about $12 a year), pointed at GitHub Pages.
 
 ## 3. What v1 adds for launch
-- **Daily Catch.** One fish a day for everyone at Willow Pond. Your casts there fill a
-  spoiler-free grid of squares, and Share copies it (or opens the phone's share sheet):
+- **Daily Catch.** One fish a day for everyone at Willow Pond (3x coins). Your first five
+  catches of the day make a luck score, and Share copies it (or opens the phone's share sheet):
   ```
-  Starlight Fishing Club 🎣 Daily Catch 2026-10-11
-  Caught today's fish in 14 casts
-  ⬜⬜🟩⬛⬜⬜⬜⬜🟦⬜
-  ⬜⬜⬜🎣
-  79.2 cm · 3 days caught
+  Starlight Fishing Club 🎣 First Five · 2026-10-12
+  ⬜🟩🎣⬜🟪  Luck 11/25
+  A lucky day!
   https://9lvs.github.io/starlight-fishing-club/
   ```
-  Catching it pays 3x. No streaks: missing a day costs nothing.
+  No streaks: missing a day costs nothing.
 - **Installable and offline.** Web app manifest, pixel icons, a service worker. Players
   can add it to their home screen and play without a connection.
 - **Link previews.** Title, description, and a 1200 x 630 image for Discord, iMessage,

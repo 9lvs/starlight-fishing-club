@@ -10,6 +10,11 @@ export function sellValue(baseValue: number, mult: number): number {
   return Math.max(ECONOMY.minSellValue, Math.round(baseValue * mult));
 }
 
+/** Extra share paid when several kept fish are sold together (0.25 = +25%). */
+export function bundleBonus(count: number, perFish: number, max: number): number {
+  return Math.max(0, Math.min(max, (count - 1) * perFish));
+}
+
 export type Balances = Record<string, number>;
 
 export class Wallet {

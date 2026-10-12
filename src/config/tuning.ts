@@ -32,19 +32,34 @@ export const OFFLINE = {
   maxTickMs: 1000,
 } as const;
 
+/** The creel: why keeping fish is worth it. */
+export const CREEL = {
+  /** Selling kept fish together pays this much extra per fish beyond the first. */
+  bundlePerFish: 0.05,
+  /** The bundle bonus never goes past this (+50%, reached at 11 fish). */
+  bundleMax: 0.5,
+  /** Show the "why keep?" line on the catch card for a player's first this-many catches. */
+  hintCatches: 25,
+} as const;
+
 /** Daily Catch: one shared fish a day at the starting water, Wordle style. */
 export const DAILY_CATCH = {
   /** Rarity tiers the daily fish is drawn from (1 uncommon, 2 rare): findable in a few minutes. */
   tiers: [1, 2],
   /** The daily fish sells for this many times its value (the extra is paid as a bonus). */
   valueMult: 3,
-  /** Casts kept for the share grid. */
-  gridMax: 40,
-  gridRow: 10,
-  /** Share grid squares by rarity tier; a miss and the daily fish have their own. */
+  /** The share shows your first this-many catches of the day: how lucky were your first pulls? */
+  firstCount: 5,
+  /** Share squares by rarity tier; today's fish gets the hook. */
   tierEmoji: ['⬜', '🟩', '🟦', '🟪', '🟨'],
-  missEmoji: '⬛',
   targetEmoji: '🎣',
+  /** Luck score labels: the first whose minimum the score reaches (score is the sum of tier + 1). */
+  luckLabels: [
+    { min: 15, text: 'Legendary luck!' },
+    { min: 11, text: 'A lucky day!' },
+    { min: 8, text: 'Nice pulls.' },
+    { min: 0, text: 'A calm start.' },
+  ],
 } as const;
 
 export const UI_TIMING = {

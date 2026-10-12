@@ -17,6 +17,8 @@ export interface CatchPopupHandlers {
   onSell: () => void;
   onKeep: () => void;
   canKeep: boolean;
+  /** A short line under the buttons explaining Sell and Keep (new players). */
+  hint?: string;
 }
 
 export const POPUP = { w: 150, h: 156, spriteScale: 3 } as const;
@@ -41,11 +43,13 @@ export class CatchPopup extends Phaser.GameObjects.Container {
     this.blocker = blocker;
     this.add([backdrop, blocker]);
 
+    const hint = h.hint ? addText(scene, POPUP.w / 2, POPUP.h - 4, h.hint, { originX: 0.5, align: 'center', color: 'sky', shadow: false, maxWidth: POPUP.w - 12 }) : null;
+    const cardH = POPUP.h + (hint ? hint.textHeight + 4 : 0);
     const px = Math.round((W - POPUP.w) / 2);
-    const py = Math.round(L.frame.y + (L.frame.h - POPUP.h) / 2 - 10);
+    const py = Math.max(L.safe.top + 4, Math.round(L.frame.y + (L.frame.h - cardH) / 2 - 10));
     const card = scene.add.container(px, py);
     const g = scene.add.graphics();
-    drawPanelBox(g, 0, 0, POPUP.w, POPUP.h, { fill: 'midnight', border: rarity.frame, highlight: 'dusk', shadow: 'ink' });
+    drawPanelBox(g, 0, 0, POPUP.w, cardH, { fill: 'midnight', border: rarity.frame, highlight: 'dusk', shadow: 'ink' });
     // Soft round halo behind the fish in the rarity color, in stepped rings
     // (no gradients); rarer fish get a bigger, brighter glow.
     const haloR = 18 + rarity.glow * 2;
@@ -105,6 +109,7 @@ export class CatchPopup extends Phaser.GameObjects.Container {
       onClick: () => this.finish(h.onKeep),
     });
     card.add([sell, keep]);
+    if (hint) card.add(hint);
     this.add(card);
 
     if (!uiSignals.reducedMotion()) {

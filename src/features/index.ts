@@ -9,6 +9,7 @@ import { journalFeature } from './journal';
 import { mapFeature } from './map';
 import { offlineFeature } from './offline';
 import { settingsFeature } from './settings';
+import { tutorialFeature } from './tutorial';
 import { upgradesFeature } from './upgrades';
 
 export const FEATURES: GameFeature[] = [
@@ -21,4 +22,6 @@ export const FEATURES: GameFeature[] = [
   settingsFeature,
   dailyGiftFeature,
   dailyCatchFeature,
+  // Last, so its tips draw above every other feature's scenes.
+  tutorialFeature,
 ];

@@ -1,13 +1,23 @@
-// Daily Catch save slice and the pure rules: which fish is today's, and the
-// spoiler-free share grid. Nothing here is lost by skipping a day.
+// Daily Catch save slice and the pure rules: which fish is today's, the luck of
+// your first five catches, and the share text squares. Nothing here is lost by
+// skipping a day.
 import type { SaveSliceDef } from '../../core/feature';
 import { hashString } from '../../core/rng';
 
+export interface FirstCatch {
+  /** Rarity tier (0 = common). */
+  tier: number;
+  /** Was it today's fish? */
+  daily: boolean;
+}
+
 export interface DailyCatchSlice {
-  /** The day the attempts below belong to (YYYY-MM-DD). */
+  /** The day everything below belongs to (YYYY-MM-DD). */
   day: string;
-  /** Hand casts at the daily water today: a rarity tier, or -1 for a missed bite. */
-  tries: number[];
+  /** Your first hand catches today, anywhere, up to DAILY_CATCH.firstCount. */
+  first: FirstCatch[];
+  /** Hand casts at the daily water today, until today's fish is caught. */
+  pondCasts: number;
   /** Set once today's fish is caught. */
   caught: { casts: number; size: number } | null;
   /** Days the daily fish was caught, ever. Only ever goes up. */
@@ -16,8 +26,10 @@ export interface DailyCatchSlice {
 
 export const dailyCatchSlice: SaveSliceDef<DailyCatchSlice> = {
   key: 'dailyCatch',
-  version: 1,
-  defaults: () => ({ day: '', tries: [], caught: null, daysCaught: 0 }),
+  version: 2,
+  defaults: () => ({ day: '', first: [], pondCasts: 0, caught: null, daysCaught: 0 }),
+  // v2 shares the first five catches instead of every cast; today starts fresh.
+  migrate: (old) => ({ day: '', first: [], pondCasts: 0, caught: null, daysCaught: (old as { daysCaught?: number })?.daysCaught ?? 0 }),
 };
 
 export interface DailyCandidate {
@@ -40,18 +52,16 @@ export function dailyFishId(day: string, pool: readonly { id: string }[]): strin
   return pool[hashString(`daily:${day}`) % pool.length]!.id;
 }
 
-export interface GridStyle {
-  tierEmoji: readonly string[];
-  missEmoji: string;
-  targetEmoji: string;
-  gridRow: number;
+/** Sum of (tier + 1) over the first catches: 5 is five commons, 25 is five legends. */
+export function luckScore(first: readonly FirstCatch[]): number {
+  return first.reduce((s, c) => s + c.tier + 1, 0);
 }
 
-/** Wordle-style rows of squares: one per cast, the daily fish last. */
-export function shareGrid(tries: readonly number[], caught: boolean, style: GridStyle): string {
-  const cells = tries.map((t) => (t < 0 ? style.missEmoji : (style.tierEmoji[t] ?? style.tierEmoji[0]!)));
-  if (caught && cells.length > 0) cells[cells.length - 1] = style.targetEmoji;
-  const rows: string[] = [];
-  for (let i = 0; i < cells.length; i += style.gridRow) rows.push(cells.slice(i, i + style.gridRow).join(''));
-  return rows.join('\n');
+export function luckLabel(score: number, labels: readonly { min: number; text: string }[]): string {
+  return labels.find((l) => score >= l.min)?.text ?? '';
+}
+
+/** One square per catch in rarity colors, today's fish as a hook. */
+export function firstFiveSquares(first: readonly FirstCatch[], style: { tierEmoji: readonly string[]; targetEmoji: string }): string {
+  return first.map((c) => (c.daily ? style.targetEmoji : (style.tierEmoji[c.tier] ?? style.tierEmoji[0]!))).join('');
 }

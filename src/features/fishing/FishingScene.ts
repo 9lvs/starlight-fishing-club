@@ -4,7 +4,7 @@ import Phaser from 'phaser';
 import { getContext, type GameContext } from '../../core/context';
 import { getLayout, type Layout } from '../../core/layout';
 import { uiState, worldAnchors } from '../../core/sceneState';
-import { FISHING } from '../../config/tuning';
+import { CREEL, FISHING } from '../../config/tuning';
 import { MOTION, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
 import { drawPixelEllipse, drawSaggingLine } from '../../ui/pixelDraw';
@@ -70,8 +70,9 @@ export class FishingScene extends Phaser.Scene {
     this.line = this.add.graphics();
     this.fx = this.add.graphics();
     this.bobber = this.add.sprite(bobber.x, bobber.y, 'bobber', 0).setOrigin(0.5, 0.5).setVisible(false);
-    this.cue = addText(this, bobber.x, bobber.y - 18, '!', { color: 'gold', scale: 2, originX: 0.5, shadow: 'ink' }).setVisible(false);
-    this.message = addText(this, this.L.width / 2, cb.y - 16, '', { color: 'mist', originX: 0.5, maxWidth: 160, align: 'center' });
+    this.cue = addText(this, bobber.x, bobber.y - 18, '!', { color: 'gold', scale: 2, originX: 0.5, outline: 'ink' }).setVisible(false);
+    // Messages sit over moving water, so they get a full outline.
+    this.message = addText(this, this.L.width / 2, cb.y - 16, '', { color: 'mist', originX: 0.5, maxWidth: 160, align: 'center', outline: 'ink' });
 
     this.castButton = new Button(this, {
       x: cb.x,
@@ -114,7 +115,7 @@ export class FishingScene extends Phaser.Scene {
 
     // Restore the popup if the scene restarted while a catch was waiting.
     if (this.ctl.session.phase === 'landed' && this.ctl.pending) this.showPopup();
-    if (this.ctl.session.phase === 'idle') this.say('Tap to cast', 'slate');
+    if (this.ctl.session.phase === 'idle') this.say('Tap to cast', 'mist');
     this.refreshButtons();
   }
 
@@ -139,7 +140,7 @@ export class FishingScene extends Phaser.Scene {
         this.throwBobber();
         break;
       case 'early':
-        this.say('Wait for the bite...', 'slate');
+        this.say('Wait for the bite...', 'sky');
         break;
       case 'bite':
         this.bobber.setFrame(1);
@@ -195,6 +196,7 @@ export class FishingScene extends Phaser.Scene {
         this.bobber.setPosition(Math.round(x), Math.round(y));
       },
       onComplete: () => {
+        this.ctx.bus.emit('audio:play', { key: 'plop' });
         this.addRipple(bobber.x, bobber.y + 2, 12, 1100, 'mist');
         this.addRipple(bobber.x, bobber.y + 2, 6, 700, 'sky');
       },
@@ -239,8 +241,14 @@ export class FishingScene extends Phaser.Scene {
     const c = this.ctl.pending;
     if (!c) return;
     uiState.modal = true;
+    const full = this.ctl.creelFull;
     const handlers: CatchPopupHandlers = {
-      canKeep: !this.ctl.creelFull,
+      canKeep: !full,
+      hint: full
+        ? 'Creel full! Open it to sell everything with a bundle bonus.'
+        : this.ctl.state.totals.catches <= CREEL.hintCatches
+          ? `Keep fills your creel. Sell it all together for up to +${Math.round(CREEL.bundleMax * 100)}%.`
+          : undefined,
       onSell: () => {
         this.ctl.sellPending();
         this.closePopup();

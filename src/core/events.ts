@@ -52,5 +52,9 @@ export interface GameEvents {
   'ui:openPanel': { sceneKey: string; data?: unknown };
   'ui:panelClosed': { sceneKey: string };
   'ui:click': Record<string, never>;
+  /** A tap on something that cannot be used yet (a disabled button). A soft sound, never a scold. */
+  'ui:deny': Record<string, never>;
+  /** Show the getting-started tips again (Settings). */
+  'help:replay': Record<string, never>;
   'audio:play': { key: string; volume?: number };
 }

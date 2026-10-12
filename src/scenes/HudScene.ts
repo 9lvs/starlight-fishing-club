@@ -3,11 +3,11 @@
 import Phaser from 'phaser';
 import { clubBonus } from '../core/club';
 import { getContext, type GameContext } from '../core/context';
-import { getLayout, type Layout } from '../core/layout';
+import { getLayout, menuSlots, type Layout } from '../core/layout';
 import { uiState } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { UI_TIMING } from '../config/tuning';
-import { UI, color } from '../design/tokens';
+import { color } from '../design/tokens';
 import { Button } from '../ui/Button';
 import { addIcon } from '../ui/Icon';
 import { ToastLayer } from '../ui/Toast';
@@ -47,9 +47,15 @@ export class HudScene extends Phaser.Scene {
     this.offs = [];
     const { topBar, menuBar } = this.L;
 
-    // Top bar background: a soft dithered strip so numbers stay readable on any sky.
+    // Top bar: a solid band with a soft edge, so coin numbers read on any sky.
+    const barH = topBar.y + topBar.h;
+    const bar = this.add.graphics();
+    bar.fillStyle(color('ink'), 0.88);
+    bar.fillRect(0, 0, this.L.width, barH);
+    bar.fillStyle(color('dusk'));
+    bar.fillRect(0, barH, this.L.width, 1);
     const dither = this.textures.exists('dither_50') ? 'dither_50' : '__WHITE';
-    this.add.tileSprite(0, 0, this.L.width, topBar.y + topBar.h, dither).setOrigin(0, 0).setTint(color('ink')).setAlpha(0.55);
+    this.add.tileSprite(0, barH + 1, this.L.width, 2, dither).setOrigin(0, 0).setTint(color('ink')).setAlpha(0.5);
 
     this.buildCurrencies();
     this.phaseIcon = addIcon(this, topBar.x + topBar.w - 30, topBar.y + 3, 'icon_sun');
@@ -58,8 +64,8 @@ export class HudScene extends Phaser.Scene {
     this.weatherIcon.setInteractive();
     attachTooltip(this, this.phaseIcon, () => TIME.phases.find((p) => p.id === this.ctx.world.phase)?.name ?? '');
     attachTooltip(this, this.weatherIcon, () => this.ctx.registries.weather.tryGet(this.ctx.world.weather)?.name ?? '');
-    this.waterText = addText(this, this.L.width / 2, topBar.y + topBar.h + 2, '', { color: 'mist' });
-    this.bonusText = addText(this, this.L.width / 2, topBar.y + topBar.h + 2, '', { color: 'gold' });
+    this.waterText = addText(this, this.L.width / 2, topBar.y + topBar.h + 4, '', { color: 'mist', outline: 'ink' });
+    this.bonusText = addText(this, this.L.width / 2, topBar.y + topBar.h + 4, '', { color: 'gold', outline: 'ink' });
     this.refreshWorld();
 
     this.buildMenu(menuBar.x, menuBar.y, menuBar.w, menuBar.h);
@@ -91,7 +97,7 @@ export class HudScene extends Phaser.Scene {
     const list = [...this.ctx.registries.currencies.list()].sort((a, b) => a.order - b.order);
     for (const c of list) {
       const icon = addIcon(this, 0, this.L.topBar.y + 3, c.icon);
-      const text = addText(this, 0, this.L.topBar.y + 4, '0', { color: c.color });
+      const text = addText(this, 0, this.L.topBar.y + 4, '0', { color: c.color, outline: 'ink' });
       this.currencies.push({ id: c.id, icon, text, shown: this.ctx.wallet.get(c.id) });
     }
     this.layoutCurrencies();
@@ -136,16 +142,16 @@ export class HudScene extends Phaser.Scene {
     g.fillRect(0, y, this.L.width, 1);
     const entries = this.ctx.features.menuEntries();
     if (entries.length === 0) return;
-    const slot = Math.min(UI.menuSlotMax, Math.floor(w / entries.length));
-    const bw = Math.min(30, slot - 2);
-    const left = x + Math.floor((w - slot * entries.length) / 2);
+    const slots = menuSlots({ x, y, w, h }, entries.length);
     entries.forEach((e, i) => {
-      const bx = left + i * slot + Math.round((slot - bw) / 2);
+      const r = slots[i]!;
+      const bx = r.x;
+      const bw = r.w;
       const btn = new Button(this, {
-        x: bx,
-        y: y + 2,
-        w: bw,
-        h: h - 4,
+        x: r.x,
+        y: r.y,
+        w: r.w,
+        h: r.h,
         icon: e.icon,
         variant: 'ghost',
         onClick: () => {

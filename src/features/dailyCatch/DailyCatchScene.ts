@@ -1,5 +1,5 @@
-// Daily Catch panel: today's fish, where and when it bites, today's casts as a
-// little grid, and Share.
+// Daily Catch panel: today's fish, where and when it bites, your first five
+// catches of the day with a luck score, and Share.
 import { DAILY_CATCH } from '../../config/tuning';
 import { TIME } from '../../config/time';
 import type { Rect } from '../../core/layout';
@@ -11,8 +11,8 @@ import { RarityBanner } from '../../ui/RarityBanner';
 import { gameUrl, shareText } from '../../ui/share';
 import { addText } from '../../ui/text';
 import { getDailyCatch } from './service';
+import { luckLabel, luckScore, type FirstCatch } from './state';
 
-const CELL = 7;
 
 export class DailyCatchScene extends PanelScene {
   readonly title = 'Daily Catch';
@@ -53,13 +53,24 @@ export class DailyCatchScene extends PanelScene {
 
     const status = caught
       ? `Caught in ${caught.casts} ${caught.casts === 1 ? 'cast' : 'casts'}! It sold for ${DAILY_CATCH.valueMult}x.`
-      : `Catch it for ${DAILY_CATCH.valueMult}x coins. Your casts there fill the grid.`;
+      : `Catch it for ${DAILY_CATCH.valueMult}x coins.`;
     const st = addText(this, cx, y, status, { originX: 0.5, align: 'center', color: caught ? 'gold' : 'sand', shadow: false, maxWidth: area.w });
-    y += st.textHeight + 6;
+    y += st.textHeight + 8;
 
-    y = this.drawGrid(cx, y, svc.tries, !!caught);
+    // Your first five catches today: the part you share.
+    const first = svc.first;
+    const n = DAILY_CATCH.firstCount;
+    addText(this, cx, y, `Your first ${n} catches today`, { originX: 0.5, color: 'mist', shadow: false });
+    y += 13;
+    y = this.drawFirst(cx, y, first, n);
+    const score = luckScore(first);
+    const scoreLine = svc.canShare
+      ? `Luck ${score}/${n * DAILY_CATCH.tierEmoji.length}: ${luckLabel(score, DAILY_CATCH.luckLabels)}`
+      : `${first.length} of ${n} so far. Share when all ${n} are in.`;
+    const sl = addText(this, cx, y, scoreLine, { originX: 0.5, align: 'center', color: svc.canShare ? 'gold' : 'slate', shadow: false, maxWidth: area.w });
+    y += sl.textHeight + 6;
 
-    const btnY = Math.min(y + 4, area.y + area.h - 46);
+    const btnY = Math.min(y, area.y + area.h - 46);
     if (!caught && this.ctx.world.waterId !== svc.waterId() && this.ctx.world.isUnlocked(svc.waterId())) {
       new Button(this, {
         x: area.x + 4,
@@ -80,16 +91,17 @@ export class DailyCatchScene extends PanelScene {
       y: btnY,
       w: area.w / 2 - 6,
       h: 20,
-      label: 'Share',
+      label: svc.canShare ? 'Share' : `${first.length}/${n}`,
       icon: 'icon_arrow',
-      variant: caught ? 'primary' : 'secondary',
+      variant: svc.canShare ? 'primary' : 'secondary',
+      disabled: !svc.canShare,
       onClick: () => {
         void shareText('Starlight Fishing Club', svc.shareText(gameUrl())).then((res) => {
           if (res === 'copied') this.ctx.ui.toast('Copied! Paste it anywhere.', { icon: 'icon_daily' });
         });
       },
     });
-    addText(this, cx, btnY + 26, `A new fish at midnight. Days caught: ${formatNumber(svc.slice.daysCaught)}`, {
+    addText(this, cx, btnY + 26, `New fish and a fresh five at midnight. Days caught: ${formatNumber(svc.slice.daysCaught)}`, {
       originX: 0.5,
       align: 'center',
       color: 'slate',
@@ -100,25 +112,32 @@ export class DailyCatchScene extends PanelScene {
     this.listen('catchLanded', () => this.refresh());
   }
 
-  /** The same squares as the share text, drawn in palette colors. */
-  private drawGrid(cx: number, y: number, tries: readonly number[], caught: boolean): number {
-    if (tries.length === 0) return y;
+  /** Five slots: filled with rarity colors as you catch, today's fish marked gold. */
+  private drawFirst(cx: number, y: number, first: readonly FirstCatch[], n: number): number {
     const tiers = [...this.ctx.registries.rarities.list()].sort((a, b) => a.tier - b.tier);
-    const cols = DAILY_CATCH.gridRow;
-    const left = Math.round(cx - (cols * CELL) / 2);
+    const size = 12;
+    const gap = 3;
+    const left = Math.round(cx - (n * size + (n - 1) * gap) / 2);
     const g = this.add.graphics();
-    tries.forEach((t, i) => {
-      const last = caught && i === tries.length - 1;
-      const c: PaletteName = last ? 'gold' : t < 0 ? 'midnight' : (tiers[t]?.color ?? 'slate');
-      const x = left + (i % cols) * CELL;
-      const yy = y + Math.floor(i / cols) * CELL;
-      g.fillStyle(color(c));
-      g.fillRect(x, yy, CELL - 1, CELL - 1);
-      if (last) {
-        g.fillStyle(color('mist'));
-        g.fillRect(x + 2, yy + 2, 2, 2);
+    for (let i = 0; i < n; i++) {
+      const x = left + i * (size + gap);
+      const c = first[i];
+      if (!c) {
+        g.lineStyle(1, color('dusk'));
+        g.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+        continue;
       }
-    });
-    return y + Math.ceil(tries.length / cols) * CELL + 2;
+      const fill: PaletteName = c.daily ? 'gold' : (tiers[c.tier]?.color ?? 'slate');
+      g.fillStyle(color(fill));
+      g.fillRect(x, y, size, size);
+      g.fillStyle(color('mist'), 0.5);
+      g.fillRect(x + 1, y + 1, size - 2, 1);
+      if (c.daily) {
+        g.fillStyle(color('ink'));
+        g.fillRect(x + 5, y + 3, 2, 6);
+        g.fillRect(x + 3, y + 7, 2, 2);
+      }
+    }
+    return y + size + 4;
   }
 }

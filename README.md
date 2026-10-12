@@ -8,7 +8,10 @@ with a visible upgrade tree, and hire a crew who keep fishing while you are away
 - 63 fish across five waters, with time-of-day and weather exclusives.
 - Ten rod tiers, ten boat tiers, and six baits; bigger waters unlock the higher tiers.
 - Move the club to the next water for a fresh start and a bigger coin bonus, all the way to Sky Lake.
-- A Daily Catch: one shared fish a day, with a spoiler-free grid to share.
+- A Daily Catch: one shared fish a day, and your first five catches make a luck score to share.
+- Calm composed music that follows the time of day, and a soft sound for every action.
+- Gentle tips for new players, and a creel bundle bonus that makes keeping fish worth it.
+- A Feedback button that opens a short form with your device filled in.
 - Installable from the browser and playable offline.
 
 Launching it, testing on phones, and finding players: see `docs/LAUNCH.md`.
