@@ -32,6 +32,30 @@ const ANCHORS: Record<string, { x: number; y: number; ox: number; oy: number }> 
   sky: { x: 16, y: -30, ox: 0.5, oy: 0.5 },
 };
 
+/** Twinkles on the water and in the sky: present, but soft on the eyes. */
+const GLINT = {
+  /** One water glint per this many pixels of width. */
+  spacing: 26,
+  /** Glints move to new spots this often. */
+  slotMs: 1600,
+  min: 0.16,
+  range: 0.22,
+  reflection: 0.55,
+  ripple: 0.45,
+  star: 0.5,
+  starBright: 0.8,
+};
+
+/** Wind and storm effects. */
+const WEATHER_FX = {
+  windDrift: 3,
+  gustCount: 7,
+  gustAlpha: 0.22,
+  flashMinMs: 14000,
+  flashRangeMs: 26000,
+  flashAlpha: 0.1,
+};
+
 /** Rod length the ROD table was drawn for; rod looks give their own length. */
 const ROD_BASE_LEN = 17;
 
@@ -84,6 +108,11 @@ export class WorldScene extends Phaser.Scene {
   private transitionTimer: Phaser.Time.TimerEvent | null = null;
   private offs: (() => void)[] = [];
   private driftAcc = 0;
+  private wind = 0;
+  private flashes = false;
+  private gusts: Mote[] = [];
+  private nextFlash = 0;
+  private flash!: Phaser.GameObjects.Rectangle;
 
   constructor() {
     super('World');
@@ -120,6 +149,7 @@ export class WorldScene extends Phaser.Scene {
         .setAlpha(0),
     );
     this.dim = this.add.rectangle(0, 0, W, H, color('ink'), 0).setOrigin(0, 0);
+    this.flash = this.add.rectangle(0, 0, W, H, color('mist'), 0).setOrigin(0, 0);
     this.fireflyGfx = this.add.graphics();
 
     this.makeStars();
@@ -259,8 +289,8 @@ export class WorldScene extends Phaser.Scene {
     if (this.pal.stars <= 0) return;
     for (const s of this.starList) {
       if (s.tw > this.pal.stars) continue;
-      const bright = Math.sin(this.elapsed / 900 + s.tw * 40) > 0.6;
-      this.stars.fillStyle(color(bright ? 'mist' : s.tw > 0.5 ? 'sky' : 'gold'), bright ? 1 : 0.7);
+      const bright = Math.sin(this.elapsed / 1400 + s.tw * 40) > 0.75;
+      this.stars.fillStyle(color(bright ? 'mist' : s.tw > 0.5 ? 'sky' : 'gold'), bright ? GLINT.starBright : GLINT.star);
       this.stars.fillRect(s.x, s.y, 1, 1);
     }
   }
@@ -305,8 +335,10 @@ export class WorldScene extends Phaser.Scene {
 
   private applyWeather(): void {
     const w = this.ctx.registries.weather.tryGet(this.ctx.world.weather);
-    const v = w?.visuals ?? { rain: 0, fog: 0, clouds: 0.3, dim: 0 };
+    const v = w?.visuals ?? { rain: 0, fog: 0, clouds: 0.3, dim: 0, wind: 0, flashes: false };
     const reduced = uiSignals.reducedMotion();
+    this.wind = v.wind ?? 0;
+    this.flashes = !!v.flashes;
     const cloudLayer = this.layers[1];
     if (cloudLayer) this.tweens.add({ targets: cloudLayer.objs, alpha: 0.35 + v.clouds * 0.65, duration: 3000 });
     this.fog.forEach((f, i) => this.tweens.add({ targets: f, alpha: v.fog * (i === 0 ? 0.7 : 0.45), duration: 4000 }));
@@ -320,7 +352,7 @@ export class WorldScene extends Phaser.Scene {
     return {
       x: Phaser.Math.Between(-20, this.L.width),
       y: anywhere ? Phaser.Math.Between(0, this.L.height) : Phaser.Math.Between(-20, 0),
-      vx: 0.012,
+      vx: 0.012 + this.wind * 0.05,
       vy: 0.09 + Math.random() * 0.03,
       phase: 0,
     };
@@ -352,7 +384,8 @@ export class WorldScene extends Phaser.Scene {
 
     // Gentle drift of tiled layers reads as the boat slowly floating along.
     if (!reduced) {
-      this.driftAcc += delta / 1000;
+      // Wind pushes the clouds and hills along faster.
+      this.driftAcc += (delta / 1000) * (1 + this.wind * WEATHER_FX.windDrift);
       for (const l of this.layers) {
         if (l.objs.length < 2 || l.drift <= 0) continue;
         const w = l.layer.width;
@@ -389,6 +422,8 @@ export class WorldScene extends Phaser.Scene {
       this.drawShimmer(cx);
     }
     this.updateWeather(delta, W, H);
+    if (!reduced) this.updateGusts(delta, W);
+    if (!reduced && this.flashes) this.updateFlashes(delta);
     this.updateFireflies(delta, reduced);
     if (!reduced && isNight && this.shapeCache.hills !== 'cave') this.updateShootingStar(delta);
   }
@@ -427,28 +462,54 @@ export class WorldScene extends Phaser.Scene {
     for (let i = 0; i < (this.shapeCache.hills === 'cave' ? 0 : 6); i++) {
       const y = horizonY + 2 + i * 3 + (i > 2 ? i : 0);
       const len = 2 + ((i * 7 + Math.floor(this.elapsed / 400)) % 4);
-      g.fillStyle(color(shine), 0.9 - i * 0.12);
+      g.fillStyle(color(shine), GLINT.reflection - i * 0.07);
       g.fillRect(celestialX - Math.floor(len / 2), y, len, 1);
     }
     // Twinkling streaks scattered over the water.
-    const n = Math.floor(W / 14);
-    const slot = Math.floor(this.elapsed / 700);
+    const n = Math.floor(W / GLINT.spacing);
+    const slot = Math.floor(this.elapsed / GLINT.slotMs);
     for (let i = 0; i < n; i++) {
       const seed = (i * 9301 + slot * 49297) % 233280;
       const r = seed / 233280;
       if (r > 0.55) continue;
       const x = Math.floor(((i * 37 + slot * 13) % W) as number);
       const y = horizonY + 6 + Math.floor(r * (H - horizonY - 30));
-      g.fillStyle(color(shine), 0.5 + r * 0.5);
-      g.fillRect(x, y, 2 + Math.floor(r * 5), 1);
+      g.fillStyle(color(shine), GLINT.min + r * GLINT.range);
+      g.fillRect(x, y, 2 + Math.floor(r * 4), 1);
     }
     // Ripple lines either side of the hull.
     const bx = this.L.boat.x;
     const by = this.L.boat.y + 3;
     const spread = Math.floor(this.elapsed / 500) % 3;
-    g.fillStyle(color(shine), 0.8);
+    g.fillStyle(color(shine), GLINT.ripple);
     g.fillRect(bx - 18 - spread, by, 4, 1);
     g.fillRect(bx + 14 + spread, by - 1, 4, 1);
+  }
+
+  /** Thin, faint streaks blowing across the scene on windy days. */
+  private updateGusts(delta: number, W: number): void {
+    const want = Math.round(this.wind * WEATHER_FX.gustCount);
+    while (this.gusts.length < want) {
+      this.gusts.push({ x: Phaser.Math.Between(-40, W), y: Phaser.Math.Between(8, this.L.menuBar.y - 20), vx: 0.08 + Math.random() * 0.06, vy: 0, phase: 10 + Math.random() * 14 });
+    }
+    this.gusts.length = want;
+    if (want === 0) return;
+    const g = this.weatherGfx;
+    g.fillStyle(color('mist'), WEATHER_FX.gustAlpha);
+    for (let i = 0; i < this.gusts.length; i++) {
+      const s = this.gusts[i]!;
+      s.x += s.vx * delta;
+      if (s.x > W + 30) this.gusts[i] = { ...s, x: -40 - Math.random() * 60, y: Phaser.Math.Between(8, this.L.menuBar.y - 20) };
+      g.fillRect(Math.round(s.x), Math.round(s.y), Math.round(s.phase), 1);
+    }
+  }
+
+  /** Storms: a soft, distant brightening now and then. Never a strobe. */
+  private updateFlashes(delta: number): void {
+    this.nextFlash -= delta;
+    if (this.nextFlash > 0) return;
+    this.nextFlash = WEATHER_FX.flashMinMs + Math.random() * WEATHER_FX.flashRangeMs;
+    this.tweens.add({ targets: this.flash, alpha: WEATHER_FX.flashAlpha, duration: 140, yoyo: true, ease: MOTION.ease });
   }
 
   private updateWeather(delta: number, W: number, H: number): void {

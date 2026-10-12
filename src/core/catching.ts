@@ -3,7 +3,7 @@
 import { LOOT, SIZE } from '../config/balance';
 import { ECONOMY } from '../config/balance';
 import { rollCatch, type LootFish, type RarityBoosts } from '../systems/lootTable';
-import { rarityBoostStat } from '../config/stats';
+import { conditionBoostStat, rarityBoostStat } from '../config/stats';
 import { sellValue } from '../systems/economy';
 import type { FishDef, RarityDef } from './content/schemas';
 import type { GameContext } from './context';
@@ -42,7 +42,19 @@ export interface MakeCatchOptions {
   boosts?: RarityBoosts;
   /** Bait: fish come out this much bigger and sell for this much more. */
   sizeMult?: number;
+  /** Bait for night or storm fish: weight multiplier within a rarity. */
+  fishWeight?: (fish: FishDef) => number;
   rng?: Rng;
+}
+
+/** Night, rain, storm... bait: a fish tied to a time or weather bites more with the matching boost. */
+export function conditionWeight(ctx: GameContext): (fish: FishDef) => number {
+  const s = ctx.stats;
+  const boost = (kind: 'time' | 'weather', id: string) => {
+    const stat = conditionBoostStat(kind, id);
+    return s.has(stat) ? s.get(stat) : 0;
+  };
+  return (f) => 1 + f.timeOfDay.reduce((a, t) => a + boost('time', t), 0) + f.weather.reduce((a, w) => a + boost('weather', w), 0);
 }
 
 /** Lure bonuses from the boost_<rarity> stats. */
@@ -68,6 +80,7 @@ export function makeCatch(ctx: GameContext, o: MakeCatchOptions): { result: Catc
     cfg: LOOT,
     pity: o.pity,
     boosts: o.boosts,
+    fishWeight: o.fishWeight,
   });
   if (!roll) return null;
   const sizeMult = o.sizeMult ?? 1;

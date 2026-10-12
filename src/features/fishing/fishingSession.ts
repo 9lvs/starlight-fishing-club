@@ -1,6 +1,7 @@
 // The hand-fishing loop as a pure state machine (no Phaser), so timing rules
 // are unit tested. Tap to cast, wait, tap when it bites, reel, land.
-// There is no fail state: a missed bite just drifts back to idle.
+// Nothing is ever lost: a missed bite or a fish that slips away just drifts
+// back to idle, and the next cast is a fresh chance.
 import { randRange, type Rng } from '../../core/rng';
 
 export type FishingPhase = 'idle' | 'casting' | 'waiting' | 'bite' | 'reeling' | 'landed' | 'missed';
@@ -24,7 +25,7 @@ export type SessionEvent =
   | { type: 'cast' }
   | { type: 'bite'; windowMs: number }
   | { type: 'missed' }
-  | { type: 'hooked' }
+  | { type: 'hooked'; reactionMs: number; windowMs: number }
   | { type: 'landed' }
   | { type: 'idle' }
   | { type: 'early' };
@@ -62,10 +63,13 @@ export class FishingSession {
       case 'waiting':
         this.emit({ type: 'early' });
         return 'early';
-      case 'bite':
+      case 'bite': {
+        // How fast the player reacted decides the quick-catch bonus.
+        const reactionMs = this.elapsed;
         this.enter('reeling', this.timing.reelAnimMs);
-        this.emit({ type: 'hooked' });
+        this.emit({ type: 'hooked', reactionMs, windowMs: this.biteWindow });
         return 'hooked';
+      }
       default:
         return 'none';
     }

@@ -1,5 +1,7 @@
 [
-  { "id": "clear", "name": "Clear", "icon": "icon_clear", "weight": 6, "visuals": { "rain": 0, "fog": 0, "clouds": 0.3, "dim": 0 } },
-  { "id": "rain", "name": "Gentle Rain", "icon": "icon_rain", "weight": 2, "visuals": { "rain": 0.7, "fog": 0, "clouds": 0.9, "dim": 0.25 } },
-  { "id": "fog", "name": "Fog", "icon": "icon_fog", "weight": 2, "visuals": { "rain": 0, "fog": 0.6, "clouds": 0.5, "dim": 0.1 } }
+  {"id": "clear", "name": "Clear", "icon": "icon_clear", "weight": 5, "visuals": {"rain": 0, "fog": 0, "clouds": 0.3, "dim": 0}},
+  {"id": "rain", "name": "Gentle Rain", "icon": "icon_rain", "weight": 2, "visuals": {"rain": 0.6, "fog": 0, "clouds": 0.9, "dim": 0.2, "wind": 0.15}},
+  {"id": "fog", "name": "Fog", "icon": "icon_fog", "weight": 2, "visuals": {"rain": 0, "fog": 0.6, "clouds": 0.5, "dim": 0.1}},
+  {"id": "wind", "name": "High Winds", "icon": "icon_wind", "weight": 1.5, "visuals": {"rain": 0, "fog": 0, "clouds": 0.7, "dim": 0.05, "wind": 1}},
+  {"id": "storm", "name": "Rainstorm", "icon": "icon_storm", "weight": 1, "visuals": {"rain": 1, "fog": 0.15, "clouds": 1, "dim": 0.4, "wind": 0.6, "flashes": true}}
 ]

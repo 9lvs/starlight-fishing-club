@@ -233,7 +233,8 @@ export const paintWater: Painter = (ctx, w, h, pal, s) => {
   rect(ctx, 0, 0, w, 1, pal.waterShine);
   // Static shine streaks, longer near the viewer for depth.
   const rng = seededRng(s.seed + 41);
-  const streaks = Math.floor((w * h) / 900);
+  // Few and soft: bright streaks everywhere tire the eyes.
+  const streaks = Math.floor((w * h) / 1600);
   for (let i = 0; i < streaks; i++) {
     const y = Math.floor(rng() * h);
     const len = 2 + Math.floor((y / h) * 8 * rng());

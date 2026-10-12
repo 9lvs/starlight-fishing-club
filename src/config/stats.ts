@@ -18,9 +18,28 @@ export const CORE_STATS: StatDef[] = [
   { id: 'crewLuck', base: 0, min: 0, label: 'Crew luck', format: 'int' },
   { id: 'offlineCapHours', base: 8, min: 0, max: 24, label: 'Offline cap', format: 'hours' },
   { id: 'offlineValueMult', base: 1, min: 0, label: 'Away earnings', format: 'mult' },
+  /** Rods, boats, and bait: how well you can land rarer fish (see systems/catchOdds.ts). */
+  { id: 'tackle', base: 0, min: 0, label: 'Tackle', format: 'int' },
+  /** Below 1 means fewer fish slip the hook (Sharp Hooks). */
+  { id: 'escapeMult', base: 1, min: 0.1, label: 'Slip chance', format: 'percent' },
+  /** Widens the quick-catch bonus window (Smooth Reel). */
+  { id: 'quickWindow', base: 1, min: 0.5, label: 'Quick-catch window', format: 'percent' },
   /** Bait: hand-caught fish grow by this factor, and bigger fish sell for more. */
   { id: 'fishSizeMult', base: 1, min: 0.5, label: 'Fish size', format: 'mult' },
 ];
+
+/** Stat id for a bait that draws out fish of one time of day or weather (0.5 = they bite 50% more). */
+export function conditionBoostStat(kind: 'time' | 'weather', id: string): string {
+  return `boost_${kind}_${id}`;
+}
+
+/** One boost stat per time of day and per weather in content. */
+export function conditionBoostStats(phases: readonly { id: string; name: string }[], weather: readonly { id: string; name: string }[]): StatDef[] {
+  return [
+    ...phases.map((p) => ({ id: conditionBoostStat('time', p.id), base: 0, min: 0, label: `${p.name} fish bites`, format: 'bonus' as const })),
+    ...weather.map((w) => ({ id: conditionBoostStat('weather', w.id), base: 0, min: 0, label: `${w.name} fish bites`, format: 'bonus' as const })),
+  ];
+}
 
 /** Stat id for the lure bonus of one rarity: extra weight moved to that tier. */
 export function rarityBoostStat(rarityId: string): string {

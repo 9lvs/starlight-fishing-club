@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { CORE_STATS, rarityBoostStats } from '../src/config/stats';
-import { PHASE_IDS } from '../src/config/time';
+import { CORE_STATS, conditionBoostStats, rarityBoostStats } from '../src/config/stats';
+import { PHASE_IDS, TIME } from '../src/config/time';
 import { formatContentError, parseContent, validateReferences } from '../src/core/content/parseContent';
 import { loadBaseContent } from './helpers/content';
 
 const base = loadBaseContent();
 const refs = {
-  statIds: [...CORE_STATS, ...rarityBoostStats(base.content.rarities)].map((s) => s.id),
+  statIds: [...CORE_STATS, ...rarityBoostStats(base.content.rarities), ...conditionBoostStats(TIME.phases, base.content.weather)].map((s) => s.id),
   effectIds: ['decoration', 'look'],
   phaseIds: PHASE_IDS,
 };

@@ -66,6 +66,8 @@ After adding content, run `npm test` (the content tests validate every pack) and
   (bought at the water before, with `"requiresRank"` one lower).
 - `clubBonus` is the extra coin share once the club lives here (`1` = +100%). Keep it
   rising along the journey; it is the reward for starting over.
+- `tackleNeed`: how much harder fish fight here. Each rarity takes its `waterNeedShare`
+  of it on top of its own `tackleNeed` (see "Add a rarity" below and `docs/TUNING.md`).
 - `scene.hills`: `rolling, pines, cliffs, cave, clouds, none` (`cave` adds a rock ceiling and
   hides the sun and moon; `clouds` is a sea of clouds). `scene.foreground`:
   `reeds, rocks, lilies, crystals, none`.
@@ -106,6 +108,11 @@ After adding content, run `npm test` (the content tests validate every pack) and
 - `{ "handler": "look", "args": { "slot": "rod", "priority": 4, "color": "coral", "tip": "sand", "length": 18 } }`
   changes how the rod looks while owned; the highest `priority` wins. Boats use
   `{ "slot": "boat", "priority": 4, "sprite": "boat_4", "rig": "rig_4" }`.
+- Weather and night bait: every time of day and weather gets a stat `boost_time_<phase>` or
+  `boost_weather_<weather>` (0.5 means fish tied to it bite 50% more), e.g.
+  `{ "stat": "boost_weather_storm", "op": "add", "value": 1 }`.
+- Tackle: `{ "stat": "tackle", "op": "add", "value": 2 }` helps land rarer fish. `escapeMult`
+  (below 1 helps) and `quickWindow` (above 1 widens the quick-catch bonus) are also stats.
 - Lures: each rarity above the lowest gets a stat `boost_<rarity>` (e.g. `boost_rare`)
   that moves that much weight from the lowest tier to that rarity, for hand fishing.
 - Branches (`branches.json`) with `"keepOnMove": true` keep their upgrades when the

@@ -98,6 +98,15 @@ Idle frame; a second swim frame (32x16 strip) can be added later. Keep the fish 
 | `fish_halo_marlin` | Halo Marlin | epic | sky_lake |
 | `fish_sky_leviathan` | Sky Leviathan | legendary | sky_lake |
 | `fish_dawn_carp` | Dawn Carp | legendary | sky_lake |
+| `fish_gust_minnow` | Gust Minnow | uncommon | pond |
+| `fish_thunder_bream` | Thunder Bream | rare | pond |
+| `fish_windrider_dace` | Windrider Dace | uncommon | river |
+| `fish_squall_trout` | Squall Trout | rare | river |
+| `fish_gale_flyingfish` | Gale Flyingfish | uncommon | cove |
+| `fish_tempest_eel` | Tempest Eel | epic | cove |
+| `fish_draft_tetra` | Draft Tetra | uncommon | glowing_cave |
+| `fish_echo_ray` | Echo Ray | rare | glowing_cave |
+| `fish_thunderhead_ray` | Thunderhead Ray | epic | sky_lake |
 
 ## Crew portraits (16x24, 2 frames)
 
@@ -158,6 +167,8 @@ Used in the HUD, menu bar, buttons, and upgrade nodes. Keep a 1 px margin.
 | `icon_dawn` | Dawn |
 | `icon_clear` | Clear weather |
 | `icon_rain` | Rain |
+| `icon_wind` | High Winds weather |
+| `icon_storm` | Rainstorm weather, Storm Sails |
 | `icon_fog` | Fog |
 | `icon_lantern` | Paper Lanterns |
 | `icon_cat` | Ship Cat |

@@ -1,7 +1,8 @@
 // Builds the GameContext: loads and validates content, fills registries, loads
 // the save, and initialises features. No Phaser here, so it is easy to reason about.
 import type { ZodType } from 'zod';
-import { CORE_STATS, rarityBoostStats } from '../config/stats';
+import { CORE_STATS, conditionBoostStats, rarityBoostStats } from '../config/stats';
+import { TIME } from '../config/time';
 import { applyClubBonus } from './club';
 import { OFFLINE, SAVE } from '../config/tuning';
 import { PHASE_IDS } from '../config/time';
@@ -106,6 +107,7 @@ export function bootstrap(opts: BootOptions): BootResult {
   const registries = buildRegistries(content);
   registerCoreEffects(registries);
   rarityBoostStats(registries.rarities.list()).forEach((s) => stats.define(s));
+  conditionBoostStats(TIME.phases, registries.weather.list()).forEach((s) => stats.define(s));
 
   const clock = new Clock();
   const save = new SaveManager(opts.storage, () => clock.now(), SAVE);

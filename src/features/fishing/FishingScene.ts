@@ -5,7 +5,7 @@ import { getContext, type GameContext } from '../../core/context';
 import { getLayout, type Layout } from '../../core/layout';
 import { uiState, worldAnchors } from '../../core/sceneState';
 import { CREEL, FISHING } from '../../config/tuning';
-import { MOTION, type PaletteName } from '../../design/tokens';
+import { MOTION, color, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
 import { drawPixelEllipse, drawSaggingLine } from '../../ui/pixelDraw';
 import { addText, type PixelText } from '../../ui/text';
@@ -23,6 +23,9 @@ interface Ripple {
   color: PaletteName;
 }
 
+/** Show the "more tackle" hint when the slip chance was at least this high. */
+const ESCAPE_HINT_AT = 0.3;
+
 const LABELS: Record<string, string> = {
   idle: 'Cast',
   missed: 'Cast',
@@ -39,6 +42,7 @@ export class FishingScene extends Phaser.Scene {
   private ctl!: FishingController;
   private line!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
+  private glow!: Phaser.GameObjects.Graphics;
   private bobber!: Phaser.GameObjects.Sprite;
   private cue!: PixelText;
   private message!: PixelText;
@@ -67,12 +71,14 @@ export class FishingScene extends Phaser.Scene {
     const zone = this.add.zone(z.x, z.y, z.w, z.h).setOrigin(0, 0).setInteractive();
     zone.on('pointerdown', () => this.tap());
 
+    this.glow = this.add.graphics();
     this.line = this.add.graphics();
     this.fx = this.add.graphics();
     this.bobber = this.add.sprite(bobber.x, bobber.y, 'bobber', 0).setOrigin(0.5, 0.5).setVisible(false);
     this.cue = addText(this, bobber.x, bobber.y - 18, '!', { color: 'gold', scale: 2, originX: 0.5, outline: 'ink' }).setVisible(false);
     // Messages sit over moving water, so they get a full outline.
-    this.message = addText(this, this.L.width / 2, cb.y - 16, '', { color: 'mist', originX: 0.5, maxWidth: 160, align: 'center', outline: 'ink' });
+    // Anchored by its bottom edge, so a two-line message grows upward, never into the Cast button.
+    this.message = addText(this, this.L.width / 2, cb.y - 5, '', { color: 'mist', originX: 0.5, originY: 1, maxWidth: 160, align: 'center', outline: 'ink' });
 
     this.castButton = new Button(this, {
       x: cb.x,
@@ -104,6 +110,7 @@ export class FishingScene extends Phaser.Scene {
 
     this.offs.push(
       this.ctl.onEvent((e) => this.onSession(e)),
+      this.ctx.bus.on('quickCatch', ({ label, coins }) => this.floatQuick(label, coins)),
       this.ctx.bus.on('viewportChanged', () => this.scene.restart()),
       this.ctx.bus.on('fishSold', () => this.refreshButtons()),
       this.ctx.bus.on('statsChanged', () => this.refreshButtons()),
@@ -159,13 +166,15 @@ export class FishingScene extends Phaser.Scene {
         break;
       case 'hooked':
         this.clearBite();
-        this.reelIn();
+        if (this.ctl.escaped) this.slipAway();
+        else this.reelIn();
         break;
       case 'landed':
         this.bobber.setVisible(false);
         this.jumper?.destroy();
         this.jumper = null;
         if (this.ctl.pending) this.showPopup();
+        else if (this.ctl.escaped) this.say(this.escapeMessage(), 'sky');
         break;
       case 'idle':
         this.say('');
@@ -237,12 +246,63 @@ export class FishingScene extends Phaser.Scene {
     this.bobber.setVisible(false);
   }
 
+  /** The fish leaps, twists off the hook, and splashes back. */
+  private slipAway(): void {
+    const { bobber } = this.L;
+    const c = this.ctl.escaped!.result;
+    const fish = this.ctx.registries.fish.tryGet(c.fishId);
+    this.addRipple(bobber.x, bobber.y + 2, 14, 700, 'mist');
+    this.bobber.setVisible(false);
+    if (!fish) return;
+    const j = this.add.image(bobber.x, bobber.y, fish.spriteKey).setFlipX(true);
+    this.jumper = j;
+    const t = { p: 0 };
+    this.tweens.add({
+      targets: t,
+      p: 1,
+      duration: FISHING.reelAnimMs * 0.9,
+      ease: MOTION.ease,
+      onUpdate: () => {
+        j.setPosition(Math.round(bobber.x - t.p * 14), Math.round(bobber.y - Math.sin(t.p * Math.PI) * 22));
+        j.setAngle(Math.round(t.p * 6) * 30);
+      },
+      onComplete: () => {
+        this.addRipple(j.x, bobber.y + 2, 16, 900, 'mist');
+        this.addRipple(j.x, bobber.y + 2, 8, 600, 'sky');
+        j.setVisible(false);
+      },
+    });
+  }
+
+  /** Gentle words, and a hint when more tackle would have helped. */
+  private escapeMessage(): string {
+    const e = this.ctl.escaped!;
+    const rarity = this.ctx.registries.rarities.tryGet(e.result.rarityId);
+    const name = rarity ? rarity.name.toLowerCase() : 'fish';
+    const article = /^[aeiou]/.test(name) ? 'An' : 'A';
+    return e.chance >= ESCAPE_HINT_AT
+      ? `${article} ${name} fish slipped away. Better rods, bait, and boats add tackle.`
+      : `${article} ${name} fish slipped away. Next time!`;
+  }
+
+  /** "+6 Perfect catch!" rises from the boat. */
+  private floatQuick(label: string, coins: number): void {
+    const { boat } = this.L;
+    const t = addText(this, boat.x + 4, boat.y - 34, `+${coins} ${label}`, { color: 'gold', originX: 0.5, outline: 'ink' }).setDepth(50);
+    if (uiSignals.reducedMotion()) {
+      this.time.delayedCall(1400, () => t.destroy());
+      return;
+    }
+    this.tweens.add({ targets: t, y: t.y - 14, alpha: 0, delay: 500, duration: 1300, ease: MOTION.easeOut, onComplete: () => t.destroy() });
+  }
+
   private showPopup(): void {
     const c = this.ctl.pending;
     if (!c) return;
     uiState.modal = true;
     const full = this.ctl.creelFull;
     const handlers: CatchPopupHandlers = {
+      quick: this.ctl.quick ? `${this.ctl.quick.label} +${this.ctl.quick.coins}` : undefined,
       canKeep: !full,
       hint: full
         ? 'Creel full! Open it to sell everything with a bundle bonus.'
@@ -279,6 +339,38 @@ export class FishingScene extends Phaser.Scene {
     this.castButton.setDisabled(phase === 'casting' || phase === 'reeling');
     const cap = this.ctx.stats.get('storageCap');
     this.creelButton.setLabel(`${this.ctl.state.creel.length}/${cap}`);
+  }
+
+  /**
+   * A rarer fish is near: a soft glow in its rarity color around the bobber
+   * while you wait (blue for rare, purple for epic, gold for legendary).
+   */
+  private drawRareGlow(phase: string, reduced: boolean): void {
+    const g = this.glow;
+    g.clear();
+    const tier = this.ctl.upcomingTier;
+    if ((phase !== 'waiting' && phase !== 'bite') || tier < FISHING.glowMinTier) return;
+    const rarity = this.ctx.registries.rarities.tryGet(this.ctl.upcomingRarity ?? '');
+    if (!rarity) return;
+    const { bobber } = this.L;
+    const pulse = reduced ? 0.5 : (Math.sin(this.elapsed / 700) + 1) / 2;
+    const strength = FISHING.glowAlpha * (0.6 + 0.4 * pulse) * (0.7 + 0.15 * (tier - FISHING.glowMinTier));
+    // A soft filled pool of light with a clearer rim.
+    const rx = 11 + Math.round(pulse * 2);
+    const ry = 4;
+    g.fillStyle(color(rarity.color), strength * 0.35);
+    for (let dy = -ry; dy <= ry; dy++) {
+      const half = Math.round(rx * Math.sqrt(1 - (dy / ry) ** 2));
+      g.fillRect(bobber.x - half, bobber.y + 2 + dy, half * 2 + 1, 1);
+    }
+    drawPixelEllipse(g, bobber.x, bobber.y + 2, rx, ry, rarity.color, strength);
+    drawPixelEllipse(g, bobber.x, bobber.y + 2, rx + 5, ry + 2, rarity.color, strength * 0.4);
+    // A slow twinkle for epic and legendary fish.
+    if (tier >= FISHING.glowMinTier + 1 && !reduced && Math.floor(this.elapsed / 600) % 3 === 0) {
+      const a = (this.elapsed / 900) % (Math.PI * 2);
+      g.fillStyle(color(rarity.color), strength);
+      g.fillRect(Math.round(bobber.x + Math.cos(a) * 12), Math.round(bobber.y + 2 + Math.sin(a) * 4), 1, 1);
+    }
   }
 
   private say(text: string, c: PaletteName = 'mist'): void {
@@ -318,6 +410,8 @@ export class FishingScene extends Phaser.Scene {
     } else if (this.jumper) {
       drawSaggingLine(this.line, worldAnchors.rodTip.x, worldAnchors.rodTip.y, this.jumper.x, this.jumper.y, 1, 'mist');
     }
+
+    this.drawRareGlow(phase, reduced);
 
     // Ripples expand and fade in three alpha steps (no smooth gradients).
     this.fx.clear();

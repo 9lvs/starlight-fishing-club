@@ -12,7 +12,7 @@ import { addText } from '../../ui/text';
 import { attachTooltip } from '../../ui/Tooltip';
 import { formatNumber } from '../../ui/format';
 import { ECONOMY } from '../../config/balance';
-import { color } from '../../design/tokens';
+import { color, type PaletteName } from '../../design/tokens';
 import { layoutBranch, prereqList } from './logic';
 import { getUpgradeService } from './service';
 
@@ -27,6 +27,8 @@ const TAB_H = 22;
 /** Below this width a tab shows only its icon (the open tab always shows its name). */
 const TAB_LABEL_MIN = 56;
 const ROW_GAP = 14;
+/** Below this content height the card drops "Leads to" and puts effects on one line. */
+const COMPACT_BELOW = 230;
 
 export class UpgradesScene extends PanelScene<UpgradesData> {
   readonly title = 'Upgrades';
@@ -133,68 +135,104 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
 
   /**
    * The detail card for the selected node, sized to its text and pinned to the
-   * bottom of `area`. Returns its height so the tree can take the rest.
+   * bottom of `area`: what it does now and next, every requirement with a check
+   * or a lock, and what it leads to. Returns its height so the tree takes the rest.
    */
   private buildCard(area: Rect, u: UpgradeDef, branch: string, scrollPos: () => number): number {
     const svc = getUpgradeService();
+    const r = this.ctx.registries;
     const level = svc.level(u.id);
     const state = svc.state(u);
+    const maxed = level >= u.maxLevel;
+    const compact = area.h < COMPACT_BELOW;
     const x = area.x;
     const w = area.w;
     const g = this.add.graphics();
+    // Rows are created first, then stacked once their heights are known.
+    const text = (t: string, c: PaletteName, dx = 4) => addText(this, x + dx, 0, t, { color: c, shadow: false, maxWidth: w - dx - 4 });
     const name = addText(this, x + 4, 0, u.name, { color: 'mist', shadow: false });
-    const lv = addText(this, x + w - 4, 0, `Lv ${level}/${u.maxLevel}`, { color: 'slate', shadow: false, originX: 1 });
-    const desc = addText(this, x + 4, 0, u.description, { color: 'sky', shadow: false, maxWidth: w - 8 });
+    const lv = addText(this, x + w - 4, 0, u.maxLevel > 1 ? `Lv ${level}/${u.maxLevel}` : maxed ? 'Owned' : '', { color: 'slate', shadow: false, originX: 1 });
+    const desc = text(u.description, 'sky');
 
-    // Effect preview: current value -> value after the next level.
-    let effect = '';
-    if (level < u.maxLevel) {
-      const parts = u.modifiers.map((m) => {
+    // What it does: current value > value after the next level.
+    const parts: string[] = [];
+    if (!maxed) {
+      for (const m of u.modifiers) {
         const def = this.ctx.stats.def(m.stat);
         const now = this.ctx.stats.get(m.stat);
         const next = this.ctx.stats.preview(m.stat, [{ ...modifierAtLevel(m, level + 1), source: `upgrade:${u.id}` }], `upgrade:${u.id}`);
-        return `${def.label ?? m.stat} ${formatStat(def, now)} > ${formatStat(def, next)}`;
-      });
-      for (const e of u.effects) {
-        const text = this.ctx.registries.effects.tryGet(e.handler)?.describe?.(this.ctx, e.args ?? {});
-        if (text) parts.push(text);
+        parts.push(`${def.label ?? m.stat} ${formatStat(def, now)} > ${formatStat(def, next)}`);
       }
-      effect = parts.join('  ');
+      for (const e of u.effects) {
+        const t = r.effects.tryGet(e.handler)?.describe?.(this.ctx, e.args ?? {});
+        if (t) parts.push(t);
+      }
     } else {
-      effect = 'Fully upgraded';
+      parts.push('Fully upgraded');
     }
-    const eff = addText(this, x + 4, 0, effect, { color: 'sage', shadow: false, maxWidth: w - 8 });
+    const eff = text(parts.join(compact ? '  ' : '\n'), 'sage');
 
-    const missing = svc.missing(u);
-    const water = svc.rankNeeded(u);
-    const blocked = missing.length > 0 || !!water;
-    const needs =
-      blocked && level < u.maxLevel
-        ? addText(this, x + 18, 0, water ? `Move the club to ${water} first` : `Needs ${missing.map((m) => m.name).join(', ')}`, {
-            color: 'slate',
-            shadow: false,
-            maxWidth: w - 22,
-          })
-        : null;
-    const footH = level >= u.maxLevel ? 0 : needs ? needs.textHeight + 4 : 24;
-    const h = 15 + desc.textHeight + 3 + eff.textHeight + 4 + footH;
+    // Requirements: each one listed, met or not, so the path is never a mystery.
+    const reqs: { label: string; met: boolean }[] = [];
+    if (!maxed) {
+      for (const p of prereqList(u)) {
+        const pu = r.upgrades.tryGet(p.id);
+        if (pu) reqs.push({ label: p.level > 1 ? `${pu.name} level ${p.level}` : pu.name, met: svc.level(p.id) >= p.level });
+      }
+      if (u.requiresRank > 0) {
+        const water = r.waters.list().find((wa) => wa.rangeRequired === u.requiresRank);
+        reqs.push({ label: `Club at ${water?.name ?? `rank ${u.requiresRank}`}`, met: this.ctx.world.clubRank >= u.requiresRank });
+      }
+    }
+    const reqRows = reqs.map((q) => ({
+      icon: this.add.image(x + 4, 0, q.met ? 'icon_check' : 'icon_lock').setOrigin(0, 0),
+      label: text(q.label, q.met ? 'sage' : 'sand', 18),
+    }));
+    const needsHead = reqRows.length > 0 ? text('Needs', 'mist') : null;
+
+    // Leads to: what this opens up.
+    const leads = compact
+      ? []
+      : r.upgrades
+          .list()
+          .filter((x2) => prereqList(x2).some((p) => p.id === u.id))
+          .map((x2) => x2.name);
+    const leadsText = leads.length > 0 ? text(`Leads to: ${leads.join(', ')}`, 'slate') : null;
+
+    const showBuy = !maxed && reqs.every((q) => q.met);
+    const footH = showBuy ? 24 : 4;
+    let h = 15 + desc.textHeight + 3 + eff.textHeight + 4;
+    if (needsHead) h += 12 + reqRows.reduce((s2, q) => s2 + Math.max(12, q.label.textHeight + 1), 0) + 2;
+    if (leadsText) h += leadsText.textHeight + 3;
+    h += footH;
     const y = area.y + area.h - h;
     drawPanelBox(g, x, y, w, h, { fill: 'ink', border: state === 'affordable' ? 'gold' : 'dusk' });
     name.setY(y + 3);
     lv.setY(y + 3);
-    desc.setY(y + 15);
-    eff.setY(y + 15 + desc.textHeight + 3);
-    const footY = y + h - footH;
-    if (needs) {
-      this.add.image(x + 4, footY, 'icon_lock').setOrigin(0, 0);
-      needs.setY(footY + 1);
-      return h;
+    let cy = y + 15;
+    desc.setY(cy);
+    cy += desc.textHeight + 3;
+    eff.setY(cy);
+    cy += eff.textHeight + 4;
+    if (needsHead) {
+      needsHead.setY(cy);
+      cy += 12;
+      for (const q of reqRows) {
+        q.icon.setY(cy - 1);
+        q.label.setY(cy + 1);
+        cy += Math.max(12, q.label.textHeight + 1);
+      }
+      cy += 2;
     }
-    if (blocked || level >= u.maxLevel) return h;
-    const currency = this.ctx.registries.currencies.tryGet(u.currency ?? ECONOMY.defaultCurrency);
+    if (leadsText) {
+      leadsText.setY(cy);
+      cy += leadsText.textHeight + 3;
+    }
+    if (!showBuy) return h;
+    const currency = r.currencies.tryGet(u.currency ?? ECONOMY.defaultCurrency);
     new Button(this, {
       x: x + w - 74,
-      y: footY,
+      y: y + h - footH,
       w: 70,
       h: 20,
       label: formatNumber(svc.cost(u)),
@@ -206,6 +244,12 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
         this.refresh({ branch, selected: u.id, scroll: scrollPos() });
       },
     });
+    if (state !== 'affordable') {
+      addText(this, x + 4, y + h - footH + 6, `${formatNumber(svc.cost(u) - this.ctx.wallet.get(u.currency ?? ECONOMY.defaultCurrency))} more coins`, {
+        color: 'slate',
+        shadow: false,
+      });
+    }
     return h;
   }
 }

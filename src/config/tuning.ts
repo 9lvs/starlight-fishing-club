@@ -13,6 +13,9 @@ export const FISHING = {
   /** Bobber float distance from the boat, in internal pixels. */
   castDistance: 46,
   bobAmplitude: 1,
+  /** Rarer fish glow softly in the water while you wait: rare (tier 2) and up. */
+  glowMinTier: 2,
+  glowAlpha: 0.7,
   biteDipPx: 2,
 } as const;
 
@@ -30,6 +33,21 @@ export const OFFLINE = {
   minSummaryMs: 60000,
   /** The live tick clamps dt to this; longer gaps go through catch-up. */
   maxTickMs: 1000,
+} as const;
+
+/** Landing a fish: slipping the hook, and the quick-catch bonus. */
+export const CATCH = {
+  escape: {
+    perShortfall: 0.05,
+    surplusRelief: 0.05,
+    minFactor: 0.3,
+    max: 0.88,
+  },
+  /** Reel in this soon after the bite for bonus coins (shares of the bite window). */
+  quick: [
+    { within: 0.35, bonus: 0.25, label: 'Perfect catch!' },
+    { within: 0.65, bonus: 0.1, label: 'Quick catch!' },
+  ],
 } as const;
 
 /** The creel: why keeping fish is worth it. */

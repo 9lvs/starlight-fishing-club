@@ -17,6 +17,8 @@ export function wireAudio(ctx: GameContext, audio: AudioManager): void {
     if (sting) audio.play(sting);
   });
   bus.on('fishKept', () => audio.play('keep'));
+  bus.on('fishEscaped', () => audio.play('slip'));
+  bus.on('quickCatch', () => audio.play('quick'));
   bus.on('fishSold', ({ source }) => {
     if (source !== 'crew') audio.play('coin');
   });
@@ -32,14 +34,18 @@ export function wireAudio(ctx: GameContext, audio: AudioManager): void {
   bus.on('ui:panelClosed', () => audio.play('ui_close'));
   bus.on('audio:play', ({ key, volume }) => audio.play(key, volume));
   // World: music follows the time of day, and rain falls on the water.
-  const rainLevel = () => ctx.registries.weather.tryGet(ctx.world.weather)?.visuals.rain ?? 0;
+  const visuals = () => ctx.registries.weather.tryGet(ctx.world.weather)?.visuals;
+  const applyWeather = () => {
+    audio.setRain(visuals()?.rain ?? 0);
+    audio.setWind(visuals()?.wind ?? 0);
+  };
   audio.setMood(ctx.world.phase);
-  audio.setRain(rainLevel());
+  applyWeather();
   bus.on('timeOfDayChanged', ({ phase }) => {
     audio.setMood(phase);
     audio.play('phase');
   });
-  bus.on('weatherChanged', () => audio.setRain(rainLevel()));
+  bus.on('weatherChanged', applyWeather);
   bus.on('settingsChanged', ({ key, value }) => {
     if (key === 'muted') audio.setMuted(value === true);
     if (key === 'volume' && typeof value === 'number') audio.setVolume(value);

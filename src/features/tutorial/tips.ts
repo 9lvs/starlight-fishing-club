@@ -56,6 +56,27 @@ export const TIPS: Record<string, TipDef> = {
     dismissable: true,
     opens: 'Map',
   },
+  tackle: {
+    id: 'tackle',
+    text: 'Some fish slip away, rare ones more often. Rods, boats, and bait add Tackle so you land them.',
+    anchor: { kind: 'menu', entry: 'upgrades' },
+    dismissable: true,
+    opens: 'Upgrades',
+  },
+  glow: {
+    id: 'glow',
+    text: 'A glow in the water means a rarer fish is near: blue rare, purple epic, gold legendary.',
+    anchor: { kind: 'bobber' },
+    dismissable: false,
+    autoHideMs: 7000,
+  },
+  weather: {
+    id: 'weather',
+    text: 'The weather changed! Some fish only bite in wind, rain, storms, or fog. Check the Journal.',
+    anchor: { kind: 'center' },
+    dismissable: true,
+    autoHideMs: 8000,
+  },
   daily: {
     id: 'daily',
     text: 'Try the Daily Catch: one fish for everyone today, and your first five catches make a luck score to share.',

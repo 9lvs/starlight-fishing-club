@@ -43,6 +43,19 @@ Base values; upgrades and features change them only through modifiers.
 | `boost_<rarity>` | 0 | Lures: weight moved from common to that rarity (hand fishing). One per rarity. |
 | `dailyGiftCoins` | 60 | Defined by the daily gift feature. |
 
+## Landing a fish: `src/config/tuning.ts` (`CATCH`), `rarities.json`, `waters.json`
+
+- Slip chance = (rarity `escape`, eased by spare tackle down to 30% of it, plus 5% per point
+  of tackle short of the need) times `escapeMult`, capped at 88%. Need = rarity `tackleNeed`
+  (uncommon 1, rare 4, epic 8, legendary 13) plus water `tackleNeed` (pond 0, river 3, cove 10,
+  cave 17, sky 25) times the rarity's `waterNeedShare` (uncommon 0, rare 0.6, epic 0.8,
+  legendary 1). Base `escape`: 0, 3%, 8%, 15%, 25%.
+- Tackle comes from rod tiers (+2 each), boat tiers (+1), bait tiers (+2), Smooth Reel and
+  Steady Anchor (+1 per level). Fully geared: about 23 at the pond and 52 at Sky Lake.
+- Quick catch: reel within 35% of the bite window for +25% of the fish's value in coins,
+  within 65% for +10%. Smooth Reel widens both.
+- Crew and offline rolls never slip away (their math is unchanged).
+
 ## Loot: `src/config/balance.ts` (`LOOT`) and `rarities.json`
 
 - `rarities.json`: `weight` (60/25/10/4/1), `baseValue` (2/6/25/100/500, a reference;
@@ -62,7 +75,7 @@ Base values; upgrades and features change them only through modifiers.
 - Pacing levers: `rod_1` / `cork_grip` costs (first upgrade), `boat_3` (first move),
   the reach boats `boat_5`, `boat_7`, `boat_9` (later moves), `hire_help.baseCost` and
   `crew.json` `deckhand.hireCost` (first crew), and `clubBonus` in `waters.json`.
-- The journey: Willow Pond (+0%), Whisper River (+100%), Moonlit Cove (+400%),
+- The journey: Willow Pond (+0%), Whisper River (+200%), Moonlit Cove (+400%),
   Glowing Cave (+900%), Sky Lake (+2400%). Tier costs rise about 6x per water
   (36x and 600x of the pond for cove and cave, 4000x for the Sky Lake finale).
 - `tests/pacing.test.ts` plays the whole journey with a goal-directed player model

@@ -56,6 +56,8 @@ export const AUDIO = {
   repeatGuardMs: 70,
   /** Rain on the water, mixed in by weather. */
   rain: { filterHz: 2600, gain: 0.035 },
+  /** Wind gusts, mixed in by weather. */
+  wind: { filterHz: 520, gain: 0.05, swellHz: 0.11 },
 };
 
 // Pentatonic notes keep every placeholder gentle and in key.
@@ -95,6 +97,13 @@ export const SOUNDS: Record<string, SoundDef> = {
     tone: { notes: [C5, G5], wave: 'sine', noteMs: 140, gapMs: 30, gain: 0.07 },
     toneDelayMs: 120,
   },
+  slip: {
+    volume: 0.45,
+    noise: { filter: 'lowpass', hz: 1200, ms: 200, gain: 0.07 },
+    tone: { notes: [G5, E5, C5], wave: 'sine', noteMs: 90, gapMs: 30, gain: 0.04, slide: 0.95 },
+    toneDelayMs: 150,
+  },
+  quick: { volume: 0.45, tone: { notes: [E5, G5, C6], wave: 'sine', noteMs: 45, gapMs: 10, gain: 0.05 } },
   miss: { volume: 0.4, tone: { notes: [E5, C5], wave: 'sine', noteMs: 120, gapMs: 40, gain: 0.04, slide: 0.94 } },
   keep: {
     volume: 0.5,

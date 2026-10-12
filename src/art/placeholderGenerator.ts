@@ -634,6 +634,26 @@ function drawIcon(f: FrameCanvas, name: string): void {
       f.ellipse(4, 3.5, 2.6, 2.4, 'mist');
       for (const [x, y] of [[3, 8], [6, 9], [9, 8], [4, 11], [8, 11]] as [number, number][]) f.px(x, y, 'sky');
       return;
+    case 'wind':
+      f.line(1, 3, 7, 3, 'mist');
+      f.px(8, 2, 'mist');
+      f.px(9, 1, 'sky');
+      f.line(0, 6, 9, 6, 'sky');
+      f.px(10, 5, 'sky');
+      f.px(10, 7, 'sky');
+      f.line(2, 9, 8, 9, 'mist');
+      f.px(9, 10, 'mist');
+      return;
+    case 'storm':
+      f.ellipse(6, 3.5, 5.5, 3, 'slate');
+      f.ellipse(4, 3, 2.6, 2.4, 'sky');
+      f.line(6, 6, 5, 8, 'gold');
+      f.line(5, 8, 7, 8, 'gold');
+      f.line(7, 8, 6, 11, 'gold');
+      f.px(2, 8, 'sky');
+      f.px(9, 9, 'sky');
+      f.px(3, 11, 'sky');
+      return;
     case 'fog':
       f.line(1, 3, 9, 3, 'mist');
       f.line(3, 6, 11, 6, 'sky');

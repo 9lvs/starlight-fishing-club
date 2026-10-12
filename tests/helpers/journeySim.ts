@@ -5,8 +5,10 @@
 // soon as they can. Moving resets coins, upgrades, and crew, and raises the club
 // bonus. Cosmetics are skipped (they change nothing here). Used by the pacing test.
 import { LOOT } from '../../src/config/balance';
-import { CORE_STATS, rarityBoostStat, rarityBoostStats } from '../../src/config/stats';
-import { FISHING } from '../../src/config/tuning';
+import { CORE_STATS, conditionBoostStats, rarityBoostStat, rarityBoostStats } from '../../src/config/stats';
+import { TIME } from '../../src/config/time';
+import { CATCH, FISHING } from '../../src/config/tuning';
+import { escapeChance, quickBonus } from '../../src/systems/catchOdds';
 import type { CoreContent, UpgradeDef } from '../../src/core/content/schemas';
 import { seededRng } from '../../src/core/rng';
 import { StatsService, modifierAtLevel } from '../../src/core/stats';
@@ -38,12 +40,14 @@ const MISS_RATE = 0.08;
 const SPEND_SHARE = 0.35;
 /** Stats this model cannot value (it never leaves the tab), so it skips upgrades that only touch them. */
 const AWAY_ONLY = new Set(['offlineCapHours', 'offlineValueMult']);
+/** The model always fishes on a clear day, so night and weather bait would be wasted here. */
+const conditionOnly = (u: UpgradeDef) => u.modifiers.every((m) => m.stat.startsWith('boost_time_') || m.stat.startsWith('boost_weather_'));
 const TOP_TIERS = ['rod_10', 'boat_10', 'bait_6'];
 
 export function simulateJourney(content: CoreContent, seed: number, horizonHours = 10): JourneyResult {
   const rng = seededRng(seed);
   const stats = new StatsService();
-  [...CORE_STATS, ...rarityBoostStats(content.rarities)].forEach((s) => stats.define(s));
+  [...CORE_STATS, ...rarityBoostStats(content.rarities), ...conditionBoostStats(TIME.phases, content.weather)].forEach((s) => stats.define(s));
   const waters = [...content.waters].filter((w) => !w.comingSoon).sort((a, b) => a.rangeRequired - b.rangeRequired);
   const fishById = new Map(content.fish.map((f) => [f.id, f]));
   const keep = new Set(content.branches.filter((b) => b.keepOnMove).map((b) => b.id));
@@ -67,6 +71,7 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
   const open = (u: UpgradeDef) =>
     !keep.has(u.branch) &&
     !u.modifiers.every((m) => AWAY_ONLY.has(m.stat)) &&
+    !conditionOnly(u) &&
     !(crewOnly(u) && crew.length === 0) &&
     lv(u.id) < u.maxLevel &&
     rank >= u.requiresRank &&
@@ -92,8 +97,17 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
     } else {
       cycle += REACTION_S + FISHING.reelAnimMs / 1000 + DISMISS_S;
       const r = rollCatch({ rarities: content.rarities, fish: content.fish, conditions: cond, luck: stats.get('luck'), rng, cfg: LOOT, pity, boosts: boosts() })!;
-      pity = r.pity!;
-      coins += sellValue(r.fish.baseValue, stats.get('sellValueMult') * stats.get('fishSizeMult'));
+      // Rarer fish can slip away, more often without enough tackle.
+      const rar = content.rarities.find((x) => x.id === r.rarityId)!;
+      const need = rar.tackleNeed + waters[rank]!.tackleNeed * rar.waterNeedShare;
+      if (rng() < escapeChance(rar.escape, need, stats.get('tackle'), stats.get('escapeMult'), CATCH.escape)) {
+        pity += 1;
+      } else {
+        pity = r.pity!;
+        const value = sellValue(r.fish.baseValue, stats.get('sellValueMult') * stats.get('fishSizeMult'));
+        const quick = quickBonus(REACTION_S * 1000, stats.get('biteWindowMs'), CATCH.quick, stats.get('quickWindow'));
+        coins += value + (quick ? Math.max(1, Math.round(value * quick.bonus)) : 0);
+      }
     }
     crew.forEach((typeId) => {
       const h = helpers.find((x) => x.id === typeId)!;

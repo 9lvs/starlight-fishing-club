@@ -5,10 +5,12 @@ shifting sky, catch fish of gentle rarities, fill your journal, grow your club
 with a visible upgrade tree, and hire a crew who keep fishing while you are away.
 
 - One-tap loop, generous timing, no fail states, nothing to lose.
-- 63 fish across five waters, with time-of-day and weather exclusives.
+- 72 fish across five waters, with time-of-day and weather exclusives.
 - Ten rod tiers, ten boat tiers, and six baits; bigger waters unlock the higher tiers.
 - Move the club to the next water for a fresh start and a bigger coin bonus, all the way to Sky Lake.
 - A Daily Catch: one shared fish a day, and your first five catches make a luck score to share.
+- Rarer fish glow in the water, fight harder, and can slip away: rods, boats, and bait add Tackle.
+- Reel in fast for a quick-catch bonus. Wind, storms, rain, fog, and night each bring their own fish.
 - Calm composed music that follows the time of day, and a soft sound for every action.
 - Gentle tips for new players, and a creel bundle bonus that makes keeping fish worth it.
 - A Feedback button that opens a short form with your device filled in.

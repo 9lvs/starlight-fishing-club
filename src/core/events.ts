@@ -15,6 +15,12 @@ export interface GameEvents {
   catchLanded: { catch: CatchResult; source: 'hand' | 'crew'; crewId?: string };
   fishSold: { fishId: string; value: number; currency: string; source: 'hand' | 'crew' | 'creel' };
   fishKept: { catch: CatchResult };
+  /** A hooked fish slipped away (rarer fish, or not enough tackle). Nothing is lost. */
+  fishEscaped: { fishId: string; rarityId: string; waterId: string; chance: number };
+  /** A rarer fish is coming to this cast (it glows in the water). */
+  rareNearby: { rarityId: string };
+  /** Reeled in soon after the bite: bonus coins. */
+  quickCatch: { label: string; coins: number };
   /** Many catches at once (offline catch-up). One entry per fish type. */
   catchesBatched: { source: 'crew'; entries: { fishId: string; count: number; size: number }[]; at: number };
 

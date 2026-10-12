@@ -159,6 +159,8 @@ export interface RollInput<F extends LootFish> {
   pity?: number;
   /** Lure bonuses (hand fishing). */
   boosts?: RarityBoosts;
+  /** Multiplies a fish's weight within its rarity (bait for night or storm fish). */
+  fishWeight?: (fish: F) => number;
 }
 
 export interface RollOutput<F extends LootFish> {
@@ -189,7 +191,7 @@ export function rollCatch<F extends LootFish>(input: RollInput<F>): RollOutput<F
   if (!tierId) return null;
   const candidates = pool.filter((f) => f.rarity === tierId);
   const fish = weightedPick(
-    candidates.map((f) => ({ item: f, weight: f.weight })),
+    candidates.map((f) => ({ item: f, weight: f.weight * (input.fishWeight?.(f) ?? 1) })),
     rng,
   );
   if (!fish) return null;

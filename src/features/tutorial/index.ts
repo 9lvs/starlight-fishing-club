@@ -22,6 +22,14 @@ export const tutorialFeature: GameFeature = {
     });
     bus.on('upgradePurchased', () => svc.onPurchase());
     bus.on('fishKept', () => svc.queue('creel'));
+    bus.on('fishEscaped', () => svc.queue('tackle'));
+    // These two only make sense in the moment, so they wait until the guide is done.
+    bus.on('rareNearby', () => {
+      if (svc.guideDone) svc.queue('glow');
+    });
+    bus.on('weatherChanged', ({ weather }) => {
+      if (weather !== 'clear' && svc.guideDone) svc.queue('weather');
+    });
     bus.on('waterUnlocked', () => svc.queue('move'));
     bus.on('statsChanged', ({ stats }) => {
       if (stats.includes('crewSlots') && ctx.stats.get('crewSlots') > 0) svc.queue('crew');

@@ -96,9 +96,9 @@ describe('moving the club', () => {
     // Club cosmetics are kept.
     expect(g.upgrades.level('paper_lanterns')).toBe(1);
     expect(g.ctx.world.activeDecorations()).toContain('lanterns');
-    // +100% coins at Whisper River.
-    expect(clubBonus(g.ctx)).toBe(1);
-    expect(g.ctx.stats.get('sellValueMult')).toBeCloseTo(sellBefore * 2);
+    // +200% coins at Whisper River.
+    expect(clubBonus(g.ctx)).toBe(2);
+    expect(g.ctx.stats.get('sellValueMult')).toBeCloseTo(sellBefore * 3);
     // The pond can still be visited, and river tiers are now for sale.
     expect(g.ctx.world.isUnlocked('pond')).toBe(true);
     expect(g.ctx.world.setWater('pond')).toBe(true);
@@ -114,7 +114,7 @@ describe('moving the club', () => {
     g.ctx.save.save();
     const again = boot(storage);
     expect(again.ctx.world.clubRank).toBe(1);
-    expect(clubBonus(again.ctx)).toBe(1);
+    expect(clubBonus(again.ctx)).toBe(2);
     expect(again.upgrades.level('boat_3')).toBe(0);
   });
 

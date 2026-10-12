@@ -11,6 +11,8 @@ export class AudioManager {
   private sfx: GainNode | null = null;
   private musicBus: GainNode | null = null;
   private rainGain: GainNode | null = null;
+  private windGain: GainNode | null = null;
+  private wind = 0;
   private buffers = new Map<string, AudioBuffer | null>();
   private ambientNode: AudioNode | null = null;
   private noise: AudioBuffer | null = null;
@@ -78,6 +80,12 @@ export class AudioManager {
   setRain(level: number): void {
     this.rain = Math.max(0, Math.min(1, level));
     if (this.rainGain && this.ac) this.rainGain.gain.setTargetAtTime(this.rain * AUDIO.rain.gain, this.ac.currentTime, 1.5);
+  }
+
+  /** 0..1 wind: a soft, swelling whoosh. */
+  setWind(level: number): void {
+    this.wind = Math.max(0, Math.min(1, level));
+    if (this.windGain && this.ac) this.windGain.gain.setTargetAtTime(this.wind * AUDIO.wind.gain, this.ac.currentTime, 2);
   }
 
   /** Pause everything while the tab is hidden. */
@@ -298,6 +306,26 @@ export class AudioManager {
     this.rainGain.gain.value = this.rain * AUDIO.rain.gain;
     src.connect(filter).connect(this.rainGain).connect(out);
     src.start();
+    // Wind: band-passed noise that swells slowly, like gusts.
+    const wsrc = ac.createBufferSource();
+    wsrc.buffer = this.whiteNoise();
+    wsrc.loop = true;
+    const band = ac.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = AUDIO.wind.filterHz;
+    band.Q.value = 0.6;
+    const swell = ac.createGain();
+    swell.gain.value = 0.6;
+    const lfo = ac.createOscillator();
+    lfo.frequency.value = AUDIO.wind.swellHz;
+    const depth = ac.createGain();
+    depth.gain.value = 0.4;
+    lfo.connect(depth).connect(swell.gain);
+    this.windGain = ac.createGain();
+    this.windGain.gain.value = this.wind * AUDIO.wind.gain;
+    wsrc.connect(band).connect(swell).connect(this.windGain).connect(out);
+    wsrc.start();
+    lfo.start();
   }
 
   private restartAmbient(): void {

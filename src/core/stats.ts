@@ -17,7 +17,7 @@ export interface Modifier {
   source: string;
 }
 
-export type StatFormat = 'int' | 'ms' | 'mult' | 'percent' | 'hours' | 'number';
+export type StatFormat = 'int' | 'ms' | 'mult' | 'percent' | 'bonus' | 'hours' | 'number';
 
 export interface StatDef {
   id: string;
@@ -180,6 +180,8 @@ export function formatStat(def: StatDef, value: number): string {
       return `x${value.toFixed(2).replace(/\.?0+$/, '')}`;
     case 'percent':
       return `${Math.round(value * 100)}%`;
+    case 'bonus':
+      return `+${Math.round(value * 100)}%`;
     case 'hours':
       return `${Math.round(value * 10) / 10}h`;
     case 'int':

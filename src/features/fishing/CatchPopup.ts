@@ -19,6 +19,8 @@ export interface CatchPopupHandlers {
   canKeep: boolean;
   /** A short line under the buttons explaining Sell and Keep (new players). */
   hint?: string;
+  /** "Perfect catch! +6": the quick-catch bonus, already paid. */
+  quick?: string;
 }
 
 export const POPUP = { w: 150, h: 156, spriteScale: 3 } as const;
@@ -84,7 +86,9 @@ export class CatchPopup extends Phaser.GameObjects.Container {
       }),
     );
     card.add(addText(scene, POPUP.w / 2, 97, `${c.size} cm`, { originX: 0.5, color: 'slate', shadow: false }));
-    if (c.pityTriggered) {
+    if (h.quick) {
+      card.add(addText(scene, POPUP.w / 2, 108, h.quick, { originX: 0.5, color: 'gold', shadow: false }));
+    } else if (c.pityTriggered) {
       card.add(addText(scene, POPUP.w / 2, 108, 'Lucky streak!', { originX: 0.5, color: 'gold', shadow: false }));
     }
 

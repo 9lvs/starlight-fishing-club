@@ -29,6 +29,12 @@ export const raritySchema = z.object({
   luckShare: z.number().min(0).default(0),
   /** Hard cap on the final chance of this tier, 0..1. */
   maxChance: z.number().min(0).max(1).optional(),
+  /** Chance a hooked fish of this rarity slips away even with enough tackle. */
+  escape: z.number().min(0).max(1).default(0),
+  /** Tackle needed to land this rarity reliably. */
+  tackleNeed: z.number().min(0).default(0),
+  /** Share of the water's tackle need this rarity also has (tougher waters, tougher rare fish). */
+  waterNeedShare: z.number().min(0).max(1).default(0),
   color: paletteName,
   frame: paletteName,
   glow: z.number().int().min(0).max(4).default(0),
@@ -73,6 +79,8 @@ export const waterSchema = z.object({
   rangeRequired: z.number().int().min(0).default(0),
   /** Extra coins earned everywhere once the club has moved here (1 = +100%). */
   clubBonus: z.number().min(0).default(0),
+  /** Fish here fight harder: added to every rarity's tackle need. */
+  tackleNeed: z.number().min(0).default(0),
   comingSoon: z.boolean().default(false),
   spriteKey,
   scene: z
@@ -149,8 +157,12 @@ export const weatherSchema = z.object({
       fog: z.number().min(0).max(1).default(0),
       clouds: z.number().min(0).max(1).default(0.3),
       dim: z.number().min(0).max(1).default(0),
+      /** Gusts: faster clouds, slanted rain, wind streaks, and a wind sound. */
+      wind: z.number().min(0).max(1).default(0),
+      /** Soft distant flashes now and then (storms). */
+      flashes: z.boolean().default(false),
     })
-    .default({ rain: 0, fog: 0, clouds: 0.3, dim: 0 }),
+    .default({ rain: 0, fog: 0, clouds: 0.3, dim: 0, wind: 0, flashes: false }),
 });
 
 export const decorationSchema = z.object({
