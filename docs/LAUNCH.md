@@ -40,16 +40,15 @@ it has no debug panel and it works offline once loaded.
 
 ### GitHub Pages (free hosting at `https://9lvs.github.io/starlight-fishing-club/`)
 The workflow `.github/workflows/deploy.yml` builds, tests, and publishes on every push
-to `main`. The first run on 2026-10-10 built fine but could not publish:
-"Ensure GitHub Pages has been enabled". Steps:
+to `main`. Status: the repo is public and Pages is on (source: GitHub Actions), so
+every push to `main` goes live in about a minute. Watch it under the repo's Actions tab.
 
-1. **(you)** Pages on a private repo needs a paid GitHub plan. Either make the repo
-   public (Settings > General > Danger Zone > Change visibility) or upgrade.
-2. **(you)** Settings > Pages > Build and deployment > Source: **GitHub Actions**.
-3. **(you)** Merge the work branch into `main` (a pull request, or ask Claude to open one).
-   The push to `main` deploys. Re-run the old workflow from the Actions tab if needed.
-4. Check the live URL on a phone and desktop. Paste the URL into a Discord or iMessage
-   chat to see the link preview card (`public/og-image.png`).
+- Check the live URL on a phone and desktop. Paste the URL into a Discord or iMessage
+  chat to see the link preview card (`public/og-image.png`).
+- Players get updates on their second visit after a deploy (the offline cache serves
+  the old version once while it fetches the new one).
+- `?debug=1` works on the live site too (handy for testing). It only changes the
+  player's own save, so it is harmless, but do not link to it publicly.
 
 If you use a different address (custom domain, or itch.io only), update the `og:url`
 and `og:image` tags in `index.html` and set `LINKS.gameUrl` in `src/config/links.ts`.

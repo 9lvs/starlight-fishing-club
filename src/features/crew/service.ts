@@ -96,7 +96,7 @@ export class CrewService {
   catchUp(elapsedMs: number): OfflineReport | void {
     const members = this.slice.members;
     if (members.length === 0) {
-      return { featureId: 'crew', title: 'Your crew', lines: ['The water was quiet.', 'Hire crew in Club upgrades to fish while you are away.'] };
+      return { featureId: 'crew', title: 'Your crew', lines: ['The water was quiet.', 'Hire crew in Crew upgrades to fish while you are away.'] };
     }
     const start = this.ctx.clock.now() - elapsedMs;
     const result = simulateOffline({

@@ -68,7 +68,7 @@ export class CrewScene extends PanelScene {
     }
 
     if (svc.freeSlots === 0 && svc.slots === 0) {
-      scroll.add(addText(this, 0, y + 4, 'No crew bunks yet. Buy Hire Help in\nthe Club upgrades to make room.', { color: 'sky', shadow: false }));
+      scroll.add(addText(this, 0, y + 4, 'No crew bunks yet. Buy Hire Help in\nthe Crew upgrades to make room.', { color: 'sky', shadow: false }));
       y += 30;
     }
 

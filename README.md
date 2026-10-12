@@ -51,24 +51,9 @@ The build is fully static with relative paths, so `dist/` works from any folder.
 
 ### GitHub Pages
 
-1. Create the repo and push (the GitHub CLI was not installed when this project was set up):
-
-   ```bash
-   gh repo create starlight-fishing-club --private --source=. --remote=origin --push --tags
-   ```
-
-   Or without `gh`: create an empty private repo named `starlight-fishing-club` on github.com, then
-
-   ```bash
-   git remote add origin git@github.com:<your-user>/starlight-fishing-club.git
-   git push -u origin main --tags
-   ```
-
-2. On GitHub: Settings > Pages > Build and deployment > Source: **GitHub Actions**.
-3. Every push to `main` runs `.github/workflows/deploy.yml` (install, `npm run check`, publish `dist/`).
-   The game appears at `https://<your-user>.github.io/starlight-fishing-club/`.
-   Note: Pages on a private repo needs a paid GitHub plan; otherwise make the repo public
-   or use itch.io.
+Live at **https://9lvs.github.io/starlight-fishing-club/**. Every push to `main` runs
+`.github/workflows/deploy.yml` (install, `npm run check`, publish `dist/`). One-time setup,
+already done: Settings > Pages > Build and deployment > Source: **GitHub Actions**.
 
 ### itch.io
 
