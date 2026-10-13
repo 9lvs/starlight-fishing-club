@@ -131,4 +131,23 @@ describe('moving the club', () => {
     expect(old.ctx.world.waterId).toBe('cove');
     expect(clubBonus(old.ctx)).toBe(4);
   });
+
+  it('saves from before Sunlit Reef keep their home water', () => {
+    const storage = new MemoryStorage();
+    const g = boot(storage);
+    g.ctx.save.save();
+    const raw = JSON.parse(storage.getItem(SAVE.storageKey)!);
+    // v2 stored the Glowing Cave as rank 3 (now 4) and the cove as rank 2 (unchanged).
+    for (const [rank, water, want] of [
+      [3, 'glowing_cave', 4],
+      [4, 'sky_lake', 5],
+      [2, 'cove', 2],
+    ] as const) {
+      raw.slices.world = { v: 2, data: { waterId: water, knownUnlocked: ['pond'], clubRank: rank } };
+      storage.setItem(SAVE.storageKey, JSON.stringify(raw));
+      const old = boot(storage);
+      expect(old.ctx.world.clubRank).toBe(want);
+      expect(old.ctx.world.waterId).toBe(water);
+    }
+  });
 });

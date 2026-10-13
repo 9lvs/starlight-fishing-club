@@ -11,6 +11,8 @@ export const VOYAGE = {
   titleMs: 2400,
   /** Scenery scrolls this many times faster while the boat sails. */
   driftBoost: 14,
+  /** A visit to a water you already have: no chart, about two seconds. */
+  quick: { sailOutMs: 450, coverMs: 220, chartMs: 0, holdMs: 0, revealMs: 420, sailInMs: 800, titleMs: 1100 },
 };
 
 export const FISHING = {

@@ -72,7 +72,17 @@ After adding content, run `npm test` (the content tests validate every pack) and
   hides the sun and moon; `clouds` is a sea of clouds). `scene.foreground`:
   `reeds, rocks, lilies, crystals, none`.
 - `scene.tint` overrides scene palette values per time of day (see `ScenePalette` in tokens):
-  palette names, a list for `skyBands`, or numbers for `stars` and `fireflies`.
+  palette names, a list for `skyBands`, or numbers for `stars` and `fireflies`. Buildings use
+  `wall`, `wallShade`, `roof`, `window` (lit at dusk and night), and `lamp`.
+- `scene.landmarks`: buildings and props on the far shore, painted in order:
+  `willows, shed, jetty, cabin, dock, lighthouse, harbor, moored_boats, palms, bungalows, coral,
+  grotto, lantern_string, pavilion, floating_isles` (`scenes/world/landmarks.ts`; `coral` is
+  painted under the water). Each place has one club building with the club's pennant.
+- `scene.effects`: slow moving touches: `leaves, dragonflies, current, smoke, beam, gulls, buoy,
+  fish_school, turtle, drips, waterfall, balloon, sky_lanterns` (`scenes/world/sceneEffects.ts`).
+  `smoke`, `beam`, `leaves`, and `waterfall` attach to the cabin, lighthouse, willows or palms,
+  and pavilion. To add a new one, add its id to `LANDMARKS` or `SCENE_EFFECTS` in
+  `core/content/schemas.ts` and a painter for it.
 - `"comingSoon": true` shows it on the map as a teaser that cannot be visited.
 - Add at least one always-available fish with `"waters": ["lantern_lake"]`.
 

@@ -350,6 +350,7 @@ function drawWater(f: FrameCanvas, key: string, scene?: { hills: string; foregro
     water_pond: { sky: 'sky', hill: 'moss', water: 'teal', extra: 'reeds' },
     water_river: { sky: 'lavender', hill: 'moss', water: 'dusk', extra: 'pines' },
     water_cove: { sky: 'midnight', hill: 'plum', water: 'dusk', extra: 'moon' },
+    water_reef: { sky: 'sky', hill: 'sand', water: 'teal', extra: 'palm' },
     water_cave: { sky: 'ink', hill: 'plum', water: 'midnight', extra: 'glow' },
     water_sky: { sky: 'sky', hill: 'mist', water: 'lavender', extra: 'clouds' },
   };
@@ -376,6 +377,10 @@ function drawWater(f: FrameCanvas, key: string, scene?: { hills: string; foregro
   } else if (look.extra === 'reeds') {
     for (const x of [26, 28, 29]) f.line(x, 22, x, 16, 'moss');
     f.px(28, 15, 'bark');
+  } else if (look.extra === 'palm') {
+    f.line(8, 13, 10, 5, 'bark');
+    for (const [x, y] of [[6, 5], [7, 4], [12, 4], [13, 5], [10, 3]] as [number, number][]) f.px(x, y, 'moss');
+    for (const [x, c] of [[20, 'coral'], [24, 'rose'], [27, 'lavender']] as [number, PaletteName][]) f.px(x, 21, c);
   } else if (look.extra === 'glow') {
     for (const [x, y] of [[4, 4], [11, 9], [20, 3], [27, 8], [15, 12]] as [number, number][]) f.px(x, y, 'lavender');
   } else if (look.extra === 'clouds') {

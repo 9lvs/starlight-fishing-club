@@ -24,8 +24,8 @@ const newWater = {
   id: 'lantern_lake',
   name: 'Lantern Lake',
   description: 'Paper lanterns float on the water all year round.',
-  order: 5,
-  rangeRequired: 5,
+  order: 6,
+  rangeRequired: 6,
   clubBonus: 80,
   spriteKey: 'water_lantern_lake',
   scene: { hills: 'pines', foreground: 'lilies' },
@@ -73,7 +73,7 @@ describe('adding content with JSON only', () => {
     expect(ctx.world.canMoveTo('lantern_lake')).toBe(false);
     const unlocked: string[] = [];
     ctx.bus.on('waterUnlocked', (e) => unlocked.push(e.waterId));
-    ctx.stats.setSource('test', [{ stat: 'boatRange', op: 'add', value: 5 }]);
+    ctx.stats.setSource('test', [{ stat: 'boatRange', op: 'add', value: 6 }]);
     expect(unlocked).toContain('lantern_lake');
     expect(moveClub(ctx, 'lantern_lake')).toBe(true);
     expect(ctx.world.conditions().waterId).toBe('lantern_lake');

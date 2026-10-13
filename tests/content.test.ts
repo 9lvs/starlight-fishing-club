@@ -29,10 +29,10 @@ describe('base content', () => {
     expect(content.fish.some((f) => f.weather.length > 0)).toBe(true);
   });
 
-  it('is a five-water journey where each move pays a bigger coin bonus', () => {
+  it('is a six-water journey where each move pays a bigger coin bonus', () => {
     const journey = [...content.waters].sort((a, b) => a.rangeRequired - b.rangeRequired);
-    expect(journey.map((w) => w.id)).toEqual(['pond', 'river', 'cove', 'glowing_cave', 'sky_lake']);
-    expect(journey.map((w) => w.rangeRequired)).toEqual([0, 1, 2, 3, 4]);
+    expect(journey.map((w) => w.id)).toEqual(['pond', 'river', 'cove', 'reef', 'glowing_cave', 'sky_lake']);
+    expect(journey.map((w) => w.rangeRequired)).toEqual([0, 1, 2, 3, 4, 5]);
     for (let i = 1; i < journey.length; i++) expect(journey[i]!.clubBonus).toBeGreaterThan(journey[i - 1]!.clubBonus);
   });
 
@@ -43,11 +43,11 @@ describe('base content', () => {
       const ranks = tiers.map((u) => u.requiresRank);
       expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
       expect(ranks[0]).toBe(0);
-      expect(ranks[9]).toBe(4);
+      expect(ranks[9]).toBe(5);
     }
     // Each move needs the boat that reaches the next water, bought at the current one.
     const reach = content.upgrades.filter((u) => u.modifiers.some((m) => m.stat === 'boatRange'));
-    expect(reach.map((u) => u.requiresRank)).toEqual([0, 1, 2, 3]);
+    expect(reach.map((u) => u.requiresRank)).toEqual([0, 1, 2, 3, 4]);
   });
 });
 

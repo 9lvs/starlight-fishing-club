@@ -23,11 +23,16 @@ export interface WorldSlice {
 export function worldSliceDef(defaultWater: string): SaveSliceDef<WorldSlice> {
   return {
     key: 'world',
-    version: 2,
+    version: 3,
     defaults: () => ({ waterId: defaultWater, knownUnlocked: [defaultWater], clubRank: 0 }),
-    // v1 unlocked waters with boat range alone. Keep every water reached so far
-    // (worked out from knownUnlocked once the registries exist, see WorldState).
-    migrate: (old) => ({ ...(old as WorldSlice), clubRank: -1 }),
+    migrate: (old, from) => {
+      // v1 unlocked waters with boat range alone. Keep every water reached so far
+      // (worked out from knownUnlocked once the registries exist, see WorldState).
+      if (from < 2) return { ...(old as WorldSlice), clubRank: -1 };
+      // v3 put Sunlit Reef at rank 3, so homes from the old rank 3 up move one rank on.
+      const w = old as WorldSlice;
+      return { ...w, clubRank: w.clubRank >= 3 ? w.clubRank + 1 : w.clubRank };
+    },
   };
 }
 

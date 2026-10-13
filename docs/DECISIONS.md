@@ -50,3 +50,6 @@ One line per decision, with the reason. Newest at the bottom.
 - Water glints, stars, and painted streaks are fewer and dimmer (playtest: too stark), and glints move every 1.6 s instead of 0.7 s.
 - Retuned after slip chances: Sturdy Skiff 800 (was 1000), Painted Rowboat 250, Hire Help 150, Whisper River bonus +200% (was +100%), so the first move still comes at about 20 minutes and rebuying gear after a move is about twice as fast. The pacing check for that is now "under 55% of the first run's time" (was 50%), since rare fish need tackle you have not rebought yet.
 - Versions: small fixes and tuning are patch releases (0.3.1, 0.3.2). New systems or a big content drop raise the minor number (0.4.0). 1.0.0 is the public launch.
+- Each water has landmarks and effects listed in data, and the club's own building gets grander with each move (shed, cabin, harbor, bungalows, grotto, domed clubhouse), so moving the club feels like moving up in the world. Approved by the owner from a screenshot review before release.
+- Sunlit Reef is the sixth water (approved). The pacing test now checks every run before Sky Lake, not just the first four.
+- Changing water plays a voyage: the full one for a club move, a 2 s one for a visit (owner's choice), and none with reduced motion.

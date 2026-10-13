@@ -89,7 +89,7 @@ comments that explain *why*. Small files.
 
 - **Fish**: add an entry to `src/content/base/fish.json` (or a new pack). See `docs/ADDING_CONTENT.md`.
 - **Water**: add to `waters.json` with the next `rangeRequired`, a `clubBonus` above the last water's,
-  a reach boat for it, and an existing scene preset.
+  a reach boat for it, a scene preset, and its landmarks and effects (`docs/ADDING_CONTENT.md`).
 - **Upgrade**: add to `upgrades.json` with `modifiers: [{ "stat": "luck", "op": "add", "value": 1 }]`.
 - **Crew type / weather / rarity / decoration / currency**: add to the matching JSON file.
 - **Content pack**: create `src/content/<pack>/pack.json` plus any content files. Content that
@@ -112,12 +112,13 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, tutorial. 118 unit tests.
-v0.3.1 fixes the Daily Catch layout and makes the music louder. v0.3.0 adds tackle and fish that slip away, the quick-catch bonus, rare-fish glows, wind and
+upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, tutorial. 119 unit tests.
+v0.4.0 adds Sunlit Reef (a sixth water), landmarks and moving scenery for every water, and
+the voyage between waters. v0.3.1 fixes the Daily Catch layout and makes the music louder. v0.3.0 adds tackle and fish that slip away, the quick-catch bonus, rare-fish glows, wind and
 storm weather with their own fish, weather and night bait, and clearer upgrade cards.
 v0.2.0 adds composed music, a sound for every action, the tutorial, the creel bundle bonus, and
 the first-five Daily Catch share. Launch
-plan, deploy steps, and marketing notes in `docs/LAUNCH.md`. Five-water journey with
+plan, deploy steps, and marketing notes in `docs/LAUNCH.md`. Six-water journey with
 moving the club (prestige), 10 rod and 10 boat tiers, bait and lures (see `docs/DECISIONS.md`). Fills the
 whole screen on every device (see the post v0.1.0 entry in `docs/BUILD_LOG.md`).
 

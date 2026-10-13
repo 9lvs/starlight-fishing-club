@@ -15,7 +15,15 @@
     "scene": { "landmarks": ["harbor", "moored_boats", "lighthouse"], "effects": ["beam", "gulls", "buoy"], "hills": "cliffs", "foreground": "lilies", "tint": { "night": { "waterTop": "teal" } } }
   },
   {
-    "id": "glowing_cave", "name": "Glowing Cave", "order": 3, "rangeRequired": 3, "clubBonus": 9, "tackleNeed": 17, "spriteKey": "water_cave",
+    "id": "reef", "name": "Sunlit Reef", "order": 3, "rangeRequired": 3, "clubBonus": 6, "tackleNeed": 13, "spriteKey": "water_reef",
+    "description": "Clear shallows over coral, with bungalows on stilts. The club's resort.",
+    "scene": {
+      "hills": "none", "foreground": "none", "landmarks": ["palms", "bungalows", "coral"], "effects": ["fish_school", "turtle", "gulls"],
+      "tint": { "day": { "waterTop": "sky", "waterDeep": "teal", "roof": "sand" }, "dusk": { "roof": "bark" }, "dawn": { "roof": "sand" } }
+    }
+  },
+  {
+    "id": "glowing_cave", "name": "Glowing Cave", "order": 4, "rangeRequired": 4, "clubBonus": 9, "tackleNeed": 17, "spriteKey": "water_cave",
     "description": "Mushrooms glow on the walls of an underground lake.",
     "scene": { "landmarks": ["lantern_string", "grotto"], "effects": ["drips"],
       "hills": "cave", "foreground": "crystals",
@@ -28,7 +36,7 @@
     }
   },
   {
-    "id": "sky_lake", "name": "Sky Lake", "order": 4, "rangeRequired": 4, "clubBonus": 24, "tackleNeed": 25, "spriteKey": "water_sky",
+    "id": "sky_lake", "name": "Sky Lake", "order": 5, "rangeRequired": 5, "clubBonus": 24, "tackleNeed": 25, "spriteKey": "water_sky",
     "description": "A lake high above the clouds. Nobody knows how the fish got there.",
     "scene": { "landmarks": ["floating_isles", "pavilion"], "effects": ["waterfall", "balloon", "sky_lanterns"],
       "hills": "clouds", "foreground": "none",

@@ -235,14 +235,15 @@ export class WorldScene extends Phaser.Scene {
     }
     this.voyageCovered = false;
     const club = this.clubJustMoved;
+    const t = club ? VOYAGE : VOYAGE.quick;
     uiState.voyaging = true;
     this.ctx.bus.emit('voyage', { active: true, waterId });
     const home = this.L.boat.x - 16;
-    this.tweens.add({ targets: this.driftBoost, k: VOYAGE.driftBoost, duration: VOYAGE.sailOutMs, ease: 'Sine.easeIn' });
+    this.tweens.add({ targets: this.driftBoost, k: VOYAGE.driftBoost, duration: t.sailOutMs, ease: 'Sine.easeIn' });
     this.tweens.add({
       targets: this.boat,
       x: this.L.width + 40,
-      duration: VOYAGE.sailOutMs,
+      duration: t.sailOutMs,
       ease: 'Sine.easeIn',
       onComplete: () => {
         const data: VoyageData = {
@@ -252,6 +253,7 @@ export class WorldScene extends Phaser.Scene {
           toIcon: to.spriteKey,
           toBlurb: to.description,
           club,
+          quick: !club,
           bonusText: club && to.clubBonus > 0 ? `Club bonus: +${Math.round(to.clubBonus * 100)}% coins` : undefined,
           onCovered: () => {
             this.voyageCovered = true;
@@ -259,8 +261,8 @@ export class WorldScene extends Phaser.Scene {
             this.boat.x = -40;
           },
           onReveal: () => {
-            this.tweens.add({ targets: this.driftBoost, k: 1, duration: VOYAGE.sailInMs, ease: 'Sine.easeOut' });
-            this.tweens.add({ targets: this.boat, x: home, duration: VOYAGE.sailInMs, ease: 'Sine.easeOut' });
+            this.tweens.add({ targets: this.driftBoost, k: 1, duration: t.sailInMs, ease: 'Sine.easeOut' });
+            this.tweens.add({ targets: this.boat, x: home, duration: t.sailInMs, ease: 'Sine.easeOut' });
           },
           onDone: () => {
             uiState.voyaging = false;

@@ -17,6 +17,8 @@ export interface VoyageData {
   /** Moving the club (a fresh start with a bonus) rather than a visit. */
   club: boolean;
   bonusText?: string;
+  /** A short hop between waters you already have: no chart, a quick fade. */
+  quick?: boolean;
   onCovered: () => void;
   onReveal: () => void;
   onDone: () => void;
@@ -32,6 +34,10 @@ export class VoyageScene extends Phaser.Scene {
     super('Voyage');
   }
 
+  private get t(): typeof VOYAGE.quick {
+    return this.d.quick ? VOYAGE.quick : VOYAGE;
+  }
+
   create(d: VoyageData): void {
     this.d = d;
     this.stage = 'cover';
@@ -45,23 +51,31 @@ export class VoyageScene extends Phaser.Scene {
     this.chart = this.buildChart(Math.round(W / 2), Math.round(H * 0.42));
     this.chart.setAlpha(0);
 
-    this.tweens.add({ targets: this.backdrop, alpha: 1, duration: VOYAGE.coverMs, ease: MOTION.ease });
+    const t = this.t;
+    this.tweens.add({ targets: this.backdrop, alpha: 1, duration: t.coverMs, ease: MOTION.ease });
     this.tweens.add({
       targets: solid,
       alpha: 0.75,
-      duration: VOYAGE.coverMs,
+      duration: t.coverMs,
       ease: MOTION.ease,
       onComplete: () => {
         d.onCovered();
+        if (d.quick) {
+          this.stage = 'reveal';
+          this.events.emit('reveal');
+          return;
+        }
         this.stage = 'chart';
         this.tweens.add({ targets: this.chart, alpha: 1, duration: 250 });
         this.sail();
       },
     });
     this.events.once('reveal', () => {
-      this.tweens.add({ targets: [this.backdrop, solid, this.chart], alpha: 0, duration: VOYAGE.revealMs, ease: MOTION.ease });
+      this.tweens.add({ targets: [this.backdrop, solid, this.chart], alpha: 0, duration: t.revealMs, ease: MOTION.ease });
       d.onReveal();
-      this.time.delayedCall(VOYAGE.revealMs * 0.6, () => this.title());
+      // Fishing resumes once the boat is home; the name keeps fading on its own.
+      this.time.delayedCall(t.sailInMs, () => d.onDone());
+      this.time.delayedCall(t.revealMs * 0.6, () => this.title());
     });
   }
 
@@ -140,7 +154,7 @@ export class VoyageScene extends Phaser.Scene {
     const parts: Phaser.GameObjects.GameObject[] = [];
     const name = addText(this, cx, y, this.d.toName, { originX: 0.5, color: 'mist', outline: 'ink', scale: 2 });
     parts.push(name);
-    const blurb = addText(this, cx, y + name.textHeight + 4, this.d.toBlurb, { originX: 0.5, align: 'center', color: 'sand', outline: 'ink', maxWidth: Math.min(L.width - 16, 170) });
+    const blurb = addText(this, cx, y + name.textHeight + 4, this.d.quick ? '' : this.d.toBlurb, { originX: 0.5, align: 'center', color: 'sand', outline: 'ink', maxWidth: Math.min(L.width - 16, 170) });
     parts.push(blurb);
     if (this.d.bonusText) parts.push(addText(this, cx, y + name.textHeight + blurb.textHeight + 8, this.d.bonusText, { originX: 0.5, color: 'gold', outline: 'ink' }));
     for (const p of parts) (p as unknown as Phaser.GameObjects.Components.Alpha).setAlpha(0);
@@ -148,13 +162,10 @@ export class VoyageScene extends Phaser.Scene {
     this.tweens.add({
       targets: parts,
       alpha: 0,
-      delay: VOYAGE.titleMs,
+      delay: this.t.titleMs,
       duration: 800,
       ease: MOTION.ease,
-      onComplete: () => {
-        this.d.onDone();
-        this.scene.stop();
-      },
+      onComplete: () => this.scene.stop(),
     });
   }
 

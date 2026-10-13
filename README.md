@@ -5,7 +5,7 @@ shifting sky, catch fish of gentle rarities, fill your journal, grow your club
 with a visible upgrade tree, and hire a crew who keep fishing while you are away.
 
 - One-tap loop, generous timing, no fail states, nothing to lose.
-- 72 fish across five waters, with time-of-day and weather exclusives.
+- 87 fish across six waters, with time-of-day and weather exclusives. Each water has its own buildings, props, and moving scenery, and the boat sails between them.
 - Ten rod tiers, ten boat tiers, and six baits; bigger waters unlock the higher tiers.
 - Move the club to the next water for a fresh start and a bigger coin bonus, all the way to Sky Lake.
 - A Daily Catch: one shared fish a day, and your first five catches make a luck score to share.
