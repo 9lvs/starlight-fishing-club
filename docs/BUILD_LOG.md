@@ -98,3 +98,7 @@
 - Changed: fog is two soft, solid banks of mist with puffy tops that drift slowly (one over the far shore, a fainter one over the water), instead of a dithered screen that looked like a glitch.
 - Fixed: the empty creel's explanation could run into the Sell button on short screens. It is now two short lines.
 - Verified: 131 tests, typecheck, and build pass. In the browser at 390x844 and 320x568: fog by day and night, and the empty creel.
+
+## v0.5.2: Coins stay visible behind panels
+- Changed: the dimmed backdrop behind every panel (Upgrades, Daily Catch, Club gift, Creel, and the rest) now starts below the coin bar, and panels sit below it, so coins and gems stay clear while you shop. Playtest feedback.
+- Verified: every panel at 320x568, 390x844, and 1280x720.

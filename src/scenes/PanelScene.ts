@@ -36,13 +36,15 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
     this.closing = false;
     this.input.enabled = true;
     uiState.openPanel = this.scene.key;
-    const { width: W, menuBar, safe } = this.L;
+    const { width: W, menuBar, topBar } = this.L;
 
-    // Backdrop stops taps reaching the game, but leaves the menu bar usable.
-    const backdropH = menuBar.y;
+    // Backdrop stops taps reaching the game, but leaves the coin bar on top and
+    // the menu bar below clear: you need to see your coins while you shop.
+    const backdropY = topBar.y + topBar.h;
+    const backdropH = menuBar.y - backdropY;
     const dither = this.textures.exists('dither_50') ? 'dither_50' : '__WHITE';
-    this.add.tileSprite(0, 0, W, backdropH, dither).setOrigin(0, 0).setTint(color('ink')).setAlpha(0.85);
-    const blocker = this.add.zone(0, 0, W, backdropH).setOrigin(0, 0).setInteractive();
+    this.add.tileSprite(0, backdropY, W, backdropH, dither).setOrigin(0, 0).setTint(color('ink')).setAlpha(0.85);
+    const blocker = this.add.zone(0, backdropY, W, backdropH).setOrigin(0, 0).setInteractive();
     blocker.on('pointerup', (p: Phaser.Input.Pointer) => {
       const b = this.panel.getBounds();
       if (!b.contains(p.x, p.y) && p.getDistance() < 6) this.close();
@@ -50,9 +52,9 @@ export abstract class PanelScene<D = unknown> extends Phaser.Scene {
 
     // Capped in both directions and centered, so big screens get a tidy card.
     const w = Math.min(W - 6, UI.panelMaxWidth);
-    const room = menuBar.y - safe.top - 6;
+    const room = backdropH - 6;
     const h = Math.min(room, UI.panelMaxHeight);
-    const top = safe.top + 3 + Math.floor((room - h) / 2);
+    const top = backdropY + 3 + Math.floor((room - h) / 2);
     this.panel = new Panel(this, {
       x: Math.round((W - w) / 2),
       y: top,
