@@ -4,5 +4,9 @@
   { "id": "ship_cat", "name": "Ship Cat", "description": "A small orange cat who supervises.", "spriteKey": "decor_cat", "anchor": "bow", "offset": [0, 0] },
   { "id": "flowers", "name": "Flower Box", "description": "A little garden at the stern.", "spriteKey": "decor_flowers", "anchor": "stern", "offset": [7, 0] },
   { "id": "fairy_lights", "name": "Fairy Lights", "description": "Tiny lights strung to the bow.", "spriteKey": "decor_fairy_lights", "anchor": "mast", "offset": [15, 4] },
-  { "id": "pennant", "name": "Club Pennant", "description": "The Starlight Fishing Club flag.", "spriteKey": "decor_pennant", "anchor": "mast", "offset": [0, -10] }
+  { "id": "pennant", "name": "Club Pennant", "description": "The Starlight Fishing Club flag.", "spriteKey": "decor_pennant", "anchor": "mast", "offset": [0, -10] },
+  { "id": "club_bunting", "name": "Club Bunting", "description": "Strings of little flags across the clubhouse.", "spriteKey": "decor_bunting", "anchor": "club" },
+  { "id": "club_lamps", "name": "Porch Lamps", "description": "Two lamp posts by the club door, lit at dusk.", "spriteKey": "decor_lamps", "anchor": "club" },
+  { "id": "club_flowers", "name": "Flower Beds", "description": "A border of flowers along the clubhouse.", "spriteKey": "decor_flowerbed", "anchor": "club" },
+  { "id": "club_fireworks", "name": "Club Fireworks", "description": "Quiet fireworks over the club now and then at night.", "spriteKey": "decor_fireworks", "anchor": "club" }
 ]

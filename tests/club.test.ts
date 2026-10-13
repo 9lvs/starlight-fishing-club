@@ -43,7 +43,7 @@ function boot(storage = new MemoryStorage()) {
 /** Buy an upgrade with exactly enough coins. */
 function buy(g: ReturnType<typeof boot>, id: string): boolean {
   const u = g.ctx.registries.upgrades.get(id);
-  g.ctx.wallet.add('coins', g.upgrades.cost(u));
+  g.ctx.wallet.add(u.currency ?? 'coins', g.upgrades.cost(u));
   return g.upgrades.buy(id);
 }
 
@@ -93,7 +93,7 @@ describe('moving the club', () => {
     expect(g.ctx.stats.get('boatRange')).toBe(0);
     expect(g.ctx.stats.get('luck')).toBe(0);
     expect(g.crew.slice.members).toEqual([]);
-    // Club cosmetics are kept.
+    // Club cosmetics (bought with gems) are kept, and so are gems.
     expect(g.upgrades.level('paper_lanterns')).toBe(1);
     expect(g.ctx.world.activeDecorations()).toContain('lanterns');
     // +200% coins at Whisper River.

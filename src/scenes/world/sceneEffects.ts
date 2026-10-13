@@ -22,6 +22,8 @@ const FX = {
   turtleShowMs: 7000,
   dripEveryMs: 1800,
   lanterns: 6,
+  fireworkEveryMs: 22000,
+  fireworkMs: 2600,
 };
 
 interface Particle {
@@ -105,6 +107,7 @@ export class SceneEffects {
     if (this.has('waterfall')) this.waterfall(f);
     if (this.has('balloon') && !night) this.balloon(f);
     if (this.has('sky_lanterns') && dark) this.lanterns(delta, f);
+    if (dark && this.shape.clubDecor.includes('club_fireworks')) this.fireworks(f);
   }
 
   private leaves(delta: number, f: EffectFrame): void {
@@ -312,6 +315,31 @@ export class SceneEffects {
     this.px(x - 1, y + 8, f.pal.wallShade, 1, 1, 2);
     this.px(x + 1, y + 8, f.pal.wallShade, 1, 1, 2);
     this.px(x - 1, y + 10, 'bark', 1, 3, 2);
+  }
+
+  /** A soft firework over the clubhouse now and then after dark: rise, burst, fade. */
+  private fireworks(f: EffectFrame): void {
+    const k = this.anchors.club;
+    if (!k) return;
+    const cycle = this.elapsed % FX.fireworkEveryMs;
+    if (cycle > FX.fireworkMs) return;
+    const n = Math.floor(this.elapsed / FX.fireworkEveryMs);
+    const tones: PaletteName[] = ['gold', 'rose', 'sky', 'sage', 'lavender'];
+    const c = tones[n % tones.length]!;
+    const o = this.toScreen((k.x0 + k.x1) / 2 + ((n * 7) % 11) - 5, k.top - 26 - (n % 3) * 4, f.offset);
+    const rise = 700;
+    if (cycle < rise) {
+      const y = o.y + (1 - cycle / rise) * 24;
+      this.px(o.x, y, 'sand', 0.8, 1, 2);
+      return;
+    }
+    const t = (cycle - rise) / (FX.fireworkMs - rise);
+    const r = 2 + t * 9;
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      this.px(o.x + Math.cos(a) * r, o.y + Math.sin(a) * r + t * t * 4, c, 0.85 * (1 - t));
+    }
+    if (t < 0.2) this.px(o.x - 1, o.y - 1, 'mist', 0.6, 3, 3);
   }
 
   private lanterns(delta: number, f: EffectFrame): void {

@@ -19,6 +19,8 @@ export interface LandmarkAnchors {
   lamp?: { x: number; y: number };
   falls?: { x: number; y: number };
   canopies: { x: number; y: number }[];
+  /** The club's building in this water: its left and right edge, roof line, and ground. */
+  club?: { x0: number; x1: number; top: number; base: number };
 }
 
 interface Placed {
@@ -89,6 +91,7 @@ const PAINTERS: Record<string, Placed[]> = {
         const top = roof(c, x, b - 10, 12, p.roof);
         pennant(c, x + 6, top - 5, p);
       },
+      anchors: (x, b, a) => (a.club = { x0: x, x1: x + 12, top: b - 13, base: b - 1 }),
     },
   ],
   jetty: [
@@ -115,7 +118,10 @@ const PAINTERS: Record<string, Placed[]> = {
         roof(c, x, b - 13, 20, p.roof);
         pennant(c, x + 3, b - 26, p);
       },
-      anchors: (x, b, a) => (a.chimney = { x: x + 16, y: b - 22 }),
+      anchors: (x, b, a) => {
+        a.chimney = { x: x + 16, y: b - 22 };
+        a.club = { x0: x, x1: x + 20, top: b - 16, base: b - 2 };
+      },
     },
   ],
   dock: [
@@ -180,6 +186,7 @@ const PAINTERS: Record<string, Placed[]> = {
         }
         pennant(c, x + 18, b - 27, p);
       },
+      anchors: (x, b, a) => (a.club = { x0: x, x1: x + 26, top: b - 21, base: b - 3 }),
     },
   ],
   moored_boats: [
@@ -224,6 +231,7 @@ const PAINTERS: Record<string, Placed[]> = {
         }
         pennant(c, x + 19, b - 22, p);
       },
+      anchors: (x, b, a) => (a.club = { x0: x, x1: x + 39, top: b - 16, base: b - 3 }),
     },
   ],
   coral: [],
@@ -247,6 +255,7 @@ const PAINTERS: Record<string, Placed[]> = {
         }
         pennant(c, x, b - 30, p);
       },
+      anchors: (x, b, a) => (a.club = { x0: x - 9, x1: x + 9, top: b - 25, base: b - 2 }),
     },
   ],
   lantern_string: [
@@ -287,7 +296,10 @@ const PAINTERS: Record<string, Placed[]> = {
         rect(c, x - 3, top - 20, 2, 1, p.lamp);
         pennant(c, x, top - 28, p);
       },
-      anchors: (x, b, a) => (a.falls = { x: x + 12, y: b - 22 }),
+      anchors: (x, b, a) => {
+        a.falls = { x: x + 12, y: b - 22 };
+        a.club = { x0: x - 11, x1: x + 12, top: b - 45, base: b - 32 };
+      },
     },
   ],
   floating_isles: [
@@ -313,6 +325,36 @@ const PAINTERS: Record<string, Placed[]> = {
 export const paintLandmarks: Painter = (ctx, w, h, pal, s) => {
   const base = h - SINK;
   for (const id of s.landmarks) for (const p of PAINTERS[id] ?? []) p.draw(ctx, Math.round(w * p.at), base, pal, w);
+  const club = landmarkAnchors(s, w).club;
+  if (club) for (const id of s.clubDecor) CLUB_DECOR[id]?.(ctx, club, pal);
+};
+
+type ClubBox = NonNullable<LandmarkAnchors['club']>;
+
+/** Gem decorations for the club's building, drawn on whatever building this water has. */
+const CLUB_DECOR: Record<string, (ctx: CanvasRenderingContext2D, k: ClubBox, pal: ScenePalette) => void> = {
+  club_bunting: (c, k, p) => {
+    const flags: PaletteName[] = isNight(p) ? ['rose', 'gold', 'sky', 'sage'] : ['coral', 'gold', 'sky', 'sage'];
+    const span = k.x1 - k.x0 + 8;
+    for (let i = 0; i <= span; i++) {
+      const y = k.top + 1 + Math.round(Math.sin((i / span) * Math.PI) * 3);
+      rect(c, k.x0 - 4 + i, y, 1, 1, p.wallShade);
+      if (i % 3 === 1) rect(c, k.x0 - 4 + i, y + 1, 1, 2, flags[(i / 3) % flags.length | 0]!);
+    }
+  },
+  club_lamps: (c, k, p) => {
+    for (const x of [k.x0 - 4, k.x1 + 3]) {
+      rect(c, x, k.base - 7, 1, 7, p.wallShade);
+      rect(c, x - 1, k.base - 9, 3, 2, p.lamp);
+    }
+  },
+  club_flowers: (c, k, p) => {
+    const tones: PaletteName[] = ['rose', 'gold', 'lavender', 'coral'];
+    for (let x = k.x0 - 3; x <= k.x1 + 2; x += 2) {
+      rect(c, x, k.base, 1, 1, p.foreground);
+      rect(c, x, k.base - 1, 1, 1, tones[(Math.abs(x - k.x0) >> 1) % tones.length]!);
+    }
+  },
 };
 
 export function landmarkAnchors(s: SceneShape, w: number): LandmarkAnchors {

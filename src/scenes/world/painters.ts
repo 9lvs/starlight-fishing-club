@@ -26,6 +26,8 @@ export interface SceneShape {
   /** Buildings and props on the far shore (landmarks.ts), and moving touches (sceneEffects.ts). */
   landmarks: readonly string[];
   effects: readonly string[];
+  /** Clubhouse decorations the player owns (club_* in decorations.json). */
+  clubDecor: readonly string[];
   /** Seed so each water gets its own skyline. */
   seed: number;
   horizonY: number;

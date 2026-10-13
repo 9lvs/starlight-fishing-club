@@ -147,6 +147,8 @@ export const branchSchema = z.object({
   order: z.number().int(),
   /** Upgrades in this branch stay owned when the club moves to a new water. */
   keepOnMove: z.boolean().default(false),
+  /** A button above the tree that opens a panel (e.g. the gem exchange), shown only if that panel exists. */
+  panel: z.object({ label: z.string().min(1).max(24), sceneKey: z.string().min(1) }).optional(),
 });
 
 const prerequisite = z.union([id, z.object({ id, level: z.number().int().min(1) })]);
@@ -212,7 +214,8 @@ export const decorationSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1).max(100),
   spriteKey,
-  anchor: z.enum(['bow', 'stern', 'mast', 'water', 'sky']),
+  /** `club` decorations dress the club's building in every water (scenes/world/landmarks.ts). */
+  anchor: z.enum(['bow', 'stern', 'mast', 'water', 'sky', 'club']),
   offset: z.tuple([z.number().int(), z.number().int()]).default([0, 0]),
 });
 

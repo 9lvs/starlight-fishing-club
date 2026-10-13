@@ -45,7 +45,7 @@ export class TreeNode extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
-  setNode(state: NodeState, level: number, maxLevel: number, selected: boolean, label?: string): void {
+  setNode(state: NodeState, level: number, maxLevel: number, selected: boolean, label?: string, costIcon = 'icon_coin'): void {
     this._state = state;
     this._selected = selected;
     const look = LOOK[state];
@@ -65,8 +65,8 @@ export class TreeNode extends Phaser.GameObjects.Container {
       this.lock.destroy();
       this.lock = null;
     }
-    if (state === 'affordable' && !this.buyable && this.scene.textures.exists('icon_coin')) {
-      this.buyable = this.scene.add.image(-3, -3, 'icon_coin').setOrigin(0, 0);
+    if (state === 'affordable' && !this.buyable && this.scene.textures.exists(costIcon)) {
+      this.buyable = this.scene.add.image(-3, -3, costIcon).setOrigin(0, 0);
       this.add(this.buyable);
     } else if (state !== 'affordable' && this.buyable) {
       this.buyable.destroy();

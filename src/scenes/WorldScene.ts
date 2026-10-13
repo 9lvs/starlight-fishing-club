@@ -187,9 +187,13 @@ export class WorldScene extends Phaser.Scene {
       }),
       bus.on('clubMoved', () => (this.clubJustMoved = true)),
       bus.on('weatherChanged', () => this.applyWeather()),
-      bus.on('decorationsChanged', () => this.applyDecorations()),
+      bus.on('decorationsChanged', () => {
+        this.applyDecorations();
+        // Club decorations are painted on the clubhouse, so repaint the scenery.
+        this.showWater(this.ctx.world.waterId, false);
+      }),
       bus.on('lookChanged', ({ slot }) => {
-        if (slot === 'boat') this.applyBoatLook();
+        if (slot === 'boat' || slot === 'fisher') this.applyBoatLook();
       }),
       bus.on('cast', () => this.setPose(2, FISHING.castAnimMs)),
       bus.on('reel', () => this.setPose(3, FISHING.reelAnimMs)),
@@ -289,6 +293,7 @@ export class WorldScene extends Phaser.Scene {
       foreground: w?.scene.foreground ?? 'reeds',
       landmarks: w?.scene.landmarks ?? [],
       effects: w?.scene.effects ?? [],
+      clubDecor: this.ctx.world.activeDecorations().filter((id) => this.ctx.registries.decorations.tryGet(id)?.anchor === 'club'),
       seed: sceneSeed(waterId),
       horizonY: this.L.horizonY,
     };
@@ -402,6 +407,9 @@ export class WorldScene extends Phaser.Scene {
     const sprite = typeof look?.sprite === 'string' && this.textures.exists(look.sprite) ? look.sprite : 'boat';
     const rig = typeof look?.rig === 'string' && this.textures.exists(look.rig) ? look.rig : null;
     this.hull.setTexture(sprite);
+    // Gem outfits swap the fisher's sprite sheet (same frames).
+    const outfit = this.ctx.world.look('fisher')?.sprite;
+    this.fisher.setTexture(typeof outfit === 'string' && this.textures.exists(outfit) ? outfit : 'fisher', this.pose);
     this.rig.setVisible(!!rig);
     if (rig) this.rig.setTexture(rig);
   }
@@ -411,7 +419,7 @@ export class WorldScene extends Phaser.Scene {
     this.decorations = [];
     for (const id of this.ctx.world.activeDecorations()) {
       const def = this.ctx.registries.decorations.tryGet(id);
-      if (!def || !this.textures.exists(def.spriteKey)) continue;
+      if (!def || def.anchor === 'club' || !this.textures.exists(def.spriteKey)) continue;
       const a = ANCHORS[def.anchor] ?? ANCHORS.bow!;
       const img = this.add
         .image(a.x + def.offset[0], a.y + def.offset[1], def.spriteKey)

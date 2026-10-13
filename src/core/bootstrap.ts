@@ -86,7 +86,8 @@ function registerCoreEffects(r: Registries): void {
     },
     describe(ctx, args) {
       const d = ctx.registries.decorations.tryGet(String(args.id ?? ''));
-      return d ? `Adds ${d.name} to your boat` : '';
+      if (!d) return '';
+      return d.anchor === 'club' ? `Adds ${d.name} to your clubhouse in every water` : `Adds ${d.name} to your boat`;
     },
   });
 }

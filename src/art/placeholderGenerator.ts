@@ -39,7 +39,7 @@ export function generatePlaceholder(entry: SpriteEntry, hints: PlaceholderHints)
         else drawBoat(f);
         break;
       case 'fisher':
-        drawFisher(f, i);
+        drawFisher(f, i, OUTFITS[entry.key] ?? OUTFITS.fisher!);
         break;
       case 'bobber':
         drawBobber(f, i);
@@ -269,26 +269,63 @@ function drawBoat(f: FrameCanvas): void {
   f.px(22, 17, 'gold');
 }
 
-function drawFisher(f: FrameCanvas, frame: number): void {
+interface Outfit {
+  coat: PaletteName;
+  collar: PaletteName;
+  hat: PaletteName;
+  hatStyle: 'bucket' | 'wide' | 'cap' | 'hood';
+  badge?: PaletteName;
+  stars?: boolean;
+}
+
+/** The fisher's default look and the gem outfits (fisher_<id> sprites). */
+const OUTFITS: Record<string, Outfit> = {
+  fisher: { coat: 'coral', collar: 'gold', hat: 'gold', hatStyle: 'bucket' },
+  fisher_sunhat: { coat: 'sage', collar: 'mist', hat: 'sand', hatStyle: 'wide' },
+  fisher_captain: { coat: 'mist', collar: 'gold', hat: 'midnight', hatStyle: 'cap', badge: 'gold' },
+  fisher_starcloak: { coat: 'plum', collar: 'gold', hat: 'plum', hatStyle: 'hood', stars: true },
+};
+
+function drawFisher(f: FrameCanvas, frame: number, o: Outfit): void {
   const bob = frame === 1 ? 1 : 0;
   // Coat and legs.
   f.rect(6, 17, 4, 5, 'dusk');
   f.rect(6, 22, 4, 2, 'bark');
-  f.rect(5, 8 + bob, 6, 9 - bob, 'coral');
-  f.rect(6, 8 + bob, 4, 1, 'gold'); // collar
+  f.rect(5, 8 + bob, 6, 9 - bob, o.coat);
+  f.rect(6, 8 + bob, 4, 1, o.collar);
+  if (o.stars) {
+    f.px(6, 11 + bob, 'gold');
+    f.px(9, 13 + bob, 'gold');
+    f.px(7, 15, 'gold');
+  }
   // Head and hat.
   f.rect(6, 4 + bob, 4, 4, 'sand');
-  f.rect(4, 3 + bob, 8, 1, 'gold');
-  f.rect(6, 1 + bob, 4, 2, 'gold');
+  if (o.hatStyle === 'wide') {
+    f.rect(3, 3 + bob, 10, 1, o.hat);
+    f.rect(5, 1 + bob, 6, 2, o.hat);
+    f.rect(5, 2 + bob, 6, 1, 'coral');
+  } else if (o.hatStyle === 'cap') {
+    f.rect(5, 2 + bob, 6, 2, o.hat);
+    f.rect(9, 3 + bob, 4, 1, o.hat);
+    if (o.badge) f.px(7, 2 + bob, o.badge);
+  } else if (o.hatStyle === 'hood') {
+    f.rect(5, 2 + bob, 6, 2, o.hat);
+    f.rect(5, 4 + bob, 1, 4, o.hat);
+    f.px(8, 0 + bob, o.hat);
+    f.rect(7, 1 + bob, 3, 1, o.hat);
+  } else {
+    f.rect(4, 3 + bob, 8, 1, o.hat);
+    f.rect(6, 1 + bob, 4, 2, o.hat);
+  }
   // Arm per pose.
   if (frame === 2) {
-    f.rect(10, 9 + bob, 3, 1, 'coral');
+    f.rect(10, 9 + bob, 3, 1, o.coat);
     f.px(13, 9, 'sand');
   } else if (frame === 3) {
-    f.rect(11, 8, 1, 3, 'coral');
+    f.rect(11, 8, 1, 3, o.coat);
     f.px(12, 7, 'sand');
   } else {
-    f.rect(10, 10 + bob, 1, 3, 'coral');
+    f.rect(10, 10 + bob, 1, 3, o.coat);
     f.px(11, 12 + bob, 'sand');
   }
   f.outline((n) => SHADE_DOWN[n]);
@@ -434,6 +471,35 @@ function drawDecor(f: FrameCanvas, key: string): void {
         if (x % 2 === 1) f.px(x, y + 1, (['gold', 'rose', 'sky', 'sage'] as PaletteName[])[((x / 2) | 0) % 4]!);
       }
       return;
+    case 'decor_bunting':
+      for (let x = 0; x < 20; x++) f.px(x, 1 + Math.round(Math.sin((x / 19) * Math.PI) * 3), 'sand');
+      for (let x = 2; x < 19; x += 3) {
+        const y = 2 + Math.round(Math.sin((x / 19) * Math.PI) * 3);
+        const c = (['coral', 'gold', 'sky', 'sage'] as PaletteName[])[(x / 3) % 4 | 0]!;
+        f.rect(x, y, 2, 2, c);
+        f.px(x, y + 2, c);
+      }
+      return;
+    case 'decor_lamps':
+      for (const x of [4, 14]) {
+        f.line(x, 4, x, 11, 'midnight');
+        f.rect(x - 1, 1, 3, 3, 'gold');
+        f.px(x, 2, 'mist');
+      }
+      return;
+    case 'decor_flowerbed':
+      f.rect(1, 9, 18, 3, 'bark');
+      for (let x = 2; x < 18; x += 2) {
+        f.px(x, 8, 'moss');
+        f.px(x, 7, (['rose', 'gold', 'lavender', 'coral'] as PaletteName[])[(x / 2) % 4 | 0]!);
+      }
+      return;
+    case 'decor_fireworks':
+      for (const [cx, cy, c] of [[6, 5, 'gold'], [14, 4, 'rose']] as [number, number, PaletteName][]) {
+        for (const [dx, dy] of [[0, -3], [0, 3], [-3, 0], [3, 0], [-2, -2], [2, 2], [-2, 2], [2, -2]]) f.px(cx + dx!, cy + dy!, c);
+        f.px(cx, cy, 'mist');
+      }
+      return;
     case 'decor_pennant':
       f.poly([[0, 0], [12, 3], [0, 7]], 'coral');
       f.px(3, 3, 'gold');
@@ -556,6 +622,23 @@ function drawIcon(f: FrameCanvas, name: string): void {
       f.px(6, 5, 'coral');
       f.px(9, 4, 'coral');
       f.px(10, 3, 'coral');
+      return;
+    case 'gem':
+      f.stamp(0, 0, [
+        '............',
+        '...llllll...',
+        '..lmlllmll..',
+        '.lmmlllllll.',
+        'pppppppppppp',
+        '.llllllllll.',
+        '..llllllll..',
+        '...llllll...',
+        '....llll....',
+        '.....ll.....',
+        '............',
+        '............',
+      ]);
+      f.px(3, 5, 'mist');
       return;
     case 'star':
       f.stamp(0, 0, [

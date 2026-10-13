@@ -3,5 +3,5 @@
   { "id": "boats", "name": "Boats", "icon": "icon_boat", "order": 1 },
   { "id": "bait", "name": "Bait", "icon": "icon_bait", "order": 2 },
   { "id": "crew", "name": "Crew", "icon": "icon_crew", "order": 3 },
-  { "id": "club", "name": "Club", "icon": "icon_flag", "order": 4, "keepOnMove": true }
+  { "id": "club", "name": "Club", "icon": "icon_flag", "order": 4, "keepOnMove": true, "panel": { "label": "Gem exchange", "sceneKey": "Gems" } }
 ]

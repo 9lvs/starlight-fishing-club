@@ -77,8 +77,26 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     const sel = nodes.find((n) => n.id === selected);
     const cardH = sel ? this.buildCard(area, sel, branch, () => scrollRef?.position ?? 0) : 0;
 
+    // A branch can offer a panel above its tree (the Club tab opens the gem exchange).
+    const b = r.branches.get(branch);
+    let barH = 0;
+    if (b.panel && this.scene.manager.keys[b.panel.sceneKey]) {
+      const sceneKey = b.panel.sceneKey;
+      new Button(this, {
+        x: area.x,
+        y: area.y + TAB_H + 3,
+        w: area.w,
+        h: 16,
+        label: b.panel.label,
+        icon: b.panel.sceneKey === 'Gems' ? 'icon_gem' : undefined,
+        variant: 'secondary',
+        onClick: () => this.ctx.ui.openPanel(sceneKey),
+      });
+      barH = 19;
+    }
+
     // Tree.
-    const treeRect = { x: area.x, y: area.y + TAB_H + 4, w: area.w, h: Math.max(TREE_NODE.h + 8, area.h - TAB_H - 4 - cardH - 4) };
+    const treeRect = { x: area.x, y: area.y + TAB_H + 4 + barH, w: area.w, h: Math.max(TREE_NODE.h + 8, area.h - TAB_H - 4 - barH - cardH - 4) };
     const scroll = new ScrollArea(this, treeRect);
     scrollRef = scroll;
     const slots = layoutBranch(nodes);
@@ -112,7 +130,7 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
       const node = new TreeNode(this, p.x, p.y, u.icon ?? 'icon_star', () =>
         this.refresh({ branch, selected: u.id, scroll: scroll.position }),
       );
-      node.setNode(svc.state(u), svc.level(u.id), u.maxLevel, u.id === selected, u.label);
+      node.setNode(svc.state(u), svc.level(u.id), u.maxLevel, u.id === selected, u.label, r.currencies.tryGet(u.currency ?? ECONOMY.defaultCurrency)?.icon);
       scroll.add(node);
     }
     const maxRow = Math.max(0, ...slots.map((s) => s.row));
@@ -245,7 +263,7 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
       },
     });
     if (state !== 'affordable') {
-      addText(this, x + 4, y + h - footH + 6, `${formatNumber(svc.cost(u) - this.ctx.wallet.get(u.currency ?? ECONOMY.defaultCurrency))} more coins`, {
+      addText(this, x + 4, y + h - footH + 6, `${formatNumber(svc.cost(u) - this.ctx.wallet.get(u.currency ?? ECONOMY.defaultCurrency))} more ${(currency?.name ?? 'coins').toLowerCase()}`, {
         color: 'slate',
         shadow: false,
       });

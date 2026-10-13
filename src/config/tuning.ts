@@ -83,6 +83,19 @@ export const CREEL = {
   ],
 };
 
+/** Gems: a rare find while fishing, spent on looks that stay when the club moves. */
+export const GEMS = {
+  currency: 'gems',
+  /** Chance a catch brings up a gem: base plus this much per rarity tier, never above max (1% to 3%). */
+  base: 0.01,
+  perTier: 0.005,
+  max: 0.03,
+  /** Coins for one gem at Willow Pond. It rises with the club bonus, so it stays a choice later on. */
+  tradeCoins: 1000,
+  /** Amounts offered in the exchange. */
+  tradeSteps: [1, 5, 10],
+};
+
 /** Daily Catch: one shared fish a day at the starting water, Wordle style. */
 export const DAILY_CATCH = {
   /** Rarity tiers the daily fish is drawn from (1 uncommon, 2 rare): findable in a few minutes. */

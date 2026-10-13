@@ -5,6 +5,7 @@ import { crewFeature } from './crew';
 import { dailyCatchFeature } from './dailyCatch';
 import { dailyGiftFeature } from './dailyGift';
 import { fishingFeature } from './fishing';
+import { gemsFeature } from './gems';
 import { journalFeature } from './journal';
 import { mapFeature } from './map';
 import { offlineFeature } from './offline';
@@ -22,6 +23,7 @@ export const FEATURES: GameFeature[] = [
   settingsFeature,
   dailyGiftFeature,
   dailyCatchFeature,
+  gemsFeature,
   // Last, so its tips draw above every other feature's scenes.
   tutorialFeature,
 ];

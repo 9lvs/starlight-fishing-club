@@ -113,6 +113,7 @@ export const SOUNDS: Record<string, SoundDef> = {
     tone: { notes: [G4], wave: 'triangle', noteMs: 80, gapMs: 0, gain: 0.06, slide: 0.8 },
   },
   coin: { volume: 0.4, tone: { notes: [A5, C6], wave: 'sine', noteMs: 60, gapMs: 10, gain: 0.05 } },
+  gem: { volume: 0.55, tone: { notes: [E6, C6, E6], wave: 'sine', noteMs: 60, gapMs: 30, gain: 0.05, release: 5 } },
   set: { volume: 0.6, tone: { notes: [C5, E5, G5, C6, G5, C6, E6], wave: 'triangle', noteMs: 70, gapMs: 15, gain: 0.06 } },
   bundle: { volume: 0.5, tone: { notes: [C5, E5, G5, C6, E6], wave: 'sine', noteMs: 60, gapMs: 15, gain: 0.05 } },
   // Menus and buying.
