@@ -58,3 +58,5 @@ One line per decision, with the reason. Newest at the bottom.
 - Matching sets use only 3, 5, and 10 (owner's rule). A rarity earns its biggest set; 12 of a kind counts as a 10. Sets stack across rarities and sit on top of the bundle bonus.
 - Gems are the second currency, kept on moves. They buy only looks (no stats). The coin price of a gem scales with the club bonus so late-game coins do not flood gems. Night Watch (away earnings) became the Ice Chest, since away coins no longer exist.
 - Each water's sound and music are data (`sound` in `waters.json`); the night music box stays at every water so nights stay quiet.
+- Crew base catch time is 30 s (was 12 s). 40 s pushed the journey past 6 hours because crew also sell while you play, so 30 s is the compromise.
+- Fog is drawn as solid mist banks at partial opacity. Dithered full-screen fog read as a rendering bug.

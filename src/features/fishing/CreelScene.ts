@@ -68,14 +68,12 @@ export class CreelScene extends PanelScene<CreelData> {
     });
 
     if (items.length === 0) {
-      const sizes = CREEL.sets.map((x) => x.size).join(', ');
-      addText(
-        this,
-        area.x + area.w / 2,
-        top + 20,
-        `Tap Keep on a catch to save it here. Crew catches from your time away land here too.\n\nSell together for a bundle bonus (+${Math.round(CREEL.bundlePerFish * 100)}% per fish after the first) and a set bonus for ${sizes} of one rarity. Rarer sets pay more.\n\nKept fish lose freshness while you play, so sell them soon.`,
-        { maxWidth: area.w - 8, originX: 0.5, align: 'center', color: 'sky' },
-      );
+      addText(this, area.x + area.w / 2, top + 16, 'Tap Keep to save a catch here.\n\nSell together for a bonus, more for 3, 5, or 10 of a rarity. Sell while fresh.', {
+        maxWidth: area.w - 8,
+        originX: 0.5,
+        align: 'center',
+        color: 'sky',
+      });
       return;
     }
 

@@ -82,7 +82,7 @@ Base values; upgrades and features change them only through modifiers.
   (`tests/helpers/journeySim.ts`) and checks: first upgrade under 1.5 min, first move
   15 to 28 min, each later water a little longer but under 80 min, the first boats
   coming back in under half the time after a move, and a Sky Lake finale of 30 to
-  150 min. Current median: 20, 29, 48, 50, 51 min per water, an 83 min finale, about 4.7 h total.
+  150 min. Current median: 20, 31, 56, 63, 65 min per water, a 107 min finale, about 5.8 h total.
 - Crew helpers in `crew.json`: `hireCost`, `intervalMult`, `valueMult`, `luck`. While you play
   they sell at `crewSellMult`; while you are away they only fill the creel (`storageCap`).
 

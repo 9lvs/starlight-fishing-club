@@ -113,7 +113,7 @@ comments that explain *why*. Small files.
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
 upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 131 unit tests.
-v0.5.0 adds creel freshness, matching set bonuses, crew that fill the creel while you are away,
+v0.5.1 slows the crew (30 s), softens the fog, and shortens the empty creel text. v0.5.0 adds creel freshness, matching set bonuses, crew that fill the creel while you are away,
 gems (finds, the exchange, gem-only looks: outfits and clubhouse decorations), and a sound bed and
 music key for each water.
 v0.4.0 adds Sunlit Reef (a sixth water), landmarks and moving scenery for every water, and

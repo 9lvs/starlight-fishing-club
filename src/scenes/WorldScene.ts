@@ -59,6 +59,19 @@ const WEATHER_FX = {
   flashAlpha: 0.1,
 };
 
+/**
+ * Fog: solid, soft-edged banks of mist that drift slowly (a dithered screen
+ * read as a glitch). `y` is a share of the water's height from the horizon,
+ * `alpha` is multiplied by the weather's fog amount.
+ */
+const FOG = {
+  height: 44,
+  banks: [
+    { y: -0.04, alpha: 0.95, speed: 1.1 },
+    { y: 0.5, alpha: 0.55, speed: -0.6 },
+  ],
+};
+
 /** Rod length the ROD table was drawn for; rod looks give their own length. */
 const ROD_BASE_LEN = 17;
 
@@ -99,7 +112,8 @@ export class WorldScene extends Phaser.Scene {
   private rod!: Phaser.GameObjects.Graphics;
   private decorations: Phaser.GameObjects.Image[] = [];
   private weatherGfx!: Phaser.GameObjects.Graphics;
-  private fog: Phaser.GameObjects.TileSprite[] = [];
+  /** Soft fog banks: two wrapping copies each, drifting at their own speed. */
+  private fog: { imgs: Phaser.GameObjects.Image[]; speed: number; alpha: number }[] = [];
   private dim!: Phaser.GameObjects.Rectangle;
   private fireflyGfx!: Phaser.GameObjects.Graphics;
   private fireflies: Mote[] = [];
@@ -156,14 +170,12 @@ export class WorldScene extends Phaser.Scene {
     this.buildBoat();
     this.addLayer(0, this.L.menuBar.y - 56, W, 60, paintForeground, 0.3, true);
     this.weatherGfx = this.add.graphics();
-    const fogTex = this.textures.exists('dither_25') ? 'dither_25' : '__WHITE';
-    this.fog = [0, 1].map((i) =>
-      this.add
-        .tileSprite(0, Math.round(horizonY * 0.6) + i * 30, W, H - Math.round(horizonY * 0.6), fogTex)
-        .setOrigin(0, 0)
-        .setTint(color('mist'))
-        .setAlpha(0),
-    );
+    this.fog = FOG.banks.map((b, i) => {
+      const key = this.makeFogTexture(W, i);
+      const y = Math.round(horizonY + b.y * (this.L.menuBar.y - horizonY)) - FOG.height / 2;
+      const imgs = [0, W].map((x) => this.add.image(x, y, key).setOrigin(0, 0).setAlpha(0));
+      return { imgs, speed: b.speed, alpha: b.alpha };
+    });
     this.dim = this.add.rectangle(0, 0, W, H, color('ink'), 0).setOrigin(0, 0);
     this.flash = this.add.rectangle(0, 0, W, H, color('mist'), 0).setOrigin(0, 0);
     this.fireflyGfx = this.add.graphics();
@@ -336,6 +348,35 @@ export class WorldScene extends Phaser.Scene {
     this.drawStars();
   }
 
+  /** One fog bank as wide as the screen: wavy top and bottom edges that wrap seamlessly. */
+  private makeFogTexture(W: number, i: number): string {
+    const key = `fog_bank_${W}_${i}`;
+    if (this.textures.exists(key)) return key;
+    const t = this.textures.createCanvas(key, W, FOG.height);
+    if (!t) return '__WHITE';
+    const c = t.context;
+    c.fillStyle = '#' + color('mist').toString(16).padStart(6, '0');
+    // A flat-bottomed bank with round puffs on top, like low cloud on the water.
+    const base = FOG.height - 12;
+    c.fillRect(0, base - 6, W, 10);
+    let seed = 7 + i * 31;
+    const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+    for (let x = 0; x < W; x += 9 + Math.floor(rnd() * 10)) {
+      const r = 6 + Math.floor(rnd() * 7);
+      // Draw each puff also one width over, so the bank wraps without a seam.
+      for (const ox of [0, -W, W]) {
+        for (let dy = -r; dy <= 0; dy++) {
+          const half = Math.round(Math.sqrt(r * r - dy * dy) * 1.4);
+          c.fillRect(x + ox - half, base - 6 + dy, half * 2 + 1, 1);
+        }
+      }
+    }
+    // A thin, soft tail under the bank.
+    for (let x = 0; x < W; x += 2) c.fillRect(x, base + 4 + (x % 4 === 0 ? 1 : 0), 1, 1);
+    t.refresh();
+    return key;
+  }
+
   private makeCelestialTextures(): void {
     if (this.textures.exists('world_sun')) return;
     const mk = (key: string, draw: (c: CanvasRenderingContext2D) => void) => {
@@ -437,7 +478,7 @@ export class WorldScene extends Phaser.Scene {
     this.flashes = !!v.flashes;
     const cloudLayer = this.layers[1];
     if (cloudLayer) this.tweens.add({ targets: cloudLayer.objs, alpha: 0.35 + v.clouds * 0.65, duration: 3000 });
-    this.fog.forEach((f, i) => this.tweens.add({ targets: f, alpha: v.fog * (i === 0 ? 0.7 : 0.45), duration: 4000 }));
+    this.fog.forEach((f) => this.tweens.add({ targets: f.imgs, alpha: v.fog * f.alpha, duration: 4000 }));
     this.tweens.add({ targets: this.dim, alpha: v.dim * 0.4, duration: 4000 });
     const target = Math.round(v.rain * (reduced ? 30 : 70));
     while (this.rain.length < target) this.rain.push(this.newDrop(true));
@@ -489,7 +530,11 @@ export class WorldScene extends Phaser.Scene {
         l.objs[0]!.x = -off;
         l.objs[1]!.x = w - off;
       }
-      this.fog.forEach((f, i) => (f.tilePositionX = Math.round(this.driftAcc * (i === 0 ? 1.2 : -0.7))));
+      for (const f of this.fog) {
+        const off = ((Math.round(this.driftAcc * f.speed) % W) + W) % W;
+        f.imgs[0]!.x = -off;
+        f.imgs[1]!.x = W - off;
+      }
     }
 
     // Sun or moon moves along an arc over its phase.
