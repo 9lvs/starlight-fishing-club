@@ -3,6 +3,7 @@
 // dithering instead of gradients so the pixel style holds.
 import { rgb, type PaletteName, type ScenePalette } from '../../design/tokens';
 import { hashString, seededRng } from '../../core/rng';
+import { paintCoral } from './landmarks';
 
 export const BAYER4 = [
   [0, 8, 2, 10],
@@ -22,17 +23,20 @@ export interface Painter {
 export interface SceneShape {
   hills: string;
   foreground: string;
+  /** Buildings and props on the far shore (landmarks.ts), and moving touches (sceneEffects.ts). */
+  landmarks: readonly string[];
+  effects: readonly string[];
   /** Seed so each water gets its own skyline. */
   seed: number;
   horizonY: number;
 }
 
-function fill(ctx: CanvasRenderingContext2D, c: PaletteName): void {
+export function fill(ctx: CanvasRenderingContext2D, c: PaletteName): void {
   const [r, g, b] = rgb(c);
   ctx.fillStyle = `rgb(${r},${g},${b})`;
 }
 
-function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, c: PaletteName): void {
+export function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, c: PaletteName): void {
   fill(ctx, c);
   ctx.fillRect(x, y, w, h);
 }
@@ -231,6 +235,7 @@ export const paintWater: Painter = (ctx, w, h, pal, s) => {
     for (let x = 0; x < w; x++) if (bayer(x, y) < t) ctx.fillRect(x, y, 1, 1);
   }
   rect(ctx, 0, 0, w, 1, pal.waterShine);
+  if (s.landmarks.includes('coral')) paintCoral(ctx, w, h, pal, s.seed);
   // Static shine streaks, longer near the viewer for depth.
   const rng = seededRng(s.seed + 41);
   // Few and soft: bright streaks everywhere tire the eyes.

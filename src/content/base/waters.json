@@ -2,41 +2,41 @@
   {
     "id": "pond", "name": "Willow Pond", "order": 0, "rangeRequired": 0, "clubBonus": 0, "tackleNeed": 0, "spriteKey": "water_pond",
     "description": "A sleepy pond under weeping willows. A good place to learn.",
-    "scene": { "hills": "rolling", "foreground": "reeds" }
+    "scene": { "landmarks": ["willows", "shed", "jetty"], "effects": ["leaves", "dragonflies"], "hills": "rolling", "foreground": "reeds" }
   },
   {
     "id": "river", "name": "Whisper River", "order": 1, "rangeRequired": 1, "clubBonus": 2, "tackleNeed": 3, "spriteKey": "water_river",
     "description": "A slow river through pine woods. Trout and salmon drift here.",
-    "scene": { "hills": "pines", "foreground": "rocks" }
+    "scene": { "landmarks": ["cabin", "dock"], "effects": ["current", "smoke"], "hills": "pines", "foreground": "rocks" }
   },
   {
     "id": "cove", "name": "Moonlit Cove", "order": 2, "rangeRequired": 2, "clubBonus": 4, "tackleNeed": 10, "spriteKey": "water_cove",
     "description": "A quiet sea cove where the moon pulls up strange and lovely things.",
-    "scene": { "hills": "cliffs", "foreground": "lilies", "tint": { "night": { "waterTop": "teal" } } }
+    "scene": { "landmarks": ["harbor", "moored_boats", "lighthouse"], "effects": ["beam", "gulls", "buoy"], "hills": "cliffs", "foreground": "lilies", "tint": { "night": { "waterTop": "teal" } } }
   },
   {
     "id": "glowing_cave", "name": "Glowing Cave", "order": 3, "rangeRequired": 3, "clubBonus": 9, "tackleNeed": 17, "spriteKey": "water_cave",
     "description": "Mushrooms glow on the walls of an underground lake.",
-    "scene": {
+    "scene": { "landmarks": ["lantern_string", "grotto"], "effects": ["drips"],
       "hills": "cave", "foreground": "crystals",
       "tint": {
-        "day": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.5, "fireflies": 1 },
-        "dusk": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.6, "fireflies": 1 },
-        "night": { "skyBands": ["ink", "ink", "ink"], "clouds": "midnight", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "midnight", "waterDeep": "ink", "waterShine": "sage", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.8, "fireflies": 1 },
-        "dawn": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.6, "fireflies": 1 }
+        "day": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.5, "fireflies": 1, "wall": "plum", "wallShade": "midnight", "roof": "midnight", "window": "gold", "lamp": "gold" },
+        "dusk": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.6, "fireflies": 1, "wall": "plum", "wallShade": "midnight", "roof": "midnight", "window": "gold", "lamp": "gold" },
+        "night": { "skyBands": ["ink", "ink", "ink"], "clouds": "midnight", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "midnight", "waterDeep": "ink", "waterShine": "sage", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.8, "fireflies": 1, "wall": "plum", "wallShade": "midnight", "roof": "midnight", "window": "gold", "lamp": "gold" },
+        "dawn": { "skyBands": ["ink", "midnight", "plum"], "clouds": "plum", "hillsFar": "midnight", "hillsNear": "plum", "waterTop": "plum", "waterDeep": "midnight", "waterShine": "lavender", "foreground": "plum", "foregroundAccent": "sage", "stars": 0.6, "fireflies": 1, "wall": "plum", "wallShade": "midnight", "roof": "midnight", "window": "gold", "lamp": "gold" }
       }
     }
   },
   {
     "id": "sky_lake", "name": "Sky Lake", "order": 4, "rangeRequired": 4, "clubBonus": 24, "tackleNeed": 25, "spriteKey": "water_sky",
     "description": "A lake high above the clouds. Nobody knows how the fish got there.",
-    "scene": {
+    "scene": { "landmarks": ["floating_isles", "pavilion"], "effects": ["waterfall", "balloon", "sky_lanterns"],
       "hills": "clouds", "foreground": "none",
       "tint": {
-        "day": { "skyBands": ["sky", "sky", "sky"], "hillsFar": "mist", "hillsNear": "lavender", "waterTop": "mist", "waterDeep": "sky" },
-        "dusk": { "hillsFar": "lavender", "hillsNear": "rose", "waterDeep": "plum" },
-        "night": { "hillsFar": "dusk", "hillsNear": "slate", "stars": 1 },
-        "dawn": { "hillsFar": "lavender", "hillsNear": "mist" }
+        "day": { "skyBands": ["sky", "sky", "sky"], "hillsFar": "mist", "hillsNear": "lavender", "waterTop": "mist", "waterDeep": "sky", "wall": "mist", "wallShade": "lavender", "roof": "gold", "window": "sky" },
+        "dusk": { "hillsFar": "lavender", "hillsNear": "rose", "waterDeep": "plum", "wall": "sand", "roof": "gold" },
+        "night": { "hillsFar": "dusk", "hillsNear": "slate", "stars": 1, "wall": "sky", "wallShade": "dusk", "roof": "gold" },
+        "dawn": { "hillsFar": "lavender", "hillsNear": "mist", "wall": "mist", "roof": "gold" }
       }
     }
   }

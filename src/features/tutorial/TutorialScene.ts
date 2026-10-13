@@ -45,7 +45,7 @@ export class TutorialScene extends Phaser.Scene {
 
   override update(): void {
     // Tips step aside while a panel or the catch card is open.
-    if (this.bubble) this.bubble.setVisible(!uiState.openPanel && !uiState.modal);
+    if (this.bubble) this.bubble.setVisible(!uiState.openPanel && !uiState.modal && !uiState.voyaging);
   }
 
   private sync(): void {

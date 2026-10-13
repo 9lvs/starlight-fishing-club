@@ -57,6 +57,12 @@ export interface ScenePalette {
   boatShade: PaletteName; // shaded side of the boat
   fireflies: number; // 0..1 firefly density
   textOnWorld: PaletteName; // readable text color over this sky
+  /** Buildings and landmarks: walls, their shaded side, roofs, windows (lit at night), lamps. */
+  wall: PaletteName;
+  wallShade: PaletteName;
+  roof: PaletteName;
+  window: PaletteName;
+  lamp: PaletteName;
 }
 
 export const SCENE_PALETTES: Record<string, ScenePalette> = {
@@ -76,6 +82,11 @@ export const SCENE_PALETTES: Record<string, ScenePalette> = {
     boatShade: 'bark',
     fireflies: 0,
     textOnWorld: 'mist',
+    wall: 'sand',
+    wallShade: 'bark',
+    roof: 'coral',
+    window: 'dusk',
+    lamp: 'sand',
   },
   dusk: {
     skyBands: ['plum', 'rose', 'coral', 'gold'],
@@ -93,6 +104,11 @@ export const SCENE_PALETTES: Record<string, ScenePalette> = {
     boatShade: 'plum',
     fireflies: 1,
     textOnWorld: 'mist',
+    wall: 'rose',
+    wallShade: 'plum',
+    roof: 'plum',
+    window: 'gold',
+    lamp: 'gold',
   },
   night: {
     skyBands: ['ink', 'midnight', 'dusk'],
@@ -110,6 +126,11 @@ export const SCENE_PALETTES: Record<string, ScenePalette> = {
     boatShade: 'midnight',
     fireflies: 0.6,
     textOnWorld: 'mist',
+    wall: 'dusk',
+    wallShade: 'midnight',
+    roof: 'midnight',
+    window: 'gold',
+    lamp: 'gold',
   },
   dawn: {
     skyBands: ['dusk', 'lavender', 'rose', 'sand'],
@@ -127,6 +148,11 @@ export const SCENE_PALETTES: Record<string, ScenePalette> = {
     boatShade: 'plum',
     fireflies: 0.2,
     textOnWorld: 'mist',
+    wall: 'lavender',
+    wallShade: 'plum',
+    roof: 'plum',
+    window: 'sand',
+    lamp: 'gold',
   },
 };
 

@@ -4,15 +4,18 @@
 import Phaser from 'phaser';
 import { getContext, type GameContext } from '../core/context';
 import { getLayout, type Layout } from '../core/layout';
-import { worldAnchors } from '../core/sceneState';
+import { uiState, worldAnchors } from '../core/sceneState';
 import { TIME } from '../config/time';
-import { FISHING } from '../config/tuning';
+import { FISHING, VOYAGE } from '../config/tuning';
 import { MOTION, PALETTE_NAMES, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
 import { FISHER_HAND, RIG_RAISE } from '../art/placeholderGenerator';
 import { phaseAt } from '../systems/timeOfDay';
+import type { VoyageData } from './VoyageScene';
 import { drawPixelLine } from '../ui/pixelDraw';
 import { uiSignals } from '../ui/uiSignals';
+import { LANDMARK_LAYER_H, paintLandmarks } from './world/landmarks';
 import { PhasedLayer } from './world/PhasedLayer';
+import { SceneEffects } from './world/sceneEffects';
 import {
   paintClouds,
   paintForeground,
@@ -113,6 +116,14 @@ export class WorldScene extends Phaser.Scene {
   private gusts: Mote[] = [];
   private nextFlash = 0;
   private flash!: Phaser.GameObjects.Rectangle;
+  private effects!: SceneEffects;
+  /** Index of the landmark layer in `layers`, for anchoring effects to its drift. */
+  private landmarkLayer = -1;
+  /** Scenery scroll multiplier, raised while sailing between waters. */
+  private driftBoost = { k: 1 };
+  private clubJustMoved = false;
+  /** During a voyage: true once the chart covers the screen and the new water is painted. */
+  private voyageCovered = false;
 
   constructor() {
     super('World');
@@ -136,6 +147,11 @@ export class WorldScene extends Phaser.Scene {
     this.addLayer(0, horizonY - 56, W, 56, paintHillsFar, 0.08, true);
     this.addLayer(0, horizonY - 34, W, 34, paintHillsNear, 0.16, true);
     this.addLayer(0, horizonY, W, H - horizonY, paintWater, 0);
+    // Landmarks drift with the near hills so buildings stay on their shore.
+    this.landmarkLayer = this.layers.length;
+    this.addLayer(0, horizonY - LANDMARK_LAYER_H + 3, W, LANDMARK_LAYER_H, paintLandmarks, 0.16, true);
+    this.effects = new SceneEffects(this.add.graphics(), this.L);
+    this.effects.setShape(this.shapeCache);
     this.shimmer = this.add.graphics();
     this.buildBoat();
     this.addLayer(0, this.L.menuBar.y - 56, W, 60, paintForeground, 0.3, true);
@@ -164,11 +180,12 @@ export class WorldScene extends Phaser.Scene {
         this.pal = this.paletteFor(phase);
         this.applyPalette(true);
       }),
-      bus.on('waterChanged', ({ waterId }) => {
-        this.shapeCache = this.shapeFor(waterId);
-        this.pal = this.paletteFor(this.ctx.world.phase);
-        this.applyPalette(true);
+      bus.on('waterChanged', ({ waterId, previous }) => {
+        // clubMoved follows waterChanged in the same call, so decide a moment later.
+        this.clubJustMoved = false;
+        queueMicrotask(() => this.arrive(waterId, previous));
       }),
+      bus.on('clubMoved', () => (this.clubJustMoved = true)),
       bus.on('weatherChanged', () => this.applyWeather()),
       bus.on('decorationsChanged', () => this.applyDecorations()),
       bus.on('lookChanged', ({ slot }) => {
@@ -185,8 +202,75 @@ export class WorldScene extends Phaser.Scene {
     this.offs.forEach((off) => off());
     this.offs = [];
     this.transitionTimer?.remove();
+    // A restart mid-voyage (screen resize) lands straight at the new water.
+    if (uiState.voyaging) {
+      this.scene.stop('Voyage');
+      uiState.voyaging = false;
+      this.ctx.bus.emit('voyage', { active: false, waterId: this.ctx.world.waterId });
+    }
+    this.driftBoost.k = 1;
     this.layers.forEach((l) => l.layer.destroy(this));
     this.layers = [];
+  }
+
+  private showWater(waterId: string, animated: boolean): void {
+    this.shapeCache = this.shapeFor(waterId);
+    this.pal = this.paletteFor(this.ctx.world.phase);
+    this.applyPalette(animated);
+    this.effects.setShape(this.shapeCache);
+  }
+
+  /** A new water: sail there (voyage), or just dissolve with reduced motion. */
+  private arrive(waterId: string, previous: string): void {
+    if (!this.sys.isActive()) return;
+    const waters = this.ctx.registries.waters;
+    const to = waters.tryGet(waterId);
+    const from = waters.tryGet(previous);
+    // Another change mid-voyage: before the chart covers the screen, the
+    // repaint there picks up the latest water; after it, dissolve to it.
+    if (uiState.voyaging && !this.voyageCovered) return;
+    if (uiSignals.reducedMotion() || !to || uiState.voyaging) {
+      this.showWater(waterId, true);
+      return;
+    }
+    this.voyageCovered = false;
+    const club = this.clubJustMoved;
+    uiState.voyaging = true;
+    this.ctx.bus.emit('voyage', { active: true, waterId });
+    const home = this.L.boat.x - 16;
+    this.tweens.add({ targets: this.driftBoost, k: VOYAGE.driftBoost, duration: VOYAGE.sailOutMs, ease: 'Sine.easeIn' });
+    this.tweens.add({
+      targets: this.boat,
+      x: this.L.width + 40,
+      duration: VOYAGE.sailOutMs,
+      ease: 'Sine.easeIn',
+      onComplete: () => {
+        const data: VoyageData = {
+          fromName: from?.name ?? '',
+          fromIcon: from?.spriteKey ?? '',
+          toName: to.name,
+          toIcon: to.spriteKey,
+          toBlurb: to.description,
+          club,
+          bonusText: club && to.clubBonus > 0 ? `Club bonus: +${Math.round(to.clubBonus * 100)}% coins` : undefined,
+          onCovered: () => {
+            this.voyageCovered = true;
+            this.showWater(this.ctx.world.waterId, false);
+            this.boat.x = -40;
+          },
+          onReveal: () => {
+            this.tweens.add({ targets: this.driftBoost, k: 1, duration: VOYAGE.sailInMs, ease: 'Sine.easeOut' });
+            this.tweens.add({ targets: this.boat, x: home, duration: VOYAGE.sailInMs, ease: 'Sine.easeOut' });
+          },
+          onDone: () => {
+            uiState.voyaging = false;
+            this.boat.x = home;
+            this.ctx.bus.emit('voyage', { active: false, waterId });
+          },
+        };
+        this.scene.launch('Voyage', data);
+      },
+    });
   }
 
   private paletteFor(phase: string): ScenePalette {
@@ -201,6 +285,8 @@ export class WorldScene extends Phaser.Scene {
     return {
       hills: w?.scene.hills ?? 'rolling',
       foreground: w?.scene.foreground ?? 'reeds',
+      landmarks: w?.scene.landmarks ?? [],
+      effects: w?.scene.effects ?? [],
       seed: sceneSeed(waterId),
       horizonY: this.L.horizonY,
     };
@@ -385,7 +471,7 @@ export class WorldScene extends Phaser.Scene {
     // Gentle drift of tiled layers reads as the boat slowly floating along.
     if (!reduced) {
       // Wind pushes the clouds and hills along faster.
-      this.driftAcc += (delta / 1000) * (1 + this.wind * WEATHER_FX.windDrift);
+      this.driftAcc += (delta / 1000) * (1 + this.wind * WEATHER_FX.windDrift) * this.driftBoost.k;
       for (const l of this.layers) {
         if (l.objs.length < 2 || l.drift <= 0) continue;
         const w = l.layer.width;
@@ -424,6 +510,14 @@ export class WorldScene extends Phaser.Scene {
     this.updateWeather(delta, W, H);
     if (!reduced) this.updateGusts(delta, W);
     if (!reduced && this.flashes) this.updateFlashes(delta);
+    const lm = this.layers[this.landmarkLayer];
+    this.effects.update(delta, {
+      pal: this.pal,
+      offset: lm ? Math.round(this.driftAcc * lm.drift) % lm.layer.width : 0,
+      wind: this.wind,
+      reduced,
+      phase: this.ctx.world.phase,
+    });
     this.updateFireflies(delta, reduced);
     if (!reduced && isNight && this.shapeCache.hills !== 'cave') this.updateShootingStar(delta);
   }

@@ -7,6 +7,42 @@ const id = z.string().regex(/^[a-z0-9_]+$/, 'ids use lowercase letters, digits, 
 const paletteName = z.enum(PALETTE_NAMES as [PaletteName, ...PaletteName[]]);
 const spriteKey = z.string().min(1);
 
+/** Scene landmarks a water can list. Each one has a painter in scenes/world/landmarks.ts. */
+export const LANDMARKS = [
+  'willows',
+  'shed',
+  'jetty',
+  'cabin',
+  'dock',
+  'lighthouse',
+  'harbor',
+  'moored_boats',
+  'palms',
+  'bungalows',
+  'coral',
+  'grotto',
+  'lantern_string',
+  'pavilion',
+  'floating_isles',
+] as const;
+
+/** Moving scene touches a water can list. Each one is drawn in scenes/world/sceneEffects.ts. */
+export const SCENE_EFFECTS = [
+  'leaves',
+  'dragonflies',
+  'current',
+  'smoke',
+  'beam',
+  'gulls',
+  'buoy',
+  'fish_school',
+  'turtle',
+  'drips',
+  'waterfall',
+  'balloon',
+  'sky_lanterns',
+] as const;
+
 export const modifierSchema = z.object({
   stat: z.string().min(1),
   op: z.enum(['add', 'mult', 'set']),
@@ -87,6 +123,10 @@ export const waterSchema = z.object({
     .object({
       hills: z.enum(['rolling', 'pines', 'cliffs', 'cave', 'clouds', 'none']).default('rolling'),
       foreground: z.enum(['reeds', 'rocks', 'lilies', 'crystals', 'none']).default('reeds'),
+      /** Buildings and props on the far shore, painted in order (see scenes/world/landmarks.ts). */
+      landmarks: z.array(z.enum(LANDMARKS)).default([]),
+      /** Moving touches for this water (see scenes/world/sceneEffects.ts). */
+      effects: z.array(z.enum(SCENE_EFFECTS)).default([]),
       /**
        * Optional scene palette overrides per phase, e.g. { "night": { "waterTop": "teal" } }.
        * Values are palette names, lists of palette names (skyBands), or numbers (stars, fireflies).
@@ -95,7 +135,7 @@ export const waterSchema = z.object({
         .record(z.string(), z.record(z.string(), z.union([paletteName, z.array(paletteName).min(1), z.number().min(0).max(1)])))
         .default({}),
     })
-    .default({ hills: 'rolling', foreground: 'reeds', tint: {} }),
+    .default({ hills: 'rolling', foreground: 'reeds', landmarks: [], effects: [], tint: {} }),
 });
 
 export const branchSchema = z.object({

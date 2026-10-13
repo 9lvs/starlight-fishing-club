@@ -112,6 +112,10 @@ export class FishingScene extends Phaser.Scene {
       this.ctl.onEvent((e) => this.onSession(e)),
       this.ctx.bus.on('quickCatch', ({ label, coins }) => this.floatQuick(label, coins)),
       this.ctx.bus.on('viewportChanged', () => this.scene.restart()),
+      // The line and prompts step aside while the boat sails to another water.
+      this.ctx.bus.on('voyage', ({ active }) =>
+        this.tweens.add({ targets: this.cameras.main, alpha: active ? 0 : 1, duration: active ? 300 : 600 }),
+      ),
       this.ctx.bus.on('fishSold', () => this.refreshButtons()),
       this.ctx.bus.on('statsChanged', () => this.refreshButtons()),
     );
@@ -135,7 +139,7 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private tap(): void {
-    if (uiState.openPanel || uiState.modal) return;
+    if (uiState.openPanel || uiState.modal || uiState.voyaging) return;
     this.ctl.tap();
   }
 

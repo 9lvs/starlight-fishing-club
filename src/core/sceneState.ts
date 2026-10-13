@@ -13,4 +13,6 @@ export const uiState = {
   openPanel: null as string | null,
   /** True while a modal popup (like the catch card) is showing. */
   modal: false,
+  /** True while the boat sails to another water. */
+  voyaging: false,
 };

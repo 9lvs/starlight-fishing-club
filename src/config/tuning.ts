@@ -1,5 +1,18 @@
 // Feel and pacing of the hand-fishing loop. All values in ms unless noted.
 
+/** The voyage between waters (scenes/VoyageScene.ts and WorldScene). */
+export const VOYAGE = {
+  sailOutMs: 900,
+  coverMs: 450,
+  chartMs: 1700,
+  holdMs: 250,
+  revealMs: 700,
+  sailInMs: 1400,
+  titleMs: 2400,
+  /** Scenery scrolls this many times faster while the boat sails. */
+  driftBoost: 14,
+};
+
 export const FISHING = {
   castAnimMs: 650,
   waitMinMs: 2000,

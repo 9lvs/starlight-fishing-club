@@ -44,6 +44,8 @@ export interface GameEvents {
    * reset; each feature resets its own progress when it hears this.
    */
   clubMoved: { waterId: string; rank: number; previousRank: number };
+  /** The boat started or finished sailing to another water (presentation only). */
+  voyage: { active: boolean; waterId: string };
 
   // Lifecycle
   saveLoaded: { fresh: boolean };

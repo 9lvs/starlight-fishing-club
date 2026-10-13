@@ -4,6 +4,7 @@ import Phaser from 'phaser';
 import { DISPLAY } from '../config/display';
 import { BootScene, type BootData } from '../scenes/BootScene';
 import { HudScene } from '../scenes/HudScene';
+import { VoyageScene } from '../scenes/VoyageScene';
 import { StyleGuideScene } from '../scenes/StyleGuideScene';
 import { WorldScene } from '../scenes/WorldScene';
 import type { GameContext } from './context';
@@ -29,6 +30,7 @@ export function startGame(o: StartOptions): Phaser.Game {
     { key: 'World', scene: WorldScene },
     ...layers,
     { key: 'Hud', scene: HudScene },
+    { key: 'Voyage', scene: VoyageScene },
     ...panels,
     { key: 'StyleGuide', scene: StyleGuideScene },
   ];
