@@ -78,11 +78,21 @@ After adding content, run `npm test` (the content tests validate every pack) and
   `willows, shed, jetty, cabin, dock, lighthouse, harbor, moored_boats, palms, bungalows, coral,
   grotto, lantern_string, pavilion, floating_isles` (`scenes/world/landmarks.ts`; `coral` is
   painted under the water). Each place has one club building with the club's pennant.
+- `sound.bed`: layers from `BED` in `config/audio.ts` (`stream, surf, lagoon, cave_hum, high_breeze,
+  birds, frogs, crickets, owl, gulls, bell_buoy, drips, chimes`); calls follow the time of day.
+  `sound.music`: `transpose` (semitones from C), `voice` (`pluck, bell, marimba, harp`), `tempo`.
 - `scene.effects`: slow moving touches: `leaves, dragonflies, current, smoke, beam, gulls, buoy,
   fish_school, turtle, drips, waterfall, balloon, sky_lanterns` (`scenes/world/sceneEffects.ts`).
   `smoke`, `beam`, `leaves`, and `waterfall` attach to the cabin, lighthouse, willows or palms,
   and pavilion. To add a new one, add its id to `LANDMARKS` or `SCENE_EFFECTS` in
   `core/content/schemas.ts` and a painter for it.
+- Decorations with `"anchor": "club"` are painted on whatever club building the water has
+  (`CLUB_DECOR` in `landmarks.ts`). Gem looks are upgrades in the `club` branch with
+  `"currency": "gems"`; a fisher outfit is a `look` effect with `"slot": "fisher"` and a
+  `fisher_<id>` sprite (outfits are listed in `OUTFITS` in `placeholderGenerator.ts`).
+- A branch can show a button above its tree with `"panel": { "label", "sceneKey" }` (the Club
+  tab opens the Gem Exchange this way); it only shows if that panel is registered.
+- Rarities take `setMult` for matching set bonuses (rarer sets pay more).
 - `"comingSoon": true` shows it on the map as a teaser that cannot be visited.
 - Add at least one always-available fish with `"waters": ["lantern_lake"]`.
 

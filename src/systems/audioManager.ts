@@ -2,8 +2,9 @@
 // first user gesture (browsers block autoplay, and surprise audio is not calm).
 // Real files are loaded when present; otherwise a placeholder plays. Two volume
 // buses: effects (sounds, water, rain) and music.
-import { AUDIO, MUSIC_FILES, SOUNDS, type NoiseSpec, type SoundDef, type ToneSpec } from '../config/audio';
+import { AUDIO, MUSIC_FILES, SOUNDS, type NoiseSpec, type SoundDef, type ToneSpec, type WaterMusic } from '../config/audio';
 import { MusicPlayer } from './musicPlayer';
+import { SoundBed } from './soundBed';
 
 export class AudioManager {
   private ac: AudioContext | null = null;
@@ -25,6 +26,8 @@ export class AudioManager {
   private mood = 'day';
   private rain = 0;
   private wantAmbient = true;
+  private bed: SoundBed | null = null;
+  private place: { bed: readonly string[]; music: WaterMusic } = { bed: [], music: { transpose: 0, tempo: 1 } };
 
   constructor(private readonly baseUrl = './') {}
 
@@ -50,7 +53,21 @@ export class AudioManager {
     }
     if (this.ac.state === 'suspended') void this.ac.resume();
     if (this.wantAmbient && !this.ambientNode) this.startAmbient();
+    if (!this.bed && this.sfx && AUDIO.placeholder === 'synth') {
+      const out = this.ac.createGain();
+      out.gain.value = AUDIO.bedLevel;
+      out.connect(this.sfx);
+      this.bed = new SoundBed(this.ac, out, this.whiteNoise());
+      this.bed.set(this.place.bed, this.mood);
+    }
     this.updateMusic();
+  }
+
+  /** A water's sound: its bed of layers and its music's key, voice, and pace. */
+  setPlace(bed: readonly string[], music: WaterMusic): void {
+    this.place = { bed, music };
+    this.bed?.set(bed, this.mood);
+    this.music?.setWater(music);
   }
 
   get unlocked(): boolean {
@@ -79,6 +96,7 @@ export class AudioManager {
   setMood(phase: string): void {
     this.mood = phase;
     this.music?.setMood(phase);
+    this.bed?.setPhase(phase);
   }
 
   /** 0..1 rain on the water. */
@@ -120,6 +138,7 @@ export class AudioManager {
     if (!this.music) {
       this.music = new MusicPlayer(this.ac, this.musicBus);
       this.music.setMood(this.mood);
+      this.music.setWater(this.place.music);
     }
     if (want && !this.music.playing) this.music.start();
     if (!want && this.music.playing) this.music.stop();

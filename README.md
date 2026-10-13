@@ -12,13 +12,18 @@ with a visible upgrade tree, and hire a crew who keep fishing while you are away
 - Rarer fish glow in the water, fight harder, and can slip away: rods, boats, and bait add Tackle.
 - Reel in fast for a quick-catch bonus. Wind, storms, rain, fog, and night each bring their own fish.
 - Calm composed music that follows the time of day, and a soft sound for every action.
-- Gentle tips for new players, and a creel bundle bonus that makes keeping fish worth it.
+- Gentle tips for new players. Keep fish in your creel for bundle and matching set bonuses
+  (3, 5, or 10 of a rarity), but sell them while they are fresh.
+- Gems: a rare find on any catch, or traded for coins. They buy looks for your boat,
+  fisher, and clubhouse that stay when the club moves.
+- Every water sounds like itself: birds and frogs at the pond, a stream, gulls and a bell buoy,
+  cave drips, wind chimes in the sky, each with its own music key and voice.
 - A Feedback button that opens a short form with your device filled in.
 - Installable from the browser and playable offline.
 
 Launching it, testing on phones, and finding players: see `docs/LAUNCH.md`.
 - 10-minute day cycle with dithered palette shifts, rain, fog, fireflies, and shooting stars.
-- Crew auto-fishing and offline progress (up to 8 hours, 24 with upgrades).
+- Crew auto-fishing. While you are away they fill your creel (up to 8 hours, 24 with upgrades).
 - Built to grow: content is JSON, systems are plug-in features (see `CLAUDE.md` and `docs/`).
 
 ## Run

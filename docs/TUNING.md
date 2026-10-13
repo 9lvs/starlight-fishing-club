@@ -73,17 +73,37 @@ Base values; upgrades and features change them only through modifiers.
   `ECONOMY.defaultCostGrowth` is 1.15 when an upgrade omits it.
 - `ECONOMY.minSellValue` (1): no sale is worth less.
 - Pacing levers: `rod_1` / `cork_grip` costs (first upgrade), `boat_3` (first move),
-  the reach boats `boat_5`, `boat_7`, `boat_9` (later moves), `hire_help.baseCost` and
+  the reach boats `boat_5`, `boat_7`, `boat_8`, `boat_9` (later moves), `hire_help.baseCost` and
   `crew.json` `deckhand.hireCost` (first crew), and `clubBonus` in `waters.json`.
 - The journey: Willow Pond (+0%), Whisper River (+200%), Moonlit Cove (+400%),
-  Glowing Cave (+900%), Sky Lake (+2400%). Tier costs rise about 6x per water
+  Sunlit Reef (+600%), Glowing Cave (+900%), Sky Lake (+2400%). Tier costs rise about 6x per water
   (36x and 600x of the pond for cove and cave, 4000x for the Sky Lake finale).
 - `tests/pacing.test.ts` plays the whole journey with a goal-directed player model
   (`tests/helpers/journeySim.ts`) and checks: first upgrade under 1.5 min, first move
   15 to 28 min, each later water a little longer but under 80 min, the first boats
   coming back in under half the time after a move, and a Sky Lake finale of 30 to
-  150 min. Current median: 23, 39, 45, 50 min per water, an 88 min finale, about 4 h total.
-- Crew helpers in `crew.json`: `hireCost`, `intervalMult`, `valueMult`, `luck`.
+  150 min. Current median: 20, 29, 48, 50, 51 min per water, an 83 min finale, about 4.7 h total.
+- Crew helpers in `crew.json`: `hireCost`, `intervalMult`, `valueMult`, `luck`. While you play
+  they sell at `crewSellMult`; while you are away they only fill the creel (`storageCap`).
+
+## Creel and gems: `src/config/tuning.ts` (`CREEL`, `GEMS`) and `rarities.json`
+
+- Freshness (`CREEL.freshness`): kept fish are full value for `graceMs` (3 min) of play,
+  then lose `perMinute` (2%) a minute down to `floor` (60%). Time away never counts.
+  `freshDecayMult` (Ice Chest) slows it.
+- Bundle: `bundlePerFish` (+5%) per fish after the first, up to `bundleMax` (+50%).
+- Matching sets (`CREEL.sets`): 3, 5, or 10 of one rarity add `share` (12%, 25%, 60%) of
+  those fish's value, times the rarity's `setMult` (common 1, uncommon 1.3, rare 1.8,
+  epic 2.5, legendary 3.5). Each rarity earns its biggest set; sets of different rarities stack.
+- Gems (`GEMS`): each catch finds one at `base + tier * perTier` (1% common to 3% legendary,
+  capped at `max`), plus the `gemChance` stat. The exchange costs `tradeCoins` (1,000) times
+  `1 + clubBonus`, so 3,000 at Whisper River and 25,000 at Sky Lake. Club items cost 2 to 25 gems.
+
+## Sound: `src/config/audio.ts`
+
+- `AUDIO.musicLevel`, `musicDefault`, `bedLevel`, and the `limiter` set the mix. `MUSIC.gain` per voice.
+- `BED`: each sound bed layer (loops: filter, swell; calls: voice, `everyS`, `phases`, gain).
+  Waters pick layers and their music `transpose`, `voice`, and `tempo` in `waters.json` `sound`.
 
 ## Time and weather: `src/config/time.ts`
 

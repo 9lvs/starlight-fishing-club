@@ -53,3 +53,8 @@ One line per decision, with the reason. Newest at the bottom.
 - Each water has landmarks and effects listed in data, and the club's own building gets grander with each move (shed, cabin, harbor, bungalows, grotto, domed clubhouse), so moving the club feels like moving up in the world. Approved by the owner from a screenshot review before release.
 - Sunlit Reef is the sixth water (approved). The pacing test now checks every run before Sky Lake, not just the first four.
 - Changing water plays a voyage: the full one for a club move, a 2 s one for a visit (owner's choice), and none with reduced motion.
+- Crew fill only the creel while you are away (owner's request), so checking in and a bigger creel both pay. Live crew still sell, so active play is unchanged.
+- Kept fish lose freshness only during play, with a 3 minute grace and a 60% floor, so keeping fish is a choice with a cost but never a loss. Crew catches arrive fresh when you return.
+- Matching sets use only 3, 5, and 10 (owner's rule). A rarity earns its biggest set; 12 of a kind counts as a 10. Sets stack across rarities and sit on top of the bundle bonus.
+- Gems are the second currency, kept on moves. They buy only looks (no stats). The coin price of a gem scales with the club bonus so late-game coins do not flood gems. Night Watch (away earnings) became the Ice Chest, since away coins no longer exist.
+- Each water's sound and music are data (`sound` in `waters.json`); the night music box stays at every water so nights stay quiet.

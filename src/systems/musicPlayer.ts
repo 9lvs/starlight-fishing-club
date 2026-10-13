@@ -1,6 +1,6 @@
 // Plays the composed music through Web Audio: schedules a bar a little ahead of
 // time, with a soft reverb so everything blurs gently. No Phaser here.
-import { MUSIC, type MusicMood } from '../config/audio';
+import { MUSIC, type MusicMood, type WaterMusic } from '../config/audio';
 import { composeBar, midiToHz, type MusicNote } from './musicComposer';
 
 const LOOKAHEAD_S = 1.5;
@@ -14,6 +14,7 @@ export class MusicPlayer {
   private bar = 0;
   private nextBarAt = 0;
   private mood: MusicMood = MUSIC.moods.day!;
+  private water: WaterMusic = { transpose: 0, tempo: 1 };
 
   constructor(
     private readonly ac: AudioContext,
@@ -36,6 +37,17 @@ export class MusicPlayer {
 
   setMood(phase: string): void {
     this.mood = MUSIC.moods[phase] ?? this.mood;
+  }
+
+  /** Each water has its own key, melody voice, and pace, from the next bar on. */
+  setWater(m: WaterMusic): void {
+    this.water = m;
+  }
+
+  /** The night's music box stays; otherwise the water's own voice plays the melody. */
+  private get mixedMood(): MusicMood {
+    if (this.mood.voice === 'bell' || !this.water.voice) return this.mood;
+    return { ...this.mood, voice: this.water.voice };
   }
 
   start(): void {
@@ -64,14 +76,14 @@ export class MusicPlayer {
   }
 
   private get beatS(): number {
-    return 60 / MUSIC.bpm;
+    return 60 / (MUSIC.bpm * this.water.tempo);
   }
 
   private schedule(): void {
     // After a long pause (tab hidden), skip ahead instead of playing a pile of notes.
     if (this.nextBarAt < this.ac.currentTime - 0.1) this.nextBarAt = this.ac.currentTime + 0.1;
     while (this.nextBarAt < this.ac.currentTime + LOOKAHEAD_S) {
-      for (const n of composeBar(this.bar, this.mood, this.rng, MUSIC)) this.playNote(n, this.nextBarAt);
+      for (const n of composeBar(this.bar, this.mixedMood, this.rng, MUSIC)) this.playNote({ ...n, midi: n.midi + this.water.transpose }, this.nextBarAt);
       this.bar += 1;
       this.nextBarAt += MUSIC.beatsPerBar * this.beatS;
     }
@@ -103,10 +115,21 @@ export class MusicPlayer {
     env.gain.setValueAtTime(0, at);
     env.gain.linearRampToValueAtTime(peak, at + (n.voice === 'bass' ? 0.08 : 0.01));
     if (n.voice === 'bell') tail = 2.5;
+    else if (n.voice === 'harp') tail = 1.9;
+    else if (n.voice === 'marimba') tail = 0.55;
     else if (n.voice === 'bass') tail = len;
     else tail = 1.2;
     env.gain.exponentialRampToValueAtTime(0.0001, at + tail);
-    this.osc(n.voice === 'pluck' ? 'triangle' : 'sine', f, 0, env, at, at + tail + 0.05);
+    this.osc(n.voice === 'pluck' || n.voice === 'harp' ? 'triangle' : 'sine', f, 0, env, at, at + tail + 0.05);
+    // A wooden marimba: a faint, quick partial two octaves up.
+    if (n.voice === 'marimba') {
+      const knock = ac.createGain();
+      knock.gain.value = 0.12;
+      knock.connect(env);
+      this.osc('sine', f * 4, 0, knock, at, at + 0.12);
+    }
+    // A harp: a second string a hair out of tune, for shimmer.
+    if (n.voice === 'harp') this.osc('triangle', f, 7, env, at, at + tail + 0.05);
     // A quiet octave on the bell makes it shimmer like a music box.
     if (n.voice === 'bell') {
       const shimmer = ac.createGain();

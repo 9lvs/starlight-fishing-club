@@ -39,8 +39,15 @@ export function wireAudio(ctx: GameContext, audio: AudioManager): void {
     audio.setRain(visuals()?.rain ?? 0);
     audio.setWind(visuals()?.wind ?? 0);
   };
+  // Each water has its own sound bed and music key.
+  const applyPlace = () => {
+    const s = ctx.registries.waters.tryGet(ctx.world.waterId)?.sound;
+    audio.setPlace(s?.bed ?? [], s?.music ?? { transpose: 0, tempo: 1 });
+  };
   audio.setMood(ctx.world.phase);
   applyWeather();
+  applyPlace();
+  bus.on('waterChanged', applyPlace);
   bus.on('timeOfDayChanged', ({ phase }) => {
     audio.setMood(phase);
     audio.play('phase');

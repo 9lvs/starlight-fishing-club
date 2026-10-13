@@ -31,6 +31,9 @@ export const tutorialFeature: GameFeature = {
       if (weather !== 'clear' && svc.guideDone) svc.queue('weather');
     });
     bus.on('waterUnlocked', () => svc.queue('move'));
+    bus.on('currencyChanged', ({ currency, delta }) => {
+      if (currency === 'gems' && delta > 0) svc.queue('gems');
+    });
     bus.on('statsChanged', ({ stats }) => {
       if (stats.includes('crewSlots') && ctx.stats.get('crewSlots') > 0) svc.queue('crew');
     });

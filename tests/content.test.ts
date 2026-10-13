@@ -51,6 +51,14 @@ describe('base content', () => {
   });
 });
 
+describe('sound', () => {
+  it('every sound bed layer a water can list has a definition', async () => {
+    const { BED } = await import('../src/config/audio');
+    const { BED_LAYERS } = await import('../src/core/content/schemas');
+    expect([...BED_LAYERS].sort()).toEqual(Object.keys(BED).sort());
+  });
+});
+
 describe('schema validation errors', () => {
   const rarity = { id: 'common', name: 'Common', tier: 0, weight: 1, baseValue: 1, color: 'slate', frame: 'dusk', pips: 1, shape: 'circle' };
 

@@ -1,7 +1,7 @@
 // Composes background music one bar at a time: a slow chord pad, a soft bass
 // note, and a sparse melody drawn from the pentatonic scale. Pure logic (no
 // Web Audio), so it is easy to test and the player only schedules notes.
-import type { MusicMood } from '../config/audio';
+import type { MusicMood, MusicVoice } from '../config/audio';
 
 export interface MusicConfig {
   beatsPerBar: number;
@@ -18,7 +18,7 @@ export interface MusicNote {
   midi: number;
   /** Length in beats. */
   beats: number;
-  voice: 'pad' | 'bass' | 'pluck' | 'bell';
+  voice: 'pad' | 'bass' | MusicVoice;
   /** 0..1 loudness within its voice. */
   velocity: number;
 }
@@ -61,7 +61,7 @@ export function composeBar(bar: number, mood: MusicMood, rng: () => number, cfg:
     const from = near.length > 0 ? near : choices;
     const midi = from[Math.floor(rng() * from.length)]!;
     prev = midi;
-    notes.push({ at: half / 2, midi, beats: mood.voice === 'bell' ? 3 : 1.5, voice: mood.voice, velocity: strong ? 1 : 0.7 });
+    notes.push({ at: half / 2, midi, beats: mood.voice === 'bell' || mood.voice === 'harp' ? 3 : 1.5, voice: mood.voice, velocity: strong ? 1 : 0.7 });
   }
   return notes;
 }

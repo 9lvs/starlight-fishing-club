@@ -56,6 +56,8 @@ export const AUDIO = {
   limiter: { thresholdDb: -10, kneeDb: 8, ratio: 4 },
   /** The same sound twice within this window plays once (selling a whole creel). */
   repeatGuardMs: 70,
+  /** The water's sound bed (birds, surf, drips...) under the effects. */
+  bedLevel: 1.5,
   /** Rain on the water, mixed in by weather. */
   rain: { filterHz: 2600, gain: 0.035 },
   /** Wind gusts, mixed in by weather. */
@@ -149,8 +151,54 @@ export const SOUNDS: Record<string, SoundDef> = {
   sting_legendary: { volume: 0.65, tone: { notes: [C5, E5, G5, C6, G5, C6], wave: 'triangle', noteMs: 150, gapMs: 30, gain: 0.07 } },
 };
 
+/** One layer of a water's sound bed (systems/soundBed.ts). Waters list layers by id in `sound.bed`. */
+export interface BedLayerDef {
+  /** `loop`: steady filtered noise. `call`: a short synthesized call now and then. */
+  kind: 'loop' | 'call';
+  gain: number;
+  /** Only during these times of day (all if left out). */
+  phases?: string[];
+  // Loops.
+  filter?: BiquadFilterType;
+  hz?: number;
+  q?: number;
+  swellHz?: number;
+  swellDepth?: number;
+  /** A very low tone under the noise (the cave). */
+  drone?: number;
+  // Calls.
+  voice?: 'birds' | 'frogs' | 'crickets' | 'owl' | 'gulls' | 'bell' | 'drip' | 'chimes';
+  /** Seconds between calls, as a range. */
+  everyS?: [number, number];
+}
+
+export const BED: Record<string, BedLayerDef> = {
+  stream: { kind: 'loop', gain: 0.05, filter: 'bandpass', hz: 1100, q: 0.6, swellHz: 3.3, swellDepth: 0.25 },
+  surf: { kind: 'loop', gain: 0.07, filter: 'lowpass', hz: 650, swellHz: 0.085, swellDepth: 0.8 },
+  lagoon: { kind: 'loop', gain: 0.045, filter: 'lowpass', hz: 900, swellHz: 0.12, swellDepth: 0.6 },
+  cave_hum: { kind: 'loop', gain: 0.05, filter: 'lowpass', hz: 170, drone: 55 },
+  high_breeze: { kind: 'loop', gain: 0.04, filter: 'bandpass', hz: 1700, q: 0.5, swellHz: 0.05, swellDepth: 0.7 },
+  birds: { kind: 'call', voice: 'birds', gain: 0.022, phases: ['day', 'dawn'], everyS: [4, 11] },
+  frogs: { kind: 'call', voice: 'frogs', gain: 0.05, phases: ['dusk', 'night'], everyS: [5, 12] },
+  crickets: { kind: 'call', voice: 'crickets', gain: 0.012, phases: ['night'], everyS: [2, 5] },
+  owl: { kind: 'call', voice: 'owl', gain: 0.035, phases: ['night'], everyS: [18, 40] },
+  gulls: { kind: 'call', voice: 'gulls', gain: 0.02, phases: ['day', 'dawn', 'dusk'], everyS: [9, 22] },
+  bell_buoy: { kind: 'call', voice: 'bell', gain: 0.025, everyS: [10, 18] },
+  drips: { kind: 'call', voice: 'drip', gain: 0.03, everyS: [1.5, 5] },
+  chimes: { kind: 'call', voice: 'chimes', gain: 0.018, everyS: [7, 16] },
+};
+
 /** A music file, if you add one (it replaces the composed music). Example: ['audio/music.ogg', 'audio/music.mp3']. */
 export const MUSIC_FILES: string[] = [];
+
+export type MusicVoice = 'pluck' | 'bell' | 'marimba' | 'harp';
+
+/** A water's own music: its key (semitones from C), melody voice, and pace. */
+export interface WaterMusic {
+  transpose: number;
+  voice?: MusicVoice;
+  tempo: number;
+}
 
 export interface MusicMood {
   /** Chance of a melody note on each half beat. */
@@ -159,8 +207,8 @@ export interface MusicMood {
   register: number;
   /** Low-pass cutoff for the pads (darker at night). */
   brightness: number;
-  /** Melody voice: a soft pluck, or a music-box bell at night. */
-  voice: 'pluck' | 'bell';
+  /** Melody voice: a soft pluck, or a music-box bell at night. Waters can pick their own. */
+  voice: MusicVoice;
 }
 
 /**
@@ -183,7 +231,7 @@ export const MUSIC = {
   scale: [0, 2, 4, 7, 9],
   /** Every Nth bar the melody mostly rests, so phrases breathe. */
   restEvery: 4,
-  gain: { pad: 0.09, bass: 0.17, pluck: 0.2, bell: 0.15 },
+  gain: { pad: 0.09, bass: 0.17, pluck: 0.2, bell: 0.15, marimba: 0.2, harp: 0.17 },
   reverbSeconds: 2.8,
   reverbWet: 0.4,
   fadeInSeconds: 6,

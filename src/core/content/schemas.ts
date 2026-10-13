@@ -26,6 +26,9 @@ export const LANDMARKS = [
   'floating_isles',
 ] as const;
 
+/** Sound bed layers a water can list. Each one is defined in BED (config/audio.ts). */
+export const BED_LAYERS = ['stream', 'surf', 'lagoon', 'cave_hum', 'high_breeze', 'birds', 'frogs', 'crickets', 'owl', 'gulls', 'bell_buoy', 'drips', 'chimes'] as const;
+
 /** Moving scene touches a water can list. Each one is drawn in scenes/world/sceneEffects.ts. */
 export const SCENE_EFFECTS = [
   'leaves',
@@ -121,6 +124,19 @@ export const waterSchema = z.object({
   tackleNeed: z.number().min(0).default(0),
   comingSoon: z.boolean().default(false),
   spriteKey,
+  /** The place's sound: a bed of layers under everything, and the music's key, voice, and pace. */
+  sound: z
+    .object({
+      bed: z.array(z.enum(BED_LAYERS)).default([]),
+      music: z
+        .object({
+          transpose: z.number().int().min(-12).max(12).default(0),
+          voice: z.enum(['pluck', 'bell', 'marimba', 'harp']).optional(),
+          tempo: z.number().min(0.5).max(1.5).default(1),
+        })
+        .default({ transpose: 0, tempo: 1 }),
+    })
+    .default({ bed: [], music: { transpose: 0, tempo: 1 } }),
   scene: z
     .object({
       hills: z.enum(['rolling', 'pines', 'cliffs', 'cave', 'clouds', 'none']).default('rolling'),

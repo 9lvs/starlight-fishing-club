@@ -44,10 +44,17 @@ export const TIPS: Record<string, TipDef> = {
   },
   crew: {
     id: 'crew',
-    text: 'A crew bunk is ready! Hire a helper: they fish even while you are away.',
+    text: 'A crew bunk is ready! Hire a helper. While you are away, crew fill your creel.',
     anchor: { kind: 'menu', entry: 'crew' },
     dismissable: true,
     opens: 'Crew',
+  },
+  gems: {
+    id: 'gems',
+    text: 'You found a gem! Gems buy looks in the Club tab, and they stay when the club moves.',
+    anchor: { kind: 'menu', entry: 'upgrades' },
+    dismissable: true,
+    opens: 'Upgrades',
   },
   move: {
     id: 'move',
