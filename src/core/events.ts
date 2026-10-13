@@ -15,6 +15,8 @@ export interface GameEvents {
   catchLanded: { catch: CatchResult; source: 'hand' | 'crew'; crewId?: string };
   fishSold: { fishId: string; value: number; currency: string; source: 'hand' | 'crew' | 'creel' };
   fishKept: { catch: CatchResult };
+  /** The creel sold together and made matching sets (3, 5, or 10 of a rarity). */
+  creelSetsSold: { sets: { rarityId: string; size: number; bonus: number }[] };
   /** A hooked fish slipped away (rarer fish, or not enough tackle). Nothing is lost. */
   fishEscaped: { fishId: string; rarityId: string; waterId: string; chance: number };
   /** A rarer fish is coming to this cast (it glows in the water). */
@@ -22,6 +24,10 @@ export interface GameEvents {
   /** Reeled in soon after the bite: bonus coins. */
   quickCatch: { label: string; coins: number };
   /** Many catches at once (offline catch-up). One entry per fish type. */
+  /** Ask how many fish the creel can take (the creel's owner sets `room`). */
+  creelRoom: { room: number };
+  /** Put fish in the creel; the owner sets `accepted` to how many fit. */
+  creelDeposit: { items: { fishId: string; size: number; at: number; crew?: boolean }[]; accepted: number };
   catchesBatched: { source: 'crew'; entries: { fishId: string; count: number; size: number }[]; at: number };
 
   // Economy and progression

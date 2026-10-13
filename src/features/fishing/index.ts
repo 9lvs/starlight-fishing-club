@@ -16,6 +16,9 @@ export const fishingFeature: GameFeature = {
     const ctl = new FishingController(ctx, ctx.save.slice<FishingSlice>('fishing'));
     setFishingController(ctl);
     ctx.bus.on('clubMoved', () => ctl.resetForMove());
+    // Crew catches from time away go into the creel (see crew/service.ts).
+    ctx.bus.on('creelRoom', (q) => (q.room = ctl.creelRoom));
+    ctx.bus.on('creelDeposit', (d) => (d.accepted = ctl.addToCreel(d.items)));
   },
   onTick(dt) {
     getFishingController().update(dt);

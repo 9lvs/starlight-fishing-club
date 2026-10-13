@@ -2,13 +2,22 @@
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
 import { CATCH, CREEL, FISHING } from '../../config/tuning';
-import { bundleBonus } from '../../systems/economy';
+import { bundleBonus, freshness, matchingSets, type SetResult } from '../../systems/economy';
 import { conditionWeight, fishValue, makeCatch, rarityBoosts } from '../../core/catching';
 import { escapeChance, quickBonus } from '../../systems/catchOdds';
 import type { GameContext } from '../../core/context';
 import type { CatchResult } from '../../core/types';
 import { FishingSession, type SessionEvent } from './fishingSession';
-import type { FishingSlice } from './state';
+import type { CreelItem, FishingSlice } from './state';
+
+export interface CreelSale {
+  /** Value of every fish at today's prices and freshness. */
+  base: number;
+  bundleShare: number;
+  bundle: number;
+  sets: SetResult[];
+  total: number;
+}
 
 export type ControllerListener = (e: SessionEvent) => void;
 
@@ -53,6 +62,8 @@ export class FishingController {
 
   update(dt: number): void {
     this.session.update(dt);
+    // Kept fish age only while you play, so time away never spoils them.
+    for (const item of this.state.creel) item.ageMs = (item.ageMs ?? 0) + dt;
   }
 
   private onSession(e: SessionEvent): void {
@@ -171,11 +182,54 @@ export class FishingController {
     return true;
   }
 
-  /** Kept fish sell at today's prices, so upgrades bought later still count. */
+  /** Value share left after waiting in the creel (1 = fresh). */
+  freshness(item: CreelItem): number {
+    return freshness(item.ageMs ?? 0, CREEL.freshness, this.ctx.stats.get('freshDecayMult'));
+  }
+
+  /** Kept fish sell at today's prices, so upgrades bought later still count, times their freshness. */
   creelValue(index: number): number {
     const item = this.state.creel[index];
     if (!item || !this.ctx.registries.fish.has(item.fishId)) return 0;
-    return fishValue(this.ctx, item.fishId, this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('fishSizeMult'));
+    const full = fishValue(this.ctx, item.fishId, this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('fishSizeMult'));
+    return Math.max(1, Math.round(full * this.freshness(item)));
+  }
+
+  /** Free creel slots. */
+  get creelRoom(): number {
+    return Math.max(0, this.ctx.stats.get('storageCap') - this.state.creel.length);
+  }
+
+  /** Crew catches from time away land in the creel, as many as fit. Returns how many fit. */
+  addToCreel(items: readonly CreelItem[]): number {
+    const fit = items.slice(0, this.creelRoom);
+    this.state.creel.push(...fit.map((i) => ({ ...i, ageMs: 0 })));
+    return fit.length;
+  }
+
+  /** What selling the whole creel now would pay: values, the bundle bonus, and matching sets. */
+  creelSale(): CreelSale {
+    const r = this.ctx.registries;
+    const groups = new Map<string, { count: number; value: number }>();
+    let base = 0;
+    this.state.creel.forEach((item, i) => {
+      const v = this.creelValue(i);
+      base += v;
+      const rarity = r.fish.tryGet(item.fishId)?.rarity;
+      if (!rarity) return;
+      const g = groups.get(rarity) ?? { count: 0, value: 0 };
+      g.count += 1;
+      g.value += v;
+      groups.set(rarity, g);
+    });
+    const sets = matchingSets(
+      [...groups].map(([id, g]) => ({ id, ...g, mult: r.rarities.tryGet(id)?.setMult ?? 1 })),
+      CREEL.sets,
+    ).sort((a, b) => (r.rarities.tryGet(b.id)?.tier ?? 0) - (r.rarities.tryGet(a.id)?.tier ?? 0));
+    const bundleShare = this.bundleShare;
+    const bundle = Math.round(base * bundleShare);
+    const total = base + bundle + sets.reduce((s, x) => s + x.bonus, 0);
+    return { base, bundleShare, bundle, sets, total };
   }
 
   sellFromCreel(index: number): void {
@@ -197,20 +251,17 @@ export class FishingController {
     return bundleBonus(this.state.creel.length, CREEL.bundlePerFish, CREEL.bundleMax);
   }
 
-  /** Sell everything at once: today's prices plus the bundle bonus. Returns the total paid. */
-  sellAllCreel(): number {
-    const share = this.bundleShare;
-    let total = 0;
-    while (this.state.creel.length > 0) {
-      total += this.creelValue(0);
-      this.sellFromCreel(0);
-    }
-    const bonus = Math.round(total * share);
+  /** Sell everything at once: today's prices, the bundle bonus, and matching sets. */
+  sellAllCreel(): CreelSale {
+    const sale = this.creelSale();
+    while (this.state.creel.length > 0) this.sellFromCreel(0);
+    const bonus = sale.total - sale.base;
     if (bonus > 0) {
       this.ctx.wallet.add(ECONOMY.defaultCurrency, bonus);
-      this.ctx.bus.emit('audio:play', { key: 'bundle' });
+      this.ctx.bus.emit('audio:play', { key: sale.sets.length > 0 ? 'set' : 'bundle' });
     }
-    return total + bonus;
+    if (sale.sets.length > 0) this.ctx.bus.emit('creelSetsSold', { sets: sale.sets.map((s) => ({ rarityId: s.id, size: s.size, bonus: s.bonus })) });
+    return sale;
   }
 }
 

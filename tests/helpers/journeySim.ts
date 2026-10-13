@@ -39,7 +39,7 @@ const MISS_RATE = 0.08;
 /** Side purchases are made while they cost under this share of the next boat. */
 const SPEND_SHARE = 0.35;
 /** Stats this model cannot value (it never leaves the tab), so it skips upgrades that only touch them. */
-const AWAY_ONLY = new Set(['offlineCapHours', 'offlineValueMult']);
+const AWAY_ONLY = new Set(['offlineCapHours', 'freshDecayMult']);
 /** The model always fishes on a clear day, so night and weather bait would be wasted here. */
 const conditionOnly = (u: UpgradeDef) => u.modifiers.every((m) => m.stat.startsWith('boost_time_') || m.stat.startsWith('boost_weather_'));
 const TOP_TIERS = ['rod_10', 'boat_10', 'bait_6'];

@@ -311,7 +311,7 @@ export class FishingScene extends Phaser.Scene {
       hint: full
         ? 'Creel full! Open it to sell everything with a bundle bonus.'
         : this.ctl.state.totals.catches <= CREEL.hintCatches
-          ? `Keep fills your creel. Sell it all together for up to +${Math.round(CREEL.bundleMax * 100)}%.`
+          ? `Keep fills your creel. Sell together for a bundle bonus, more for 3 of a rarity.`
           : undefined,
       onSell: () => {
         this.ctl.sellPending();

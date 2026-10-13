@@ -27,7 +27,7 @@ export class CrewScene extends PanelScene {
     const r = this.ctx.registries;
     this.bars = [];
     addText(this, area.x, area.y, `Crew slots: ${svc.slice.members.length} of ${svc.slots}`, { color: 'mist', shadow: false });
-    addText(this, area.x, area.y + 12, `Crew sell fish at ${Math.round(this.ctx.stats.get('crewSellMult') * 100)}% value`, {
+    addText(this, area.x, area.y + 12, `Sell at ${Math.round(this.ctx.stats.get('crewSellMult') * 100)}%. Away, they fill your creel.`, {
       color: 'slate',
       shadow: false,
     });

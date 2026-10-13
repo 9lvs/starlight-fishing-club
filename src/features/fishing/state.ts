@@ -5,6 +5,10 @@ export interface CreelItem {
   fishId: string;
   size: number;
   at: number;
+  /** Play time spent in the creel, for freshness (time away does not count). */
+  ageMs?: number;
+  /** Caught by the crew while you were away. */
+  crew?: boolean;
 }
 
 export interface FishingSlice {

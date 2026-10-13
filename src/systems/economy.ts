@@ -15,6 +15,62 @@ export function bundleBonus(count: number, perFish: number, max: number): number
   return Math.max(0, Math.min(max, (count - 1) * perFish));
 }
 
+export interface FreshnessConfig {
+  /** Kept fish stay at full value this long. */
+  graceMs: number;
+  /** Then they lose this share of value per minute... */
+  perMinute: number;
+  /** ...down to this share, never lower. */
+  floor: number;
+}
+
+/** Value share of a kept fish that has waited `ageMs` of play time (1 = fresh). */
+export function freshness(ageMs: number, cfg: FreshnessConfig, decayMult = 1): number {
+  const stale = Math.max(0, ageMs - cfg.graceMs) / 60000;
+  return Math.max(cfg.floor, 1 - stale * cfg.perMinute * decayMult);
+}
+
+export interface SetRule {
+  /** Fish of one rarity needed for this set. */
+  size: number;
+  /** Extra share of those fish's value. */
+  share: number;
+}
+
+export interface SetGroup {
+  /** Rarity id. */
+  id: string;
+  count: number;
+  /** Total value of the fish in this group. */
+  value: number;
+  /** The rarity's own multiplier on set bonuses (rarer sets pay more). */
+  mult: number;
+}
+
+export interface SetResult {
+  id: string;
+  size: number;
+  share: number;
+  bonus: number;
+}
+
+/**
+ * Matching sets: each rarity with at least the smallest set size earns its
+ * biggest set (only the sizes listed, e.g. 3, 5, and 10). Sets of different
+ * rarities stack. A group above the biggest size still counts as that size.
+ */
+export function matchingSets(groups: readonly SetGroup[], rules: readonly SetRule[]): SetResult[] {
+  const sorted = [...rules].sort((a, b) => b.size - a.size);
+  const out: SetResult[] = [];
+  for (const g of groups) {
+    const rule = sorted.find((r) => g.count >= r.size);
+    if (!rule) continue;
+    const share = rule.share * g.mult;
+    out.push({ id: g.id, size: rule.size, share, bonus: Math.round(g.value * share) });
+  }
+  return out;
+}
+
 export type Balances = Record<string, number>;
 
 export class Wallet {

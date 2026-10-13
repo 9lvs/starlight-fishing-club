@@ -1,6 +1,7 @@
-// Crew: hired helpers each fish one water on a timer. Their catches go to the
-// journal and sell automatically at the crewSellMult share of value, so hand
-// fishing (with pity and full value) always stays worthwhile.
+// Crew: hired helpers each fish one water on a timer. While you play, their
+// catches sell automatically at the crewSellMult share of value, so hand fishing
+// (with pity and full value) stays worthwhile. While you are away they only fill
+// the creel, so a bigger creel and checking in often both pay.
 import { LOOT } from '../../config/balance';
 import { ECONOMY } from '../../config/balance';
 import { TIME, WEATHER } from '../../config/time';
@@ -9,7 +10,7 @@ import type { GameContext } from '../../core/context';
 import type { CrewDef } from '../../core/content/schemas';
 import type { OfflineReport } from '../../core/types';
 import { simulateOffline } from '../../systems/offlineSim';
-import { formatNumber } from '../../ui/format';
+import { formatDuration, formatNumber } from '../../ui/format';
 import type { CrewMember, CrewSlice } from './state';
 
 export class CrewService {
@@ -92,17 +93,57 @@ export class CrewService {
     }
   }
 
-  /** Offline: exact math over the gap, no loop over rolls. */
+  /** Offline: exact math over the gap, no loop over rolls. Catches go to the creel until it is full. */
   catchUp(elapsedMs: number): OfflineReport | void {
     const members = this.slice.members;
     if (members.length === 0) {
       return { featureId: 'crew', title: 'Your crew', lines: ['The water was quiet.', 'Hire crew in Crew upgrades to fish while you are away.'] };
     }
+    const room = { room: 0 };
+    this.ctx.bus.emit('creelRoom', room);
+    if (room.room <= 0) {
+      return { featureId: 'crew', title: 'Your crew', lines: ['Your creel was already full, so your crew rested.', 'Sell your catch and they will fish again.'] };
+    }
     const start = this.ctx.clock.now() - elapsedMs;
-    const result = simulateOffline({
-      startMs: start,
+    let result = this.simulate(start, elapsedMs);
+    let filledAfter: number | null = null;
+    if (result.rolls > room.room) {
+      // The crew fish at a steady pace, so the creel filled about this far in.
+      filledAfter = Math.max(1, Math.floor((elapsedMs * room.room) / result.rolls));
+      result = this.simulate(start, filledAfter);
+    }
+    // Rarest first, so if rounding leaves one too many, a common one is dropped.
+    const r = this.ctx.registries;
+    const tier = (id: string) => r.rarities.tryGet(r.fish.tryGet(id)?.rarity ?? '')?.tier ?? 0;
+    const items = Object.entries(result.catches)
+      .sort((a, b) => tier(b[0]) - tier(a[0]))
+      .flatMap(([fishId, n]) => Array.from({ length: n }, () => ({ fishId, size: rollSize(r.fish.get(fishId), this.ctx.rng), at: this.ctx.clock.now(), crew: true })));
+    const deposit = { items: items.slice(0, room.room), accepted: 0 };
+    this.ctx.bus.emit('creelDeposit', deposit);
+    const kept = deposit.items.slice(0, deposit.accepted);
+
+    const lines: string[] = [];
+    for (const res of result.perCrew) {
+      const m = members.find((x) => x.id === res.id)!;
+      m.progressMs = filledAfter === null ? res.progressMs : 0;
+      m.catches += res.rolls;
+      lines.push(`${this.type(m)?.name ?? m.typeId} caught ${formatNumber(res.rolls)} fish`);
+    }
+    if (filledAfter !== null) lines.push(`Your creel filled up after ${formatDuration(filledAfter)}. A bigger boat holds more.`);
+    if (kept.length > 0) lines.push('They are fresh now. Sell them soon for the best price.');
+
+    const counts: Record<string, number> = {};
+    for (const k of kept) counts[k.fishId] = (counts[k.fishId] ?? 0) + 1;
+    const entries = kept.map((k) => ({ fishId: k.fishId, count: 1, size: k.size }));
+    if (entries.length > 0) this.ctx.bus.emit('catchesBatched', { source: 'crew', entries, at: this.ctx.clock.now() });
+    return { featureId: 'crew', title: 'Your crew', lines, catches: counts, kept: kept.length };
+  }
+
+  private simulate(startMs: number, elapsedMs: number) {
+    return simulateOffline({
+      startMs,
       elapsedMs,
-      crew: members.map((m) => ({
+      crew: this.slice.members.map((m) => ({
         id: m.id,
         waterId: m.waterId,
         intervalMs: this.intervalMs(m),
@@ -116,30 +157,8 @@ export class CrewService {
       rarities: lootRarities(this.ctx),
       fish: lootFish(this.ctx),
       lootCfg: LOOT,
-      valueMult: this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('crewSellMult') * this.ctx.stats.get('offlineValueMult'),
+      valueMult: 1,
     });
-    const lines: string[] = [];
-    for (const r of result.perCrew) {
-      const m = members.find((x) => x.id === r.id)!;
-      m.progressMs = r.progressMs;
-      m.catches += r.rolls;
-      m.earned += r.coins;
-      const name = this.type(m)?.name ?? m.typeId;
-      lines.push(`${name} caught ${formatNumber(r.rolls)} fish (+${formatNumber(r.coins)})`);
-    }
-    if (result.coins > 0) this.ctx.wallet.add(ECONOMY.defaultCurrency, result.coins);
-    const entries = Object.entries(result.catches).map(([fishId, count]) => {
-      const fish = this.ctx.registries.fish.get(fishId);
-      return { fishId, count, size: rollSize(fish, this.ctx.rng) };
-    });
-    if (entries.length > 0) this.ctx.bus.emit('catchesBatched', { source: 'crew', entries, at: this.ctx.clock.now() });
-    return {
-      featureId: 'crew',
-      title: 'Your crew',
-      lines,
-      earned: { [ECONOMY.defaultCurrency]: result.coins },
-      catches: result.catches,
-    };
   }
 }
 

@@ -37,12 +37,19 @@ export class OfflineSummaryScene extends PanelScene<OfflineSummaryData> {
       y += t.textHeight + 8;
     }
     const totals: Record<string, number> = {};
+    let kept = 0;
     for (const r of data.reports) {
+      kept += r.kept ?? 0;
       addText(this, area.x, y, r.title, { color: 'gold' });
       y += 14;
       const t = addText(this, area.x + 4, y, r.lines.join('\n'), { color: 'sky', shadow: false, maxWidth: area.w - 4 });
       y += t.textHeight + 8;
       for (const [c, n] of Object.entries(r.earned ?? {})) totals[c] = (totals[c] ?? 0) + n;
+    }
+    if (kept > 0) {
+      this.add.image(cx - 34, y + 2, 'icon_creel').setOrigin(0, 0);
+      addText(this, cx - 18, y + 3, `+${formatNumber(kept)} fish`, { color: 'sky', scale: 2 });
+      y += 30;
     }
     for (const [c, n] of Object.entries(totals)) {
       if (n <= 0) continue;

@@ -71,6 +71,8 @@ export const raritySchema = z.object({
   tackleNeed: z.number().min(0).default(0),
   /** Share of the water's tackle need this rarity also has (tougher waters, tougher rare fish). */
   waterNeedShare: z.number().min(0).max(1).default(0),
+  /** Multiplies matching set bonuses for this rarity (3 legendaries pay more than 3 commons). */
+  setMult: z.number().min(0).default(1),
   color: paletteName,
   frame: paletteName,
   glow: z.number().int().min(0).max(4).default(0),

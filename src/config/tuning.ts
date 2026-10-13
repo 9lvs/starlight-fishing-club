@@ -73,7 +73,15 @@ export const CREEL = {
   bundleMax: 0.5,
   /** Show the "why keep?" line on the catch card for a player's first this-many catches. */
   hintCatches: 25,
-} as const;
+  /** Kept fish lose value while you play (fresher sells for more). Time away does not count. */
+  freshness: { graceMs: 3 * 60_000, perMinute: 0.02, floor: 0.6 },
+  /** Matching sets when the creel sells together: 3, 5, or 10 of one rarity. Scaled by each rarity's setMult. */
+  sets: [
+    { size: 3, share: 0.12 },
+    { size: 5, share: 0.25 },
+    { size: 10, share: 0.6 },
+  ],
+};
 
 /** Daily Catch: one shared fish a day at the starting water, Wordle style. */
 export const DAILY_CATCH = {

@@ -23,6 +23,8 @@ export interface OfflineReport {
   lines: string[];
   earned?: Record<string, number>;
   catches?: Record<string, number>;
+  /** Fish that landed in the creel while you were away. */
+  kept?: number;
 }
 
 export interface ToastRequest {
