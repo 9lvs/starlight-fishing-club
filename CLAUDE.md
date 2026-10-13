@@ -113,7 +113,7 @@ comments that explain *why*. Small files.
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
 upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, tutorial. 118 unit tests.
-v0.3.0 adds tackle and fish that slip away, the quick-catch bonus, rare-fish glows, wind and
+v0.3.1 fixes the Daily Catch layout and makes the music louder. v0.3.0 adds tackle and fish that slip away, the quick-catch bonus, rare-fish glows, wind and
 storm weather with their own fish, weather and night bait, and clearer upgrade cards.
 v0.2.0 adds composed music, a sound for every action, the tutorial, the creel bundle bonus, and
 the first-five Daily Catch share. Launch

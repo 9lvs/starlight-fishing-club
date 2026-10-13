@@ -49,3 +49,4 @@ One line per decision, with the reason. Newest at the bottom.
 - Upgrade cards now list every requirement with a check or a lock (including "Club at <water>"), what the next level changes line by line, what it leads to, and how many more coins are needed.
 - Water glints, stars, and painted streaks are fewer and dimmer (playtest: too stark), and glints move every 1.6 s instead of 0.7 s.
 - Retuned after slip chances: Sturdy Skiff 800 (was 1000), Painted Rowboat 250, Hire Help 150, Whisper River bonus +200% (was +100%), so the first move still comes at about 20 minutes and rebuying gear after a move is about twice as fast. The pacing check for that is now "under 55% of the first run's time" (was 50%), since rare fish need tackle you have not rebought yet.
+- Versions: small fixes and tuning are patch releases (0.3.1, 0.3.2). New systems or a big content drop raise the minor number (0.4.0). 1.0.0 is the public launch.

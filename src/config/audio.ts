@@ -47,11 +47,13 @@ export const AUDIO = {
   placeholder: 'synth' as Placeholder,
   /** Effects volume (water and sounds). */
   masterDefault: 0.7,
-  musicDefault: 0.5,
+  musicDefault: 0.7,
   /** Never louder than this, even at 100% volume. Keeps the game calm. */
   masterCeiling: 0.6,
-  /** Music sits under the water and effects. */
-  musicLevel: 0.55,
+  /** Music sits just under the effects (playtest: it was too quiet). */
+  musicLevel: 1,
+  /** Soft limiter on the master bus. */
+  limiter: { thresholdDb: -10, kneeDb: 8, ratio: 4 },
   /** The same sound twice within this window plays once (selling a whole creel). */
   repeatGuardMs: 70,
   /** Rain on the water, mixed in by weather. */
@@ -179,7 +181,7 @@ export const MUSIC = {
   scale: [0, 2, 4, 7, 9],
   /** Every Nth bar the melody mostly rests, so phrases breathe. */
   restEvery: 4,
-  gain: { pad: 0.018, bass: 0.035, pluck: 0.045, bell: 0.03 },
+  gain: { pad: 0.09, bass: 0.17, pluck: 0.2, bell: 0.15 },
   reverbSeconds: 2.8,
   reverbWet: 0.4,
   fadeInSeconds: 6,

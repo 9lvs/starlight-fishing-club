@@ -34,7 +34,12 @@ export class AudioManager {
     if (!this.ac) {
       this.ac = new AudioContext();
       this.master = this.ac.createGain();
-      this.master.connect(this.ac.destination);
+      // A gentle limiter, so louder music and a burst of effects never clip.
+      const limiter = this.ac.createDynamicsCompressor();
+      limiter.threshold.value = AUDIO.limiter.thresholdDb;
+      limiter.knee.value = AUDIO.limiter.kneeDb;
+      limiter.ratio.value = AUDIO.limiter.ratio;
+      this.master.connect(limiter).connect(this.ac.destination);
       this.sfx = this.ac.createGain();
       this.sfx.connect(this.master);
       this.musicBus = this.ac.createGain();
