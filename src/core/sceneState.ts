@@ -8,6 +8,12 @@ export const worldAnchors = {
   bob: 0,
 };
 
+/** What stands on the boat's deck, set by features (the crew), drawn by the world. */
+export const deckState = {
+  /** Sprite keys of hired crew, in hiring order. */
+  crew: [] as string[],
+};
+
 export const uiState = {
   /** Scene key of the open panel, or null. Fishing ignores taps while one is open. */
   openPanel: null as string | null,

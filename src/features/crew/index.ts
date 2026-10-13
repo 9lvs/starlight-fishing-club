@@ -1,6 +1,7 @@
 // Crew feature: helpers who fish on a timer, live and while the tab is closed.
 import { ECONOMY } from '../../config/balance';
 import type { GameFeature } from '../../core/feature';
+import { deckState } from '../../core/sceneState';
 import { CrewScene } from './CrewScene';
 import { CrewService, getCrewService, setCrewService } from './service';
 import { crewSlice, type CrewSlice } from './state';
@@ -25,7 +26,17 @@ export const crewFeature: GameFeature = {
   init(ctx) {
     const svc = new CrewService(ctx, ctx.save.slice<CrewSlice>('crew'));
     setCrewService(svc);
-    ctx.bus.on('clubMoved', () => svc.resetForMove());
+    // Hired crew stand on the boat's deck (drawn by the world scene).
+    const showOnDeck = () => {
+      deckState.crew = svc.slice.members.map((m) => svc.type(m)?.spriteKey ?? '').filter(Boolean);
+      ctx.bus.emit('deckChanged', {});
+    };
+    showOnDeck();
+    ctx.bus.on('crewHired', showOnDeck);
+    ctx.bus.on('clubMoved', () => {
+      svc.resetForMove();
+      showOnDeck();
+    });
   },
   onTick(dt) {
     getCrewService().tick(dt);

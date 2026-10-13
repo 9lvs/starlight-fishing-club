@@ -4,7 +4,7 @@
 import type { PaletteName } from '../design/tokens';
 import { hashString, seededRng } from '../core/rng';
 import { FrameCanvas, PixelCanvas, SHADE_DOWN, SHADE_UP } from './pixelCanvas';
-import type { SpriteEntry } from './spriteManifest';
+import { BOAT_WIDTHS, boatTier, type SpriteEntry } from './spriteManifest';
 
 export interface FishArtHint {
   body?: PaletteName;
@@ -193,21 +193,21 @@ const BOAT_STYLES: BoatStyle[] = [
 ];
 
 function tierOf(key: string): number {
-  const n = Number(key.split('_').pop());
-  return Number.isFinite(n) ? Math.max(1, Math.min(BOAT_STYLES.length, n)) : 1;
+  return boatTier(key);
 }
 
-/** Hull only; the mast and sail are a separate sprite drawn behind the fisher. */
+/** Hull only; the mast, sail, and cabin are a separate sprite drawn behind the fisher. */
 function drawBoatTier(f: FrameCanvas, tier: number): void {
   const s = BOAT_STYLES[tier - 1]!;
+  const w = BOAT_WIDTHS[tier - 1]!;
   // Bigger boats sit a touch longer in the water.
-  const bow = tier >= 6 ? 31 : 30;
-  f.poly([[1, 19], [bow - 3, 17.5], [bow, 15.5], [27, 26], [6, 26]], s.hull);
-  for (let x = 0; x < 32; x++) for (let y = 24; y < 27; y++) if (f.get(x, y) === s.hull) f.px(x, y, s.band);
-  f.line(2, 20, 28, 18, s.trim);
-  if (tier >= 4) f.line(5, 23, 27, 22, s.trim);
+  const bow = w - (tier >= 6 ? 1 : 2);
+  f.poly([[1, 19], [bow - 3, 17.5], [bow, 15.5], [bow - 3, 26], [6, 26]], s.hull);
+  for (let x = 0; x < w; x++) for (let y = 24; y < 27; y++) if (f.get(x, y) === s.hull) f.px(x, y, s.band);
+  f.line(2, 20, bow - 2, 18, s.trim);
+  if (tier >= 4) f.line(5, 23, bow - 3, 22, s.trim);
   f.outline((n) => SHADE_DOWN[n]);
-  f.rect(8, 18, 4, 1, s.trim);
+  f.rect(w - 24, 18, 4, 1, s.trim);
   if (s.patch) {
     f.rect(19, 21, 3, 2, 'sand');
     f.px(20, 21, 'bark');
@@ -216,8 +216,10 @@ function drawBoatTier(f: FrameCanvas, tier: number): void {
     f.px(bow - 2, 14, 'gold');
     f.px(bow - 2, 13, 'sand');
   }
-  // Portholes on the bigger boats.
-  if (tier >= 6) for (const x of [14, 19, 24]) f.px(x, 21, tier >= 9 ? 'gold' : 'sky');
+  // A rail along the deck from the fifth tier: posts every few pixels.
+  if (tier >= 5) for (let x = 4; x < bow - 4; x += 5) f.px(x, 17, s.trim);
+  // Portholes on the bigger boats, more of them as the hull grows.
+  if (tier >= 6) for (let x = 10; x < bow - 5; x += 5) f.px(x, 21, tier >= 9 ? 'gold' : 'sky');
 }
 
 /** Rig sprites are taller than the hull: RIG_RAISE extra rows above, so sails clear the fisher's head. */
@@ -227,19 +229,35 @@ function drawRig(f: FrameCanvas, tier: number): void {
   const s = BOAT_STYLES[tier - 1]!;
   const o = RIG_RAISE;
   const deck = o + 20;
+  // The mast stays by the fisher; the boat grows behind it.
+  const m = BOAT_WIDTHS[tier - 1]! - 15;
   const top = s.sail === 2 ? 2 : s.sail === 1 ? 8 : o + 3;
-  f.rect(17, top, 1, deck - top, 'bark');
+  // A little cabin at the stern on the bigger boats, behind the crew.
+  if (tier >= 7) {
+    const cw = tier >= 9 ? 16 : 12;
+    f.rect(3, deck - 9, cw, 9, s.hull);
+    f.rect(2, deck - 10, cw + 2, 1, s.trim);
+    for (let x = 5; x < 3 + cw - 2; x += 4) f.rect(x, deck - 7, 2, 2, tier >= 9 ? 'gold' : 'sky');
+    f.outline((n) => SHADE_DOWN[n]);
+  }
+  f.rect(m, top, 1, deck - top, 'bark');
   if (s.sail === 1) {
-    f.poly([[18, top + 1], [18, deck - 4], [27, deck - 4]], s.sailColor);
-    f.line(18, deck - 4, 27, deck - 4, SHADE_DOWN[s.sailColor]);
+    f.poly([[m + 1, top + 1], [m + 1, deck - 4], [m + 10, deck - 4]], s.sailColor);
+    f.line(m + 1, deck - 4, m + 10, deck - 4, SHADE_DOWN[s.sailColor]);
   } else if (s.sail === 2) {
-    f.poly([[18, top + 1], [18, deck - 4], [30, deck - 4]], s.sailColor);
-    f.poly([[16, top + 5], [16, deck - 5], [7, deck - 5]], s.sailColor);
-    f.line(18, deck - 4, 30, deck - 4, SHADE_DOWN[s.sailColor]);
-    f.line(19, top + 10, 25, deck - 8, SHADE_UP[s.sailColor]);
+    f.poly([[m + 1, top + 1], [m + 1, deck - 4], [m + 13, deck - 4]], s.sailColor);
+    f.poly([[m - 1, top + 5], [m - 1, deck - 5], [m - 10 - Math.floor((tier - 6) * 1.5), deck - 5]], s.sailColor);
+    f.line(m + 1, deck - 4, m + 13, deck - 4, SHADE_DOWN[s.sailColor]);
+    f.line(m + 2, top + 10, m + 8, deck - 8, SHADE_UP[s.sailColor]);
+  }
+  // The biggest boats carry a second mast at the stern.
+  if (tier >= 9) {
+    const m2 = 22;
+    f.rect(m2, top + 8, 1, deck - top - 8 - 9, 'bark');
+    f.poly([[m2 + 1, top + 9], [m2 + 1, deck - 13], [m2 + 9, deck - 13]], s.sailColor);
   }
   if (s.star) {
-    const sx = 21;
+    const sx = m + 4;
     const sy = top + 12;
     f.px(sx, sy, 'mist');
     f.px(sx - 1, sy, 'gold');
@@ -248,9 +266,9 @@ function drawRig(f: FrameCanvas, tier: number): void {
     f.px(sx, sy + 1, 'gold');
   }
   if (s.flag) {
-    f.rect(18, top, 4, 1, s.flag);
-    f.rect(18, top + 1, 3, 1, s.flag);
-    f.px(18, top + 2, s.flag);
+    f.rect(m + 1, top, 4, 1, s.flag);
+    f.rect(m + 1, top + 1, 3, 1, s.flag);
+    f.px(m + 1, top + 2, s.flag);
   }
 }
 

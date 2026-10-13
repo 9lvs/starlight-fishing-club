@@ -68,12 +68,29 @@ export function staticSprites(): SpriteEntry[] {
   return STATIC.map(withFile);
 }
 
+/**
+ * Hull width per boat tier (boat_1 to boat_10). Boats grow toward the stern
+ * (left), so the fisher, rod, and bobber stay put and the extra deck holds
+ * crew, crates, and spare rods.
+ */
+export const BOAT_WIDTHS = [32, 34, 38, 42, 48, 52, 58, 62, 68, 72] as const;
+
+/** Tier from a boat_N or rig_N key (1 for the starter boat). */
+export function boatTier(key: string): number {
+  const n = Number(key.split('_').pop());
+  return Number.isFinite(n) ? Math.max(1, Math.min(BOAT_WIDTHS.length, n)) : 1;
+}
+
+export function boatWidth(key: string): number {
+  return key.startsWith('boat_') || key.startsWith('rig_') ? BOAT_WIDTHS[boatTier(key) - 1]! : 32;
+}
+
 /** Resolve any key, including content keys not listed above. */
 export function resolveSprite(key: string): SpriteEntry {
   const known = STATIC.find((s) => s.key === key);
   if (known) return withFile(known);
   const rule = PREFIX_RULES.find((r) => key.startsWith(r.prefix));
-  if (rule) return withFile({ key, width: rule.width, height: rule.height, frames: rule.frames, kind: rule.kind });
+  if (rule) return withFile({ key, width: rule.kind === 'boat' ? boatWidth(key) : rule.width, height: rule.height, frames: rule.frames, kind: rule.kind });
   // Unknown keys still render as a small icon placeholder rather than crashing.
   return withFile({ key, width: 12, height: 12, frames: 1, kind: 'icon' });
 }

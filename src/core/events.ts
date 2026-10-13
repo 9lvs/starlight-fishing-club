@@ -50,6 +50,8 @@ export interface GameEvents {
    * reset; each feature resets its own progress when it hears this.
    */
   clubMoved: { waterId: string; rank: number; previousRank: number };
+  /** Who stands on the deck changed (see deckState). */
+  deckChanged: Record<string, never>;
   /** The boat started or finished sailing to another water (presentation only). */
   voyage: { active: boolean; waterId: string };
 

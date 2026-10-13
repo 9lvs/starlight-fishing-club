@@ -4,7 +4,7 @@
 import Phaser from 'phaser';
 import { getContext, type GameContext } from '../core/context';
 import { getLayout, type Layout } from '../core/layout';
-import { uiState, worldAnchors } from '../core/sceneState';
+import { deckState, uiState, worldAnchors } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { FISHING, VOYAGE } from '../config/tuning';
 import { MOTION, PALETTE_NAMES, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
@@ -27,6 +27,10 @@ import {
   type SceneShape,
 } from './world/painters';
 
+/** Deck layout: the starter boat's width, and how much room each thing on deck takes. */
+const DECK = { baseWidth: 32, fisherX: 5, crewW: 11, crateW: 6, crateEvery: 4, maxCrates: 6, rackW: 6, maxSpareRods: 3 };
+
+/** Decoration anchors on the starter boat; all but the stern move with the fisher on bigger boats. */
 const ANCHORS: Record<string, { x: number; y: number; ox: number; oy: number }> = {
   mast: { x: 17, y: 3, ox: 1, oy: 0 },
   bow: { x: 28, y: 16, ox: 0.5, oy: 1 },
@@ -110,6 +114,11 @@ export class WorldScene extends Phaser.Scene {
   private hull!: Phaser.GameObjects.Image;
   private rig!: Phaser.GameObjects.Image;
   private rod!: Phaser.GameObjects.Graphics;
+  /** Crates and spare rods on the deck, and the crew standing there. */
+  private deck!: Phaser.GameObjects.Graphics;
+  private deckCrew: Phaser.GameObjects.Sprite[] = [];
+  /** Extra hull length beyond the starter boat, in pixels (the boat grows toward the stern). */
+  private extra = 0;
   private decorations: Phaser.GameObjects.Image[] = [];
   private weatherGfx!: Phaser.GameObjects.Graphics;
   /** Soft fog banks: two wrapping copies each, drifting at their own speed. */
@@ -206,6 +215,11 @@ export class WorldScene extends Phaser.Scene {
       }),
       bus.on('lookChanged', ({ slot }) => {
         if (slot === 'boat' || slot === 'fisher') this.applyBoatLook();
+        if (slot === 'rod') this.layoutDeck();
+      }),
+      bus.on('deckChanged', () => this.layoutDeck()),
+      bus.on('statsChanged', ({ stats }) => {
+        if (stats.includes('storageCap')) this.layoutDeck();
       }),
       bus.on('cast', () => this.setPose(2, FISHING.castAnimMs)),
       bus.on('reel', () => this.setPose(3, FISHING.reelAnimMs)),
@@ -254,7 +268,7 @@ export class WorldScene extends Phaser.Scene {
     const t = club ? VOYAGE : VOYAGE.quick;
     uiState.voyaging = true;
     this.ctx.bus.emit('voyage', { active: true, waterId });
-    const home = this.L.boat.x - 16;
+    const home = this.homeX;
     this.tweens.add({ targets: this.driftBoost, k: VOYAGE.driftBoost, duration: t.sailOutMs, ease: 'Sine.easeIn' });
     this.tweens.add({
       targets: this.boat,
@@ -433,13 +447,66 @@ export class WorldScene extends Phaser.Scene {
     const { boat } = this.L;
     const top = boat.y - 23;
     this.boat = this.add.container(boat.x - 16, top);
-    this.fisher = this.add.sprite(5, -2, 'fisher', 0).setOrigin(0, 0);
+    this.fisher = this.add.sprite(DECK.fisherX, -2, 'fisher', 0).setOrigin(0, 0);
     this.rod = this.add.graphics();
-    // Mast and sail sit behind the fisher; the hull sits in front.
+    this.deck = this.add.graphics();
+    // Mast, sail, and cabin sit behind everyone on deck; the hull sits in front.
     this.rig = this.add.image(0, -RIG_RAISE, '__DEFAULT').setOrigin(0, 0).setVisible(false);
     this.hull = this.add.image(0, 0, 'boat').setOrigin(0, 0);
-    this.boat.add([this.rig, this.rod, this.fisher, this.hull]);
+    this.boat.add([this.rig, this.deck, this.rod, this.fisher, this.hull]);
+    this.deckCrew = [];
     this.applyBoatLook();
+  }
+
+  /** Where the boat container sits when it is home: the fisher never moves, the boat grows behind. */
+  private get homeX(): number {
+    return this.L.boat.x - 16 - this.extra;
+  }
+
+  /**
+   * Fill the deck between the stern and the fisher: crew next to the fisher,
+   * then a rack of spare rods, then crates (one per few creel spaces). What
+   * does not fit stays below deck.
+   */
+  private layoutDeck(): void {
+    const g = this.deck;
+    g.clear();
+    this.deckCrew.forEach((s) => s.destroy());
+    this.deckCrew = [];
+    let right = DECK.fisherX + this.extra - 1;
+    const left = 3;
+    for (const key of deckState.crew) {
+      if (right - DECK.crewW < left || !this.textures.exists(key)) break;
+      right -= DECK.crewW;
+      const s = this.add.sprite(right - 3, -2, key, 0).setOrigin(0, 0);
+      this.boat.addAt(s, this.boat.getIndex(this.fisher));
+      this.deckCrew.push(s);
+    }
+    // Spare rods: the rods you have bought before your current one.
+    const rodTier = Number(this.ctx.world.look('rod')?.priority ?? 0);
+    const spare = Math.min(DECK.maxSpareRods, Math.max(0, rodTier - 1));
+    if (spare > 0 && right - DECK.rackW >= left) {
+      right -= DECK.rackW;
+      g.fillStyle(color('bark'));
+      g.fillRect(right, 14, DECK.rackW - 1, 1);
+      for (let i = 0; i < spare; i++) {
+        g.fillStyle(color(i === spare - 1 ? 'sand' : 'bark'));
+        g.fillRect(right + 1 + i * 2, 4 + i, 1, 13 - i);
+      }
+    }
+    // Crates: one for every few creel spaces beyond the start, stacked two high.
+    const crates = Math.min(DECK.maxCrates, Math.max(0, Math.floor((this.ctx.stats.get('storageCap') - 6) / DECK.crateEvery) + 1));
+    let placed = 0;
+    for (let x = left; placed < crates && x + DECK.crateW - 1 <= right; x += DECK.crateW) {
+      for (let row = 0; row < 2 && placed < crates; row++, placed++) {
+        const y = 13 - row * 5;
+        g.fillStyle(color('bark'));
+        g.fillRect(x, y, DECK.crateW - 1, 5);
+        g.fillStyle(color('sand'));
+        g.fillRect(x, y, DECK.crateW - 1, 1);
+        g.fillRect(x + 2, y + 1, 1, 4);
+      }
+    }
   }
 
   /** The best boat tier owned (a look from upgrades), or the starter boat. */
@@ -448,11 +515,17 @@ export class WorldScene extends Phaser.Scene {
     const sprite = typeof look?.sprite === 'string' && this.textures.exists(look.sprite) ? look.sprite : 'boat';
     const rig = typeof look?.rig === 'string' && this.textures.exists(look.rig) ? look.rig : null;
     this.hull.setTexture(sprite);
+    // Bigger boats are longer: shift everything so the fisher stays where it was.
+    this.extra = Math.max(0, this.hull.width - DECK.baseWidth);
+    this.fisher.setX(DECK.fisherX + this.extra);
+    if (!uiState.voyaging) this.boat.x = this.homeX;
     // Gem outfits swap the fisher's sprite sheet (same frames).
     const outfit = this.ctx.world.look('fisher')?.sprite;
     this.fisher.setTexture(typeof outfit === 'string' && this.textures.exists(outfit) ? outfit : 'fisher', this.pose);
     this.rig.setVisible(!!rig);
     if (rig) this.rig.setTexture(rig);
+    this.applyDecorations();
+    this.layoutDeck();
   }
 
   private applyDecorations(): void {
@@ -462,8 +535,9 @@ export class WorldScene extends Phaser.Scene {
       const def = this.ctx.registries.decorations.tryGet(id);
       if (!def || def.anchor === 'club' || !this.textures.exists(def.spriteKey)) continue;
       const a = ANCHORS[def.anchor] ?? ANCHORS.bow!;
+      const shift = def.anchor === 'stern' ? 0 : this.extra;
       const img = this.add
-        .image(a.x + def.offset[0], a.y + def.offset[1], def.spriteKey)
+        .image(a.x + shift + def.offset[0], a.y + def.offset[1], def.spriteKey)
         .setOrigin(a.ox, a.oy);
       this.boat.add(img);
       this.decorations.push(img);
@@ -556,6 +630,8 @@ export class WorldScene extends Phaser.Scene {
     // Fisher pose and rod.
     if (this.elapsed > this.poseUntil) this.pose = Math.floor(this.elapsed / 1300) % 2 === 0 || reduced ? 0 : 1;
     this.fisher.setFrame(this.pose);
+    // Crew on deck shift their weight now and then, each on their own beat.
+    this.deckCrew.forEach((s, i) => s.setFrame(reduced ? 0 : Math.floor(this.elapsed / 1700 + i * 0.6) % 2));
     this.drawRod();
 
     if (Math.floor(this.elapsed / 250) !== Math.floor((this.elapsed - delta) / 250)) {
@@ -585,7 +661,7 @@ export class WorldScene extends Phaser.Scene {
     const len = rod.len + (typeof look?.length === 'number' ? look.length - ROD_BASE_LEN : 0);
     const shaft = isPalette(look?.color) ? look.color : 'bark';
     const tip = isPalette(look?.tip) ? look.tip : 'sand';
-    const hx = 5 + hand.x;
+    const hx = DECK.fisherX + this.extra + hand.x;
     const hy = -2 + hand.y;
     const tx = Math.round(hx + Math.cos(rod.angle) * len);
     const ty = Math.round(hy + Math.sin(rod.angle) * len);
@@ -626,12 +702,12 @@ export class WorldScene extends Phaser.Scene {
       g.fillStyle(color(shine), GLINT.min + r * GLINT.range);
       g.fillRect(x, y, 2 + Math.floor(r * 4), 1);
     }
-    // Ripple lines either side of the hull.
+    // Ripple lines either side of the hull (longer boats reach further back).
     const bx = this.L.boat.x;
     const by = this.L.boat.y + 3;
     const spread = Math.floor(this.elapsed / 500) % 3;
     g.fillStyle(color(shine), GLINT.ripple);
-    g.fillRect(bx - 18 - spread, by, 4, 1);
+    g.fillRect(bx - 18 - this.extra - spread, by, 4, 1);
     g.fillRect(bx + 14 + spread, by - 1, 4, 1);
   }
 
