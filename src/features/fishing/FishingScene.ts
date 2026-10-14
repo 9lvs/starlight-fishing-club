@@ -48,8 +48,8 @@ export class FishingScene extends Phaser.Scene {
   /** The fish's shadow gliding up to the bobber before a bite. */
   private shadow!: Phaser.GameObjects.Graphics;
   private shadowSide = 1;
-  /** This cast's shadow: a random length and plumpness. */
-  private shadowShape = { len: 7, h: 1 };
+  /** This cast's shadow: a random length and plumpness, how far away it starts, and which way its path bends. */
+  private shadowShape = { len: 7, h: 1, dist: 26, bend: 1 };
   /** The legendary moment: the gold glow at the screen edges, and its sparkles. */
   private moment: { sparks: Phaser.GameObjects.Graphics; motes: { x: number; y: number; vx: number; vy: number; age: number; life: number; c: PaletteName }[] } | null = null;
   private bobber!: Phaser.GameObjects.Sprite;
@@ -188,12 +188,7 @@ export class FishingScene extends Phaser.Scene {
       case 'cast':
         this.say('');
         this.throwBobber();
-        this.shadowSide = Math.random() < 0.5 ? -1 : 1;
-        // Random on purpose: the shadow says a fish is coming, not which one.
-        this.shadowShape = {
-          len: FX.shadow.minLen + Math.floor(Math.random() * (FX.shadow.maxLen - FX.shadow.minLen + 1)),
-          h: Math.random() < 0.5 ? 1 : 2,
-        };
+        this.planShadow();
         break;
       case 'early':
         this.say('Wait for the bite...', 'sky');
@@ -418,6 +413,22 @@ export class FishingScene extends Phaser.Scene {
   }
 
   /**
+   * Pick this cast's shadow. Random on purpose: it says a fish is coming, not
+   * which one. It starts as far out as the screen allows, so on a narrow phone
+   * it still has room to swim instead of popping up beside the bobber.
+   */
+  private planShadow(): void {
+    const cfg = FX.shadow;
+    const len = cfg.minLen + Math.floor(Math.random() * (cfg.maxLen - cfg.minLen + 1));
+    const { bobber, width, safe } = this.L;
+    const room = (side: number) => (side > 0 ? width - safe.right - bobber.x : bobber.x - safe.left) - len - 6;
+    let side = Math.random() < 0.5 ? -1 : 1;
+    if (room(side) < cfg.minRoom) side = -side;
+    this.shadowSide = side;
+    this.shadowShape = { len, h: Math.random() < 0.5 ? 1 : 2, dist: Math.max(0, Math.min(cfg.startDx, room(side))), bend: Math.random() < 0.5 ? -1 : 1 };
+  }
+
+  /**
    * Before the bite, a fish's shadow glides in under the bobber from one side.
    * Just a dark shape of random size: you only see the fish once it leaves the water.
    */
@@ -432,18 +443,32 @@ export class FishingScene extends Phaser.Scene {
     const p = 1 - left / cfg.leadMs;
     const ease = 1 - (1 - p) ** 2;
     const { bobber } = this.L;
-    const { len, h } = this.shadowShape;
-    const dx = reduced ? 0 : Math.round(this.shadowSide * cfg.startDx * (1 - ease));
+    const { len, h, dist, bend } = this.shadowShape;
+    const dx = reduced ? 0 : Math.round(this.shadowSide * dist * (1 - ease));
+    // A soft curve on the way in, plus a little side to side as it swims.
+    const curve = reduced ? 0 : Math.round(Math.sin(ease * Math.PI) * cfg.curvePx * bend);
     const wiggle = reduced || phase === 'bite' ? 0 : Math.round(Math.sin(this.elapsed / 160));
     const cx = bobber.x + dx + this.shadowSide * Math.round(len / 2);
-    const cy = bobber.y + 5 + wiggle;
-    g.fillStyle(color('ink'), cfg.alpha * Math.min(1, p * 2));
+    const cy = bobber.y + 5 + wiggle + curve;
+    g.fillStyle(color('ink'), cfg.alpha * Math.min(1, p * 4));
     // Body: a soft lozenge, with the tail on the side it came from.
     g.fillRect(cx - Math.floor(len / 2), cy - h + 1, len, h * 2 - 1);
     g.fillRect(cx - Math.floor(len / 2) + 1, cy - h, len - 2, h * 2 + 1);
     const tailX = this.shadowSide > 0 ? cx + Math.ceil(len / 2) : cx - Math.floor(len / 2) - 2;
-    g.fillRect(tailX, cy - 1, 2, 1);
-    g.fillRect(tailX + (this.shadowSide > 0 ? 1 : 0), cy + 1, 1, 1);
+    // A faint wake of light ripples behind it, so it reads on dark water too.
+    if (!reduced && phase === 'waiting' && dx !== 0) {
+      const back = this.shadowSide;
+      const tail = this.shadowSide > 0 ? cx + Math.ceil(len / 2) + 2 : cx - Math.floor(len / 2) - 3;
+      g.fillStyle(color('mist'), FX.shadow.wakeAlpha * Math.min(1, p * 4));
+      for (let i = 0; i < 3; i++) {
+        const off = Math.floor(this.elapsed / cfg.flickMs + i) % 3;
+        g.fillRect(tail + back * (2 + i * 3 + off), cy - 2 + (i % 2) * 4, 2, 1);
+      }
+    }
+    // The tail flicks up and down while it swims.
+    const flick = !reduced && phase === 'waiting' && Math.floor(this.elapsed / cfg.flickMs) % 2 === 0 ? 1 : 0;
+    g.fillRect(tailX, cy - 1 + flick, 2, 1);
+    g.fillRect(tailX + (this.shadowSide > 0 ? 1 : 0), cy + 1 - flick, 1, 1);
   }
 
   /** The fish leaps, twists off the hook, and splashes back. */

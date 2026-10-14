@@ -147,7 +147,8 @@ export const FX = {
    * A fish shadow glides up to the bobber just before the bite. Only a dark
    * shape: its size and shape are random, so it never gives the fish away.
    */
-  shadow: { leadMs: 1800, startDx: 26, minLen: 5, maxLen: 11, alpha: 0.35 },
+  /** It swims in from up to startDx away (less if the screen edge is closer) along a soft curve, tail flicking. */
+  shadow: { leadMs: 2600, startDx: 48, minRoom: 24, curvePx: 4, flickMs: 180, minLen: 5, maxLen: 11, alpha: 0.38, wakeAlpha: 0.35 },
   /** Landing a legendary: the leap slows, the screen zooms in a little, a gold glow rims the edges, and sparkles burst. */
   legendary: { minTier: 4, slow: 2.2, arcPx: 40, zoom: 1.12, zoomInMs: 600, zoomOutMs: 700, sparkles: 14, burstPx: 22, trailEveryMs: 50 },
   /** Crew on deck: a hop for a rare catch, their own little lines, and dozing at night. */
