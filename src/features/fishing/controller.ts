@@ -1,7 +1,7 @@
 // Glue between the pure fishing session and the rest of the game: rolls the
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
-import { CATCH, CREEL, FIGHT, FISHING, RESTED } from '../../config/tuning';
+import { CATCH, CREEL, FIGHT, FISHING, FX, RESTED } from '../../config/tuning';
 import { bundleBonus, freshness, matchingSets, type SetResult } from '../../systems/economy';
 import { conditionWeight, fishValue, makeCatch, rarityBoosts } from '../../core/catching';
 import { escapeChance, quickBonus } from '../../systems/catchOdds';
@@ -126,6 +126,7 @@ export class FishingController {
           break;
         }
         this.resolveHook(plan, e.reactionMs, e.windowMs, 1);
+        this.slowForLegend();
         bus.emit('reel', { waterId });
         break;
       }
@@ -139,6 +140,7 @@ export class FishingController {
         const mult = FIGHT.escapeMissed + (FIGHT.escapeClean - FIGHT.escapeMissed) * quality;
         this.resolveHook(f.plan, f.reactionMs, f.windowMs, mult);
         if (this.pending && quality >= 1) this.clean = { coins: Math.max(1, Math.round(this.pending.value * FIGHT.cleanBonus)) };
+        this.slowForLegend();
         bus.emit('reel', { waterId });
         break;
       }
@@ -170,6 +172,16 @@ export class FishingController {
         break;
     }
     this.listeners.forEach((fn) => fn(e));
+  }
+
+  /** Tier of the fish now landing, or -1. */
+  get pendingTier(): number {
+    return this.pending ? (this.ctx.registries.rarities.tryGet(this.pending.rarityId)?.tier ?? 0) : -1;
+  }
+
+  /** A legendary on its way in leaps in slow motion (the scene draws the moment). */
+  private slowForLegend(): void {
+    if (this.pendingTier >= FX.legendary.minTier) this.session.stretchReel(FX.legendary.slow);
   }
 
   /** Did the hooked fish slip? If not, it is pending, with its quick-catch bonus. */

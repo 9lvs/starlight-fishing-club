@@ -4,7 +4,7 @@ import Phaser from 'phaser';
 import { getContext, type GameContext } from '../../core/context';
 import { getLayout, type Layout } from '../../core/layout';
 import { uiState, worldAnchors } from '../../core/sceneState';
-import { CREEL, FIGHT, FISHING } from '../../config/tuning';
+import { CREEL, FIGHT, FISHING, FX } from '../../config/tuning';
 import { MOTION, color, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
 import { drawPixelEllipse, drawSaggingLine } from '../../ui/pixelDraw';
@@ -44,6 +44,11 @@ export class FishingScene extends Phaser.Scene {
   private line!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
   private glow!: Phaser.GameObjects.Graphics;
+  /** The fish's shadow gliding up to the bobber before a bite. */
+  private shadow!: Phaser.GameObjects.Graphics;
+  private shadowSide = 1;
+  /** The legendary moment: the dim around the leap, and its sparkles. */
+  private moment: { dim: Phaser.GameObjects.Rectangle; sparks: Phaser.GameObjects.Graphics; motes: { x: number; y: number; vx: number; vy: number; age: number; life: number; c: PaletteName }[] } | null = null;
   private bobber!: Phaser.GameObjects.Sprite;
   private cue!: PixelText;
   private message!: PixelText;
@@ -78,6 +83,7 @@ export class FishingScene extends Phaser.Scene {
     const zone = this.add.zone(z.x, z.y, z.w, z.h).setOrigin(0, 0).setInteractive();
     zone.on('pointerdown', () => this.tap());
 
+    this.shadow = this.add.graphics();
     this.glow = this.add.graphics();
     this.fightGfx = this.add.graphics().setDepth(5);
     this.fightMarks = [];
@@ -178,6 +184,7 @@ export class FishingScene extends Phaser.Scene {
       case 'cast':
         this.say('');
         this.throwBobber();
+        this.shadowSide = Math.random() < 0.5 ? -1 : 1;
         break;
       case 'early':
         this.say('Wait for the bite...', 'sky');
@@ -243,6 +250,7 @@ export class FishingScene extends Phaser.Scene {
         this.bobber.setVisible(false);
         this.jumper?.destroy();
         this.jumper = null;
+        this.endMoment();
         if (this.ctl.pending) this.showPopup();
         else if (this.ctl.escaped) this.say(this.escapeMessage(), 'sky');
         break;
@@ -292,28 +300,149 @@ export class FishingScene extends Phaser.Scene {
       this.time.addEvent({ delay: 130, repeat: 2, callback: () => splash.setFrame(Math.min(2, ++frame)) });
       this.time.delayedCall(520, () => splash.destroy());
     }
-    // The fish leaps from the bobber toward the boat.
+    // The fish leaps from the bobber toward the boat. A legendary leaps high and slow.
     if (pending) {
       const fish = this.ctx.registries.fish.get(pending.fishId);
-      this.jumper = this.add.image(bobber.x, bobber.y, fish.spriteKey).setFlipX(true);
+      const legend = this.ctl.pendingTier >= FX.legendary.minTier && !uiSignals.reducedMotion();
+      const rarityColor = this.ctx.registries.rarities.tryGet(pending.rarityId)?.color ?? 'gold';
+      this.jumper = this.add.image(bobber.x, bobber.y, fish.spriteKey).setFlipX(true).setDepth(legend ? 45 : 0);
+      if (legend) this.startMoment();
       const to = { x: this.L.boat.x + 4, y: this.L.boat.y - 20 };
+      const arc = legend ? FX.legendary.arcPx : 26;
       const t = { p: 0 };
       const j = this.jumper;
+      let burst = false;
+      let trail = 0;
       this.tweens.add({
         targets: t,
         p: 1,
-        duration: FISHING.reelAnimMs,
+        duration: Math.max(FISHING.reelAnimMs, this.ctl.session.duration),
         ease: MOTION.ease,
-        onUpdate: () => {
+        onUpdate: (tw) => {
           j.setPosition(
             Math.round(bobber.x + (to.x - bobber.x) * t.p),
-            Math.round(bobber.y + (to.y - bobber.y) * t.p - Math.sin(t.p * Math.PI) * 26),
+            Math.round(bobber.y + (to.y - bobber.y) * t.p - Math.sin(t.p * Math.PI) * arc),
           );
           j.setAngle(Math.round(t.p * 4) * -15);
+          if (!legend) return;
+          // A soft gold trail, and one burst of sparkles at the top of the leap.
+          const now = tw.elapsed;
+          if (now - trail > FX.legendary.trailEveryMs) {
+            trail = now;
+            this.addMote(j.x + (Math.random() * 6 - 3), j.y + (Math.random() * 4 - 2), 0, 0.006, 700, Math.random() < 0.5 ? 'gold' : rarityColor);
+          }
+          if (!burst && t.p >= 0.5) {
+            burst = true;
+            this.sparkBurst(j.x, j.y, rarityColor);
+          }
         },
       });
     }
     this.bobber.setVisible(false);
+  }
+
+  /** Dim the water around a legendary's leap, gently, so the eye follows the fish. */
+  private startMoment(): void {
+    this.endMoment();
+    const dim = this.add.rectangle(0, 0, this.L.width, this.L.height, color('ink'), 1).setOrigin(0, 0).setDepth(40).setAlpha(0);
+    const sparks = this.add.graphics().setDepth(46);
+    this.tweens.add({ targets: dim, alpha: FX.legendary.dim, duration: FX.legendary.dimInMs, ease: MOTION.easeOut });
+    this.moment = { dim, sparks, motes: [] };
+  }
+
+  /** The catch card takes over: the dim fades and the sparkles finish on their own. */
+  private endMoment(): void {
+    const m = this.moment;
+    if (!m) return;
+    this.moment = null;
+    this.tweens.add({ targets: m.dim, alpha: 0, duration: MOTION.popupIn, onComplete: () => m.dim.destroy() });
+    this.time.delayedCall(900, () => m.sparks.destroy());
+    // Let the last sparkles fade under the card.
+    const left = m.motes;
+    const fade = this.time.addEvent({
+      delay: 16,
+      repeat: 55,
+      callback: () => {
+        for (const o of left) this.stepMote(o, 16);
+        this.drawMotes(m.sparks, left);
+        if (fade.getRepeatCount() === 0) left.length = 0;
+      },
+    });
+  }
+
+  private addMote(x: number, y: number, vx: number, vy: number, life: number, c: PaletteName): void {
+    this.moment?.motes.push({ x, y, vx, vy, age: 0, life, c });
+  }
+
+  private sparkBurst(x: number, y: number, c: PaletteName): void {
+    const n = FX.legendary.sparkles;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const v = FX.legendary.burstPx / 700;
+      this.addMote(x, y, Math.cos(a) * v, Math.sin(a) * v * 0.7, 700 + (i % 3) * 120, i % 3 === 0 ? 'mist' : i % 2 ? 'gold' : c);
+    }
+  }
+
+  private stepMote(o: { x: number; y: number; vx: number; vy: number; age: number }, dt: number): void {
+    o.age += dt;
+    o.x += o.vx * dt;
+    o.y += o.vy * dt;
+    o.vx *= 0.97;
+    o.vy *= 0.97;
+  }
+
+  /** Little plus-shaped sparkles that shrink to a dot as they fade. */
+  private drawMotes(g: Phaser.GameObjects.Graphics, motes: { x: number; y: number; age: number; life: number; c: PaletteName }[]): void {
+    g.clear();
+    for (const o of motes) {
+      const t = o.age / o.life;
+      if (t >= 1) continue;
+      const x = Math.round(o.x);
+      const y = Math.round(o.y);
+      g.fillStyle(color(o.c), t < 0.6 ? 1 : 0.5);
+      if (t < 0.4) {
+        g.fillRect(x, y - 1, 1, 3);
+        g.fillRect(x - 1, y, 3, 1);
+      } else g.fillRect(x, y, 1, 1);
+    }
+  }
+
+  /**
+   * Before the bite, the fish's shadow glides in under the bobber from one
+   * side. Bigger for rarer fish, with a rim in its rarity color from rare up.
+   */
+  private drawShadow(phase: string, reduced: boolean): void {
+    const g = this.shadow;
+    g.clear();
+    const tier = this.ctl.upcomingTier;
+    if (tier < 0 || (phase !== 'waiting' && phase !== 'bite')) return;
+    const s = this.ctl.session;
+    const cfg = FX.shadow;
+    const left = phase === 'bite' ? 0 : s.duration - s.elapsed;
+    if (left > cfg.leadMs) return;
+    const p = 1 - left / cfg.leadMs;
+    const ease = 1 - (1 - p) ** 2;
+    const { bobber } = this.L;
+    const dx = reduced ? 0 : Math.round(this.shadowSide * cfg.startDx * (1 - ease));
+    const wiggle = reduced ? 0 : Math.round(Math.sin(this.elapsed / 160));
+    const len = cfg.baseLen + tier * cfg.perTier;
+    const cx = bobber.x + dx + this.shadowSide * Math.round(len / 2);
+    const cy = bobber.y + 5 + (phase === 'bite' ? 0 : wiggle);
+    const fade = Math.min(1, p * 2);
+    const alpha = cfg.alpha * fade;
+    const rarity = this.ctx.registries.rarities.tryGet(this.ctl.upcomingRarity ?? '');
+    // Body: a soft lozenge, with the tail on the side it came from.
+    const h = tier >= 3 ? 2 : 1;
+    if (rarity && tier >= FISHING.glowMinTier) {
+      g.fillStyle(color(rarity.color), cfg.rimAlpha * fade);
+      g.fillRect(cx - Math.floor(len / 2) - 1, cy - h, len + 2, h * 2 + 1);
+    }
+    g.fillStyle(color('ink'), alpha);
+    g.fillRect(cx - Math.floor(len / 2), cy - h + 1, len, h * 2 - 1);
+    g.fillRect(cx - Math.floor(len / 2) + 1, cy - h, len - 2, h * 2 + 1);
+    const tailX = this.shadowSide > 0 ? cx + Math.ceil(len / 2) : cx - Math.floor(len / 2) - 2;
+    g.fillRect(tailX, cy - 1, 2, 1);
+    g.fillRect(tailX + (this.shadowSide > 0 ? 1 : 0), cy + 1, 1, 1);
   }
 
   /** The fish leaps, twists off the hook, and splashes back. */
@@ -546,7 +675,13 @@ export class FishingScene extends Phaser.Scene {
       drawSaggingLine(this.line, worldAnchors.rodTip.x, worldAnchors.rodTip.y, this.jumper.x, this.jumper.y, 1, 'mist');
     }
 
+    this.drawShadow(phase, reduced);
     this.drawRareGlow(phase, reduced);
+    if (this.moment) {
+      for (const o of this.moment.motes) this.stepMote(o, delta);
+      this.moment.motes = this.moment.motes.filter((o) => o.age < o.life);
+      this.drawMotes(this.moment.sparks, this.moment.motes);
+    }
 
     // Ripples expand and fade in three alpha steps (no smooth gradients).
     this.fx.clear();

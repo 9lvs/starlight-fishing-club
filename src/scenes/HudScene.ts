@@ -6,8 +6,9 @@ import { getContext, type GameContext } from '../core/context';
 import { getLayout, menuSlots, type Layout } from '../core/layout';
 import { uiState } from '../core/sceneState';
 import { TIME } from '../config/time';
-import { UI_TIMING } from '../config/tuning';
-import { color } from '../design/tokens';
+import { FX, UI_TIMING } from '../config/tuning';
+import { MOTION, color } from '../design/tokens';
+import { uiSignals } from '../ui/uiSignals';
 import { Button } from '../ui/Button';
 import { addIcon } from '../ui/Icon';
 import { ToastLayer } from '../ui/Toast';
@@ -34,6 +35,10 @@ export class HudScene extends Phaser.Scene {
   private badges: { dot: Phaser.GameObjects.Rectangle; check: (ctx: GameContext) => boolean }[] = [];
   private offs: (() => void)[] = [];
   private badgeTimer = 0;
+  /** Coins sold this frame, waiting to fly to the counter (sales arrive in bursts). */
+  private flyQueue: { amount: number; fromBoat: boolean } | null = null;
+  /** The coin counter waits for flying coins to land before it counts up. */
+  private holdCoinsMs = 0;
 
   constructor() {
     super('Hud');
@@ -85,6 +90,13 @@ export class HudScene extends Phaser.Scene {
       }),
       bus.on('ui:openPanel', ({ sceneKey, data }) => this.openPanel(sceneKey, data)),
       bus.on('currencyChanged', () => this.layoutCurrencies()),
+      bus.on('fishSold', ({ value, currency, source }) => {
+        if (source === 'crew' || currency !== 'coins') return;
+        const q = (this.flyQueue ??= { amount: 0, fromBoat: false });
+        q.amount += value;
+        // A catch sold by hand flies from the boat; a creel sale from just under the bar (the panel is open).
+        if (source === 'hand') q.fromBoat = true;
+      }),
       bus.on('viewportChanged', () => this.scene.restart()),
     );
     this.events.once('shutdown', () => this.offs.forEach((off) => off()));
@@ -184,9 +196,69 @@ export class HudScene extends Phaser.Scene {
     this.scene.launch(sceneKey, data as object | undefined);
   }
 
+  /** A few coins arc up from the boat to the coin counter, more for a bigger sale. */
+  private flyCoins(amount: number, fromBoat: boolean): void {
+    const view = this.currencies.find((v) => v.id === 'coins');
+    if (!view || !view.icon.visible || uiSignals.reducedMotion()) return;
+    if (!this.textures.exists('fx_coin')) {
+      const g = this.make.graphics({}, false);
+      g.fillStyle(color('bark'));
+      g.fillRect(1, 0, 3, 5);
+      g.fillRect(0, 1, 5, 3);
+      g.fillStyle(color('gold'));
+      g.fillRect(1, 1, 3, 3);
+      g.fillStyle(color('mist'));
+      g.fillRect(1, 1, 1, 1);
+      g.generateTexture('fx_coin', 5, 5);
+      g.destroy();
+    }
+    const cfg = FX.coins;
+    const n = Math.max(cfg.min, Math.min(cfg.max, Math.round(Math.log10(amount + 1) * 2)));
+    const from = fromBoat
+      ? { x: this.L.boat.x + 4, y: this.L.boat.y - 18 }
+      : { x: Math.round(this.L.width / 2), y: this.L.topBar.y + this.L.topBar.h - 2 };
+    const to = { x: view.icon.x + 6, y: view.icon.y + 6 };
+    this.holdCoinsMs = cfg.flyMs;
+    for (let i = 0; i < n; i++) {
+      const coin = this.add.image(from.x + (i % 3) * 2 - 2, from.y, 'fx_coin').setDepth(1000);
+      const side = (i % 2 ? 1 : -1) * (6 + (i % 3) * 4);
+      const t = { p: 0 };
+      const sx = coin.x;
+      this.tweens.add({
+        targets: t,
+        p: 1,
+        delay: i * cfg.staggerMs,
+        duration: cfg.flyMs,
+        ease: 'Sine.easeIn',
+        onUpdate: () => {
+          // A gentle curve: out to one side and up, then into the counter.
+          const q = 1 - t.p;
+          const cx = (sx + to.x) / 2 + side;
+          const cy = Math.min(from.y, to.y) - cfg.liftPx + (fromBoat ? 0 : cfg.liftPx);
+          coin.setPosition(Math.round(q * q * sx + 2 * q * t.p * cx + t.p * t.p * to.x), Math.round(q * q * from.y + 2 * q * t.p * cy + t.p * t.p * to.y));
+        },
+        onComplete: () => {
+          coin.destroy();
+          if (i !== 0) return;
+          // The counter gives a tiny nod as the first coin lands.
+          const base = this.L.topBar.y + 3;
+          this.tweens.killTweensOf(view.icon);
+          view.icon.setY(base);
+          this.tweens.add({ targets: view.icon, y: base - 1, duration: 70, yoyo: true, ease: MOTION.easeOut, onComplete: () => view.icon.setY(base) });
+        },
+      });
+    }
+  }
+
   override update(_t: number, delta: number): void {
+    if (this.flyQueue) {
+      this.flyCoins(this.flyQueue.amount, this.flyQueue.fromBoat);
+      this.flyQueue = null;
+    }
     // Count currencies up gently instead of jumping.
+    this.holdCoinsMs = Math.max(0, this.holdCoinsMs - delta);
     for (const v of this.currencies) {
+      if (v.id === 'coins' && this.holdCoinsMs > 0) continue;
       const target = this.ctx.wallet.get(v.id);
       if (v.shown === target) continue;
       const step = Math.max(1, Math.abs(target - v.shown) * Math.min(1, delta / UI_TIMING.coinTickMs));

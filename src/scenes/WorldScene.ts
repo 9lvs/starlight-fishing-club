@@ -6,7 +6,7 @@ import { getContext, type GameContext } from '../core/context';
 import { getLayout, type Layout } from '../core/layout';
 import { deckState, uiState, worldAnchors } from '../core/sceneState';
 import { TIME } from '../config/time';
-import { FISHING, VOYAGE } from '../config/tuning';
+import { FISHING, FX, VOYAGE } from '../config/tuning';
 import { MOTION, PALETTE_NAMES, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
 import { FISHER_HAND, RIG_RAISE } from '../art/placeholderGenerator';
 import { phaseAt } from '../systems/timeOfDay';
@@ -16,6 +16,7 @@ import { uiSignals } from '../ui/uiSignals';
 import { LANDMARK_LAYER_H, paintLandmarks } from './world/landmarks';
 import { PhasedLayer } from './world/PhasedLayer';
 import { SceneEffects } from './world/sceneEffects';
+import { DeckLife } from './world/deckLife';
 import {
   paintClouds,
   paintForeground,
@@ -117,6 +118,7 @@ export class WorldScene extends Phaser.Scene {
   /** Crates and spare rods on the deck, and the crew standing there. */
   private deck!: Phaser.GameObjects.Graphics;
   private deckCrew: Phaser.GameObjects.Sprite[] = [];
+  private deckLife!: DeckLife;
   /** Extra hull length beyond the starter boat, in pixels (the boat grows toward the stern). */
   private extra = 0;
   private decorations: Phaser.GameObjects.Image[] = [];
@@ -223,6 +225,13 @@ export class WorldScene extends Phaser.Scene {
       }),
       bus.on('cast', () => this.setPose(2, FISHING.castAnimMs)),
       bus.on('reel', () => this.setPose(3, FISHING.reelAnimMs)),
+      // The crew cheer a rare catch, and their own bobbers dip when they catch.
+      bus.on('catchLanded', ({ catch: c, source }) => {
+        const reduced = uiSignals.reducedMotion();
+        if (source === 'crew') return this.deckLife.crewCatch(reduced);
+        const tier = this.ctx.registries.rarities.tryGet(c.rarityId)?.tier ?? 0;
+        if (tier >= FX.crew.cheerMinTier) this.deckLife.cheer(tier >= FX.legendary.minTier ? 2 : 1, reduced);
+      }),
       bus.on('viewportChanged', () => this.scene.restart()),
     );
     this.events.once('shutdown', () => this.cleanup());
@@ -455,6 +464,7 @@ export class WorldScene extends Phaser.Scene {
     this.hull = this.add.image(0, 0, 'boat').setOrigin(0, 0);
     this.boat.add([this.rig, this.deck, this.rod, this.fisher, this.hull]);
     this.deckCrew = [];
+    this.deckLife = new DeckLife(this, this.boat);
     this.applyBoatLook();
   }
 
@@ -482,6 +492,7 @@ export class WorldScene extends Phaser.Scene {
       this.boat.addAt(s, this.boat.getIndex(this.fisher));
       this.deckCrew.push(s);
     }
+    this.deckLife.setCrew(this.deckCrew);
     // Spare rods: the rods you have bought before your current one.
     const rodTier = Number(this.ctx.world.look('rod')?.priority ?? 0);
     const spare = Math.min(DECK.maxSpareRods, Math.max(0, rodTier - 1));
@@ -630,8 +641,10 @@ export class WorldScene extends Phaser.Scene {
     // Fisher pose and rod.
     if (this.elapsed > this.poseUntil) this.pose = Math.floor(this.elapsed / 1300) % 2 === 0 || reduced ? 0 : 1;
     this.fisher.setFrame(this.pose);
-    // Crew on deck shift their weight now and then, each on their own beat.
-    this.deckCrew.forEach((s, i) => s.setFrame(reduced ? 0 : Math.floor(this.elapsed / 1700 + i * 0.6) % 2));
+    // Crew on deck shift their weight now and then, each on their own beat (and keep still while they doze).
+    const dozing = this.ctx.world.phase === 'night';
+    this.deckCrew.forEach((s, i) => s.setFrame(reduced || dozing ? 0 : Math.floor(this.elapsed / 1700 + i * 0.6) % 2));
+    this.deckLife.update(delta, { night: dozing, reduced });
     this.drawRod();
 
     if (Math.floor(this.elapsed / 250) !== Math.floor((this.elapsed - delta) / 250)) {

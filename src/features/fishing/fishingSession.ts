@@ -86,6 +86,11 @@ export class FishingSession {
     if (dips === 0) this.startHold();
   }
 
+  /** Slow the reel-in down (the legendary leap). */
+  stretchReel(mult: number): void {
+    if (this.phase === 'reeling') this.duration *= mult;
+  }
+
   /** Finger lifted or key released: only matters while holding a legendary. */
   release(): void {
     if (this.fight) this.fight.holding = false;

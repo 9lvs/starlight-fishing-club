@@ -134,6 +134,21 @@ export const DAILY_TASKS = {
   gemChance: 0.1,
 };
 
+/**
+ * Small touches of life. All of them stay soft and short, and reduced motion
+ * turns the moving parts off.
+ */
+export const FX = {
+  /** A fish shadow glides up to the bobber just before the bite. Rarer fish are bigger and tinted. */
+  shadow: { leadMs: 1800, startDx: 26, baseLen: 5, perTier: 2, alpha: 0.35, rimAlpha: 0.45 },
+  /** Landing a legendary: the leap slows, the water dims around it, and gold sparkles burst. */
+  legendary: { minTier: 4, slow: 2.2, arcPx: 40, dim: 0.35, dimInMs: 400, sparkles: 14, burstPx: 22, trailEveryMs: 50 },
+  /** Crew on deck: a hop for a rare catch, their own little lines, and dozing at night. */
+  crew: { cheerMinTier: 2, hopPx: 3, hopMs: 150, staggerMs: 90, zEveryMs: 2600, zRisePx: 10, zLifeMs: 1800 },
+  /** Coins fly from the boat to the coin counter when you sell. */
+  coins: { min: 2, max: 6, flyMs: 650, staggerMs: 55, liftPx: 18 },
+};
+
 /** Gems: a rare find while fishing, spent on looks that stay when the club moves. */
 export const GEMS = {
   currency: 'gems',
