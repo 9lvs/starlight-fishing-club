@@ -1,14 +1,14 @@
 // Glue between the pure fishing session and the rest of the game: rolls the
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
-import { CATCH, CREEL, FIGHT, FISHING } from '../../config/tuning';
+import { CATCH, CREEL, FIGHT, FISHING, RESTED } from '../../config/tuning';
 import { bundleBonus, freshness, matchingSets, type SetResult } from '../../systems/economy';
 import { conditionWeight, fishValue, makeCatch, rarityBoosts } from '../../core/catching';
 import { escapeChance, quickBonus } from '../../systems/catchOdds';
 import type { GameContext } from '../../core/context';
 import type { CatchResult } from '../../core/types';
 import { FishingSession, type SessionEvent } from './fishingSession';
-import type { CreelItem, FishingSlice } from './state';
+import { addRest, type CreelItem, type FishingSlice } from './state';
 
 export interface CreelSale {
   /** Value of every fish at today's prices and freshness. */
@@ -35,6 +35,8 @@ export class FishingController {
   quick: { label: string; coins: number } | null = null;
   /** Bonus for a clean fight with the fish now landing. */
   clean: { coins: number } | null = null;
+  /** Rested bonus paid on the fish now landing (fresh bait from time away). */
+  rested: { coins: number } | null = null;
   /** A rare fish on the line, fighting, with what is needed to land it after. */
   private fighting: { plan: Plan; reactionMs: number; windowMs: number } | null = null;
   /** Easy reel (Settings): rare fish land with one tap, no fight. */
@@ -96,6 +98,7 @@ export class FishingController {
         this.escaped = null;
         this.quick = null;
         this.clean = null;
+        this.rested = null;
         this.fighting = null;
         // Roll now, so the water can hint at a rare fish while you wait.
         this.planned = this.plan(waterId);
@@ -147,6 +150,12 @@ export class FishingController {
             bus.emit('quickCatch', this.quick);
           }
           if (this.clean) this.ctx.wallet.add(this.pending.currency, this.clean.coins);
+          if (this.state.rested > 0) {
+            this.state.rested -= 1;
+            this.rested = { coins: Math.max(1, Math.round(this.pending.value * RESTED.bonus)) };
+            this.ctx.wallet.add(this.pending.currency, this.rested.coins);
+            bus.emit('restedCatch', { coins: this.rested.coins, left: this.state.rested });
+          }
           // Listeners (like the journal) may annotate pending.flags before the popup shows.
           bus.emit('catchLanded', { catch: this.pending, source: 'hand' });
           // After catchLanded, so the journal already has this fish to mark.
@@ -201,6 +210,13 @@ export class FishingController {
     if (!r) return 0;
     const need = r.tackleNeed + (w?.tackleNeed ?? 0) * r.waterNeedShare;
     return escapeChance(r.escape, need, this.ctx.stats.get('tackle'), this.ctx.stats.get('escapeMult'), CATCH.escape);
+  }
+
+  /** Time away fills the bait tin. Returns the charges it added. */
+  addRest(ms: number): number {
+    const gained = addRest(this.state, ms, RESTED);
+    if (gained > 0) this.ctx.bus.emit('restedChanged', { left: this.state.rested });
+    return gained;
   }
 
   /** Rarity tier of the fish on its way (for the glow in the water), or -1. */

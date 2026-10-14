@@ -23,6 +23,18 @@ export const fishingFeature: GameFeature = {
     });
     ctx.bus.on('creelDeposit', (d) => (d.accepted = ctl.addToCreel(d.items)));
   },
+  // Time away fills the bait tin: the next catches pay double.
+  onOfflineCatchUp(elapsedMs) {
+    const ctl = getFishingController();
+    const gained = ctl.addRest(elapsedMs);
+    if (gained <= 0) return;
+    const n = ctl.state.rested;
+    return {
+      featureId: 'fishing',
+      title: 'Fresh bait',
+      lines: [`Your next ${n} ${n === 1 ? 'catch pays' : 'catches pay'} double.`],
+    };
+  },
   onTick(dt) {
     getFishingController().update(dt);
   },
@@ -34,6 +46,16 @@ export const fishingFeature: GameFeature = {
       run: (_ctx, args) => {
         getFishingController().state.pity = Number(args.value);
         return `Pity counter is now ${args.value}`;
+      },
+    },
+    {
+      id: 'fishing.rested',
+      label: 'Add rested time (minutes)',
+      args: [{ name: 'minutes', type: 'number', default: 60 }],
+      run: (_ctx, args) => {
+        const ctl = getFishingController();
+        ctl.addRest(Number(args.minutes) * 60_000);
+        return `Fresh bait: ${ctl.state.rested} catches`;
       },
     },
   ],

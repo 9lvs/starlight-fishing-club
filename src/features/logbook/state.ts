@@ -2,6 +2,19 @@
 // Tasks belong to a water: the ones shown are for the club's home water.
 import { z } from 'zod';
 import type { SaveSliceDef } from '../../core/feature';
+import { hashString, seededRng } from '../../core/rng';
+
+/** Today's three daily tasks and how far along they are. A new day starts them over. */
+export interface DailyState {
+  day: string;
+  ids: string[];
+  progress: Record<string, number>;
+  species: Record<string, string[]>;
+  done: string[];
+  claimed: string[];
+}
+
+export const emptyDaily = (): DailyState => ({ day: '', ids: [], progress: {}, species: {}, done: [], claimed: [] });
 
 export interface LogbookSlice {
   /** Progress counts by task id. */
@@ -11,12 +24,15 @@ export interface LogbookSlice {
   /** Finished, and finished-and-paid, task ids. Kept when the club moves. */
   done: string[];
   claimed: string[];
+  daily: DailyState;
 }
 
+/** v2 adds the daily tasks. */
 export const logbookSlice: SaveSliceDef<LogbookSlice> = {
   key: 'logbook',
-  version: 1,
-  defaults: () => ({ progress: {}, species: {}, done: [], claimed: [] }),
+  version: 2,
+  defaults: () => ({ progress: {}, species: {}, done: [], claimed: [], daily: emptyDaily() }),
+  migrate: (old) => ({ ...(old as LogbookSlice), daily: emptyDaily() }),
 };
 
 const id = z.string().regex(/^[a-z0-9_]+$/);
@@ -43,6 +59,49 @@ export const taskSchema = z.object({
 });
 export type TaskDef = z.infer<typeof taskSchema>;
 
+/** Daily task templates: src/content/<pack>/dailies.json. Coins scale with the club's water. */
+export const dailySchema = z.object({
+  id,
+  text: z.string().min(1).max(48),
+  kind: z.enum(['catch', 'species', 'keep', 'set', 'clean']),
+  count: z.number().int().min(1).default(1),
+  minTier: z.number().int().min(0).default(0),
+  weather: z.string().optional(),
+  phase: z.string().optional(),
+  setSize: z.number().int().min(1).optional(),
+  /** Only offered once the club has reached this rank (some need rarer fish). */
+  minRank: z.number().int().min(0).default(0),
+  /** Reward size next to the other dailies (1 = usual). */
+  share: z.number().positive().default(1),
+  /** How often it comes up. */
+  weight: z.number().positive().default(1),
+});
+export type DailyDef = z.infer<typeof dailySchema>;
+
+/** What counting progress needs from a task (regular or daily). */
+export type TaskRule = Pick<TaskDef, 'id' | 'count' | 'minTier' | 'weather' | 'phase' | 'setSize'> & { kind: TaskDef['kind']; target?: string };
+
+/**
+ * The same three dailies for everyone on a given day: a weighted draw seeded
+ * by the date, at most one of each kind while the pool allows it.
+ */
+export function pickDailies(day: string, pool: readonly DailyDef[], count: number): string[] {
+  const rng = seededRng(hashString(day));
+  const left = [...pool].sort((a, b) => a.id.localeCompare(b.id));
+  const picked: DailyDef[] = [];
+  while (picked.length < count && left.length > 0) {
+    const kinds = new Set(picked.map((p) => p.kind));
+    const fresh = left.filter((d) => !kinds.has(d.kind));
+    const from = fresh.length > 0 ? fresh : left;
+    const total = from.reduce((s, d) => s + d.weight, 0);
+    let roll = rng() * total;
+    const choice = from.find((d) => (roll -= d.weight) < 0) ?? from[from.length - 1]!;
+    picked.push(choice);
+    left.splice(left.indexOf(choice), 1);
+  }
+  return picked.map((d) => d.id);
+}
+
 /** Something that happened in the game, as the logbook sees it. */
 export type LogEvent =
   | { kind: 'catch'; fishId: string; tier: number; weather: string; phase: string }
@@ -54,7 +113,7 @@ export type LogEvent =
   | { kind: 'move'; waterId: string };
 
 /** How much one event adds to a task (0 if it does not count). */
-export function counts(t: TaskDef, e: LogEvent): number {
+export function counts(t: TaskRule, e: LogEvent): number {
   switch (t.kind) {
     case 'catch':
       if (e.kind !== 'catch' || e.tier < t.minTier) return 0;
@@ -82,7 +141,7 @@ export function counts(t: TaskDef, e: LogEvent): number {
  * Apply an event to the open tasks. Returns the ids that just finished.
  * "Different fish" tasks only count a fish the first time.
  */
-export function record(slice: LogbookSlice, tasks: readonly TaskDef[], e: LogEvent): string[] {
+export function record(slice: Pick<LogbookSlice, 'progress' | 'species' | 'done'>, tasks: readonly TaskRule[], e: LogEvent): string[] {
   const finished: string[] = [];
   for (const t of tasks) {
     if (slice.done.includes(t.id)) continue;

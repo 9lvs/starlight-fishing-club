@@ -1,0 +1,14 @@
+[
+  {"id": "d_catch15", "text": "Catch 15 fish", "kind": "catch", "count": 15, "share": 1, "weight": 2},
+  {"id": "d_catch30", "text": "Catch 30 fish", "kind": "catch", "count": 30, "share": 1.6},
+  {"id": "d_uncommon", "text": "Catch 3 uncommon fish or better", "kind": "catch", "count": 3, "minTier": 1, "share": 1.2},
+  {"id": "d_rare", "text": "Catch a rare fish", "kind": "catch", "minTier": 2, "minRank": 1, "share": 1.5},
+  {"id": "d_night", "text": "Catch 5 fish at night", "kind": "catch", "count": 5, "phase": "night", "share": 1.2},
+  {"id": "d_dawn", "text": "Catch 3 fish at dawn", "kind": "catch", "count": 3, "phase": "dawn", "share": 1, "weight": 0.5},
+  {"id": "d_weather", "text": "Catch 3 fish in wind, rain, or fog", "kind": "catch", "count": 3, "weather": "any_weather", "share": 1.2, "weight": 0.7},
+  {"id": "d_species", "text": "Catch 5 different fish", "kind": "species", "count": 5, "share": 1.1},
+  {"id": "d_keep", "text": "Keep 5 fish in your creel", "kind": "keep", "count": 5, "share": 0.8},
+  {"id": "d_set3", "text": "Sell 3 matching fish together", "kind": "set", "setSize": 3, "share": 1.2},
+  {"id": "d_set5", "text": "Sell a set of 5 matching fish", "kind": "set", "setSize": 5, "minRank": 2, "share": 1.6},
+  {"id": "d_clean", "text": "Land a rare fish cleanly", "kind": "clean", "minTier": 2, "minRank": 1, "share": 1.6}
+]

@@ -1,11 +1,11 @@
 // Turns game events into logbook progress (no Phaser, so tests use it as is).
 import type { GameContext } from '../../core/context';
 import type { LogbookService } from './service';
-import type { LogEvent, TaskDef } from './state';
+import type { DailyDef, LogEvent, TaskDef } from './state';
 
 declare module '../../core/events' {
   interface GameEvents {
-    logbookTaskDone: { taskId: string };
+    logbookTaskDone: { taskId: string; daily?: boolean };
   }
 }
 
@@ -23,8 +23,14 @@ export function wireLogbook(ctx: GameContext, svc: LogbookService): void {
       ctx.ui.toast(`Task done: ${t.text}. Claim it in the Logbook`, { icon: 'icon_task', color: 'gold' });
     }
   };
+  const announceDaily = (d: DailyDef) => {
+    ctx.bus.emit('logbookTaskDone', { taskId: d.id, daily: true });
+    ctx.bus.emit('audio:play', { key: 'unlock' });
+    ctx.ui.toast(`Daily task done: ${d.text}. Claim it in the Logbook`, { icon: 'icon_task', color: 'gold' });
+  };
   const feed = (e: LogEvent) => {
     for (const t of svc.onEvent(e)) announce(t);
+    if (e.kind !== 'move' && e.kind !== 'buy' && e.kind !== 'hire') for (const d of svc.onDailyEvent(e)) announceDaily(d);
   };
   ctx.bus.on('catchLanded', ({ catch: c, source }) => {
     if (source === 'hand') feed({ kind: 'catch', fishId: c.fishId, tier: tier(c.rarityId), weather: ctx.world.weather, phase: ctx.world.phase });

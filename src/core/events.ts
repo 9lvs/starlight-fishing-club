@@ -27,6 +27,12 @@ export interface GameEvents {
   rareNearby: { rarityId: string };
   /** Reeled in soon after the bite: bonus coins. */
   quickCatch: { label: string; coins: number };
+  /** A rested catch (fresh bait from time away) paid its bonus; `left` charges remain. */
+  restedCatch: { coins: number; left: number };
+  /** Time away added rested charges. */
+  restedChanged: { left: number };
+  /** Coins from a sale should fly from here to the coin counter (presentation only). */
+  coinsFly: { x: number; y: number; amount: number };
   /** Many catches at once (offline catch-up). One entry per fish type. */
   /** Ask how many fish the creel can take (the creel's owner sets `room`). */
   creelRoom: { room: number };

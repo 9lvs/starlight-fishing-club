@@ -49,6 +49,8 @@ export class FishingScene extends Phaser.Scene {
   private message!: PixelText;
   private castButton!: Button;
   private creelButton!: Button;
+  /** Fresh bait from time away: shows how many catches still pay double. */
+  private restedButton!: Button;
   private jumper: Phaser.GameObjects.Image | null = null;
   /** The fight's marks above the bobber: one per dip, then the hold for a legendary. */
   private fightMarks: ('todo' | 'hit' | 'miss')[] = [];
@@ -110,6 +112,21 @@ export class FishingScene extends Phaser.Scene {
       onClick: () => this.ctx.ui.openPanel('Creel'),
     });
 
+    // Mirrors the creel button on the other side of Cast.
+    this.restedButton = new Button(this, {
+      x: Math.min(this.L.width - this.L.safe.right - 4 - cr.w, cb.x + cb.w + 6),
+      y: cr.y,
+      w: cr.w,
+      h: cr.h,
+      icon: 'icon_bait',
+      label: '0',
+      variant: 'secondary',
+      onClick: () => {
+        const n = this.ctl.state.rested;
+        this.ctx.ui.toast(`Fresh bait from your time away: the next ${n} ${n === 1 ? 'catch pays' : 'catches pay'} double.`, { icon: 'icon_bait', color: 'gold' });
+      },
+    });
+
     const kb = this.input.keyboard;
     kb?.on('keydown-SPACE', () => this.keyTap());
     kb?.on('keydown-ENTER', () => this.keyTap());
@@ -129,6 +146,7 @@ export class FishingScene extends Phaser.Scene {
       ),
       this.ctx.bus.on('fishSold', () => this.refreshButtons()),
       this.ctx.bus.on('statsChanged', () => this.refreshButtons()),
+      this.ctx.bus.on('restedChanged', () => this.refreshButtons()),
     );
     this.events.once('shutdown', () => {
       this.offs.forEach((off) => off());
@@ -337,13 +355,21 @@ export class FishingScene extends Phaser.Scene {
       : `${article} ${name} fish slipped away. Next time!`;
   }
 
-  /** The bonus line on the catch card: quick catch, clean fight, or both together. */
+  /** The bonus line on the catch card: quick catch, clean fight, fresh bait, or several together. */
   private bonusLine(): string | undefined {
     const q = this.ctl.quick;
     const c = this.ctl.clean;
-    if (q && c) return `${q.label.replace(' catch!', '')} and clean! +${q.coins + c.coins}`;
-    if (c) return `Clean landing! +${c.coins}`;
-    return q ? `${q.label} +${q.coins}` : undefined;
+    const r = this.ctl.rested;
+    const parts: { short: string; full: string; coins: number }[] = [];
+    if (q) parts.push({ short: q.label.replace(' catch!', ''), full: q.label, coins: q.coins });
+    if (c) parts.push({ short: 'clean', full: 'Clean landing!', coins: c.coins });
+    if (r) parts.push({ short: 'fresh bait', full: 'Fresh bait x2!', coins: r.coins });
+    if (parts.length === 0) return undefined;
+    const coins = parts.reduce((s, p) => s + p.coins, 0);
+    if (parts.length === 1) return `${parts[0]!.full} +${coins}`;
+    const words = parts.map((p, i) => (i === 0 ? p.short : p.short.toLowerCase()));
+    const last = words.pop()!;
+    return `${words.join(', ')} and ${last}! +${coins}`;
   }
 
   /** "+6 Perfect catch!" rises from the boat (`lift` stacks a second one above). */
@@ -443,6 +469,9 @@ export class FishingScene extends Phaser.Scene {
     this.castButton.setDisabled(phase === 'casting' || phase === 'reeling');
     const cap = this.ctx.stats.get('storageCap');
     this.creelButton.setLabel(`${this.ctl.state.creel.length}/${cap}`);
+    const rested = this.ctl.state.rested;
+    this.restedButton.setVisible(rested > 0);
+    this.restedButton.setLabel(`x${rested}`);
   }
 
   /**

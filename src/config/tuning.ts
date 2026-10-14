@@ -111,6 +111,29 @@ export const CREEL = {
   ],
 };
 
+/**
+ * Rested bonus: time away fills a tin of fresh bait, and each of your next hand
+ * catches pays its value again as a bonus. It only adds, it never blocks play.
+ */
+export const RESTED = {
+  /** One charge for this much time away (counted up to the offline cap). */
+  perChargeMs: 6 * 60_000,
+  max: 20,
+  /** Extra share of the fish's value per rested catch (1 = pays double). */
+  bonus: 1,
+};
+
+/** Daily Logbook tasks: three small ones a day, paid in coins, with a small gem chance. */
+export const DAILY_TASKS = {
+  count: 3,
+  /** Coins are this share of the average task reward at the club's water, times each task's share. */
+  rewardBase: 0.6,
+  /** Used when a water has no regular tasks to scale from. */
+  fallbackCoins: 50,
+  /** Chance a claimed daily task also brings up a gem. */
+  gemChance: 0.1,
+};
+
 /** Gems: a rare find while fishing, spent on looks that stay when the club moves. */
 export const GEMS = {
   currency: 'gems',

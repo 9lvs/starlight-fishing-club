@@ -19,6 +19,7 @@ export function wireAudio(ctx: GameContext, audio: AudioManager): void {
   bus.on('fishKept', () => audio.play('keep'));
   bus.on('fishEscaped', () => audio.play('slip'));
   bus.on('quickCatch', () => audio.play('quick'));
+  bus.on('restedCatch', () => audio.play('rested'));
   bus.on('fishSold', ({ source }) => {
     if (source !== 'crew') audio.play('coin');
   });

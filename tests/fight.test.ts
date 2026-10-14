@@ -83,6 +83,8 @@ describe('the fight', () => {
 
 function boot() {
   const ctx = bootstrap({ features: [], loadContent: () => parseContent(readContentFiles()), storage: new MemoryStorage(), debug: false }).ctx!;
+  // High rolls: even a small slip chance never fires, so the tests are steady.
+  ctx.rng = () => 0.99;
   const ctl = new FishingController(ctx, fishingSlice.defaults());
   return { ctx, ctl };
 }
