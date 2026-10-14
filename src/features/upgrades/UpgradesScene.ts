@@ -1,5 +1,6 @@
 // Upgrade tree: branch tabs, a scrollable node tree per branch with links
 // between prerequisites, and a detail card with the effect preview and Buy.
+import type Phaser from 'phaser';
 import type { Rect } from '../../core/layout';
 import type { UpgradeDef } from '../../core/content/schemas';
 import { formatStat, modifierAtLevel } from '../../core/stats';
@@ -29,6 +30,8 @@ const TAB_LABEL_MIN = 56;
 const ROW_GAP = 14;
 /** Below this content height the card drops "Leads to" and puts effects on one line. */
 const COMPACT_BELOW = 230;
+/** The detail card never takes more than this share of the panel; longer text scrolls inside it. */
+const CARD_MAX_SHARE = 0.45;
 
 export class UpgradesScene extends PanelScene<UpgradesData> {
   readonly title = 'Upgrades';
@@ -75,7 +78,8 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     // Detail card first (it sizes to its text), then the tree fills what is left.
     let scrollRef: ScrollArea | null = null;
     const sel = nodes.find((n) => n.id === selected);
-    const cardH = sel ? this.buildCard(area, sel, branch, () => scrollRef?.position ?? 0) : 0;
+    const cardMax = Math.max(64, Math.floor(area.h * CARD_MAX_SHARE));
+    const cardH = sel ? this.buildCard(area, sel, branch, () => scrollRef?.position ?? 0, cardMax) : 0;
 
     // A branch can offer a panel above its tree (the Club tab opens the gem exchange).
     const b = r.branches.get(branch);
@@ -156,7 +160,7 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
    * bottom of `area`: what it does now and next, every requirement with a check
    * or a lock, and what it leads to. Returns its height so the tree takes the rest.
    */
-  private buildCard(area: Rect, u: UpgradeDef, branch: string, scrollPos: () => number): number {
+  private buildCard(area: Rect, u: UpgradeDef, branch: string, scrollPos: () => number, maxH: number): number {
     const svc = getUpgradeService();
     const r = this.ctx.registries;
     const level = svc.level(u.id);
@@ -219,32 +223,45 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
 
     const showBuy = !maxed && reqs.every((q) => q.met);
     const footH = showBuy ? 24 : 4;
-    let h = 15 + desc.textHeight + 3 + eff.textHeight + 4;
-    if (needsHead) h += 12 + reqRows.reduce((s2, q) => s2 + Math.max(12, q.label.textHeight + 1), 0) + 2;
-    if (leadsText) h += leadsText.textHeight + 3;
-    h += footH;
+    const head = 15;
+    // Lay the body out from 0, then place it: directly if it fits, else in a scroll area.
+    const body: Phaser.GameObjects.GameObject[] = [desc, eff];
+    let by = 0;
+    desc.setY(by);
+    by += desc.textHeight + 3;
+    eff.setY(by);
+    by += eff.textHeight + 4;
+    if (needsHead) {
+      body.push(needsHead);
+      needsHead.setY(by);
+      by += 12;
+      for (const q of reqRows) {
+        body.push(q.icon, q.label);
+        q.icon.setY(by - 1);
+        q.label.setY(by + 1);
+        by += Math.max(12, q.label.textHeight + 1);
+      }
+      by += 2;
+    }
+    if (leadsText) {
+      body.push(leadsText);
+      leadsText.setY(by);
+      by += leadsText.textHeight + 3;
+    }
+    const bodyH = Math.min(by, maxH - head - footH);
+    const h = head + bodyH + footH;
     const y = area.y + area.h - h;
     drawPanelBox(g, x, y, w, h, { fill: 'ink', border: state === 'affordable' ? 'gold' : 'dusk' });
     name.setY(y + 3);
     lv.setY(y + 3);
-    let cy = y + 15;
-    desc.setY(cy);
-    cy += desc.textHeight + 3;
-    eff.setY(cy);
-    cy += eff.textHeight + 4;
-    if (needsHead) {
-      needsHead.setY(cy);
-      cy += 12;
-      for (const q of reqRows) {
-        q.icon.setY(cy - 1);
-        q.label.setY(cy + 1);
-        cy += Math.max(12, q.label.textHeight + 1);
-      }
-      cy += 2;
-    }
-    if (leadsText) {
-      leadsText.setY(cy);
-      cy += leadsText.textHeight + 3;
+    if (by <= bodyH) {
+      for (const o of body) (o as unknown as { y: number }).y += y + head;
+    } else {
+      // Long cards scroll inside, so the tree above always stays in view.
+      const scroll = new ScrollArea(this, { x, y: y + head, w, h: bodyH });
+      for (const o of body) (o as unknown as { x: number }).x -= x;
+      scroll.add(body);
+      scroll.setContentHeight(by);
     }
     if (!showBuy) return h;
     const currency = r.currencies.tryGet(u.currency ?? ECONOMY.defaultCurrency);

@@ -108,3 +108,7 @@
 - Changed: crew need a bunk on the boat as well as a contract (Hire Help). The Painted Rowboat, Keelboat, and Glowshell Barge each add a bunk (`crewBunks`), so the first helper still comes in the first run. The crew panel says which of the two is missing. Crew hired before this update stay.
 - Built: rare fish fight back after the hook (`FIGHT` in `config/tuning.ts`). Rare: tap 2 dips, epic: 3, legendary: 3 and then hold until a ring fills. A tap before a dip, or a dip left alone, counts as missed; how the fight goes scales the slip chance from x0.5 (clean) to x1.3 (all missed). A clean fight pays +25% of the fish's value, shown on the catch card, and the journal marks the fish with a gold corner and a count. Easy reel in Settings lands rare fish with one tap. A one-time tip explains the first fight.
 - Verified: 139 tests, typecheck, and build pass. Journey simulation: about 5.9 hours. In the browser: a legendary fight from bite to a clean landing ("Perfect and clean!" on the card), and all ten boats with crew on a 320 px phone.
+
+## v0.6.1: Upgrade card no longer hides the tree
+- Fixed: on long upgrades (the boats with five effects and a requirement) the detail card grew over most of the panel and hid the tree. The card is now capped at 45% of the panel; longer text scrolls inside the card, so the tree always shows at least a few rows. Playtest feedback.
+- Verified: Keelboat, Glowshell Barge, Ice Chest, and Sharp Hooks at 320x568, 390x844, and 1280x720.
