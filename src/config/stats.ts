@@ -13,6 +13,8 @@ export const CORE_STATS: StatDef[] = [
   { id: 'storageCap', base: 6, min: 1, integer: true, label: 'Creel space', format: 'int' },
   { id: 'boatRange', base: 0, min: 0, integer: true, label: 'Boat range', format: 'int' },
   { id: 'crewSlots', base: 0, min: 0, integer: true, label: 'Crew slots', format: 'int' },
+  /** Bunks on your boat: you can hire as many crew as you have both slots and bunks. */
+  { id: 'crewBunks', base: 0, min: 0, integer: true, label: 'Boat bunks', format: 'int' },
   /** Slow on purpose (was 12 s, now 30 s): crew are a gentle helper, not the main income. */
   { id: 'crewIntervalMs', base: 30000, min: 4000, label: 'Crew catch time', format: 'ms' },
   { id: 'crewSellMult', base: 0.5, min: 0, max: 1, label: 'Crew sell value', format: 'mult' },

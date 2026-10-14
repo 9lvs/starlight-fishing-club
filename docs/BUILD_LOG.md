@@ -102,3 +102,9 @@
 ## v0.5.2: Coins stay visible behind panels
 - Changed: the dimmed backdrop behind every panel (Upgrades, Daily Catch, Club gift, Creel, and the rest) now starts below the coin bar, and panels sit below it, so coins and gems stay clear while you shop. Playtest feedback.
 - Verified: every panel at 320x568, 390x844, and 1280x720.
+
+## v0.6.0: Bigger boats, crew bunks, and fish that fight
+- Built: boats grow with each tier (32 to 76 px long), toward the stern so the fisher, rod, and bobber never move. Hired crew stand on deck, a rack shows the rods you owned before, and crates show creel space. Tier 7 and up have a cabin, tier 9 and up a second mast. Crew are listed for the world scene in `deckState` (`core/sceneState.ts`).
+- Changed: crew need a bunk on the boat as well as a contract (Hire Help). The Painted Rowboat, Keelboat, and Glowshell Barge each add a bunk (`crewBunks`), so the first helper still comes in the first run. The crew panel says which of the two is missing. Crew hired before this update stay.
+- Built: rare fish fight back after the hook (`FIGHT` in `config/tuning.ts`). Rare: tap 2 dips, epic: 3, legendary: 3 and then hold until a ring fills. A tap before a dip, or a dip left alone, counts as missed; how the fight goes scales the slip chance from x0.5 (clean) to x1.3 (all missed). A clean fight pays +25% of the fish's value, shown on the catch card, and the journal marks the fish with a gold corner and a count. Easy reel in Settings lands rare fish with one tap. A one-time tip explains the first fight.
+- Verified: 139 tests, typecheck, and build pass. Journey simulation: about 5.9 hours. In the browser: a legendary fight from bite to a clean landing ("Perfect and clean!" on the card), and all ten boats with crew on a 320 px phone.

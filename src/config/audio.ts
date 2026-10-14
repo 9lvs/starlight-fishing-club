@@ -107,6 +107,7 @@ export const SOUNDS: Record<string, SoundDef> = {
     tone: { notes: [G5, E5, C5], wave: 'sine', noteMs: 90, gapMs: 30, gain: 0.04, slide: 0.95 },
     toneDelayMs: 150,
   },
+  tug: { volume: 0.5, noise: { filter: 'lowpass', hz: 700, ms: 110, gain: 0.06 }, tone: { notes: [G4, C5], wave: 'triangle', noteMs: 60, gapMs: 15, gain: 0.05 } },
   quick: { volume: 0.45, tone: { notes: [E5, G5, C6], wave: 'sine', noteMs: 45, gapMs: 10, gain: 0.05 } },
   miss: { volume: 0.4, tone: { notes: [E5, C5], wave: 'sine', noteMs: 120, gapMs: 40, gain: 0.04, slide: 0.94 } },
   keep: {

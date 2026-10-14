@@ -11,6 +11,8 @@ export interface SettingsSlice {
   volume: number;
   musicVolume: number;
   reducedMotion: MotionPref;
+  /** Rare fish land with one tap instead of a short fight. */
+  easyReel?: boolean;
 }
 
 export const settingsSlice: SaveSliceDef<SettingsSlice> = {
@@ -34,4 +36,5 @@ export function applySettings(ctx: GameContext, s: SettingsSlice): void {
   ctx.bus.emit('settingsChanged', { key: 'volume', value: s.volume });
   ctx.bus.emit('settingsChanged', { key: 'musicVolume', value: s.musicVolume });
   ctx.bus.emit('settingsChanged', { key: 'reducedMotion', value: ctx.flags.reducedMotion });
+  ctx.bus.emit('settingsChanged', { key: 'easyReel', value: s.easyReel === true });
 }

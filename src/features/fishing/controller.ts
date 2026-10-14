@@ -1,7 +1,7 @@
 // Glue between the pure fishing session and the rest of the game: rolls the
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
-import { CATCH, CREEL, FISHING } from '../../config/tuning';
+import { CATCH, CREEL, FIGHT, FISHING } from '../../config/tuning';
 import { bundleBonus, freshness, matchingSets, type SetResult } from '../../systems/economy';
 import { conditionWeight, fishValue, makeCatch, rarityBoosts } from '../../core/catching';
 import { escapeChance, quickBonus } from '../../systems/catchOdds';
@@ -21,16 +21,24 @@ export interface CreelSale {
 
 export type ControllerListener = (e: SessionEvent) => void;
 
+type Plan = { made: { result: CatchResult; pity: number | undefined }; escape: number };
+
 export class FishingController {
   readonly session: FishingSession;
   /** The catch waiting in the popup, if any. */
   pending: CatchResult | null = null;
   /** The fish rolled at cast time, waiting for a bite. */
-  private planned: { made: { result: CatchResult; pity: number | undefined }; escape: number } | null = null;
+  private planned: Plan | null = null;
   /** The last hooked fish that slipped away (for the scene's message). */
   escaped: { result: CatchResult; chance: number } | null = null;
   /** Quick-catch bonus for the fish now landing. */
   quick: { label: string; coins: number } | null = null;
+  /** Bonus for a clean fight with the fish now landing. */
+  clean: { coins: number } | null = null;
+  /** A rare fish on the line, fighting, with what is needed to land it after. */
+  private fighting: { plan: Plan; reactionMs: number; windowMs: number } | null = null;
+  /** Easy reel (Settings): rare fish land with one tap, no fight. */
+  easyReel = false;
   private listeners = new Set<ControllerListener>();
 
   constructor(
@@ -48,7 +56,20 @@ export class FishingController {
       },
       ctx.rng,
       (e) => this.onSession(e),
+      FIGHT,
     );
+  }
+
+  /** Lift a finger or a key (legendary fish need a hold). */
+  release(): void {
+    this.session.release();
+  }
+
+  /** Dips to tap and whether a hold follows, for a fish of this rarity tier. */
+  fightFor(tier: number): { dips: number; hold: boolean } | null {
+    if (this.easyReel || tier < FIGHT.minTier) return null;
+    const dips = FIGHT.dipsByTier[Math.min(tier, FIGHT.dipsByTier.length - 1)] ?? 0;
+    return { dips, hold: tier >= FIGHT.holdMinTier };
   }
 
   onEvent(fn: ControllerListener): () => void {
@@ -74,6 +95,8 @@ export class FishingController {
         this.state.totals.casts++;
         this.escaped = null;
         this.quick = null;
+        this.clean = null;
+        this.fighting = null;
         // Roll now, so the water can hint at a rare fish while you wait.
         this.planned = this.plan(waterId);
         bus.emit('cast', { waterId });
@@ -90,18 +113,29 @@ export class FishingController {
       case 'hooked': {
         const plan = this.planned ?? this.plan(waterId);
         this.planned = null;
-        const result = plan?.made.result ?? null;
-        if (result && this.ctx.rng() < plan!.escape) {
-          // It slipped the hook. The pity counter keeps counting, so luck is never lost.
-          this.escaped = { result, chance: plan!.escape };
-          this.pending = null;
-          this.state.pity += 1;
-        } else {
-          this.pending = result;
-          if (plan?.made.pity !== undefined) this.state.pity = plan.made.pity;
-          const tier = result ? quickBonus(e.reactionMs, e.windowMs, CATCH.quick, this.ctx.stats.get('quickWindow')) : null;
-          this.quick = tier && result ? { label: tier.label, coins: Math.max(1, Math.round(result.value * tier.bonus)) } : null;
+        // Rare fish fight first; how the fight goes changes the slip chance.
+        const tier = plan ? (this.ctx.registries.rarities.tryGet(plan.made.result.rarityId)?.tier ?? 0) : 0;
+        const fight = plan ? this.fightFor(tier) : null;
+        if (plan && fight) {
+          this.fighting = { plan, reactionMs: e.reactionMs, windowMs: e.windowMs };
+          this.session.startFight(fight.dips, fight.hold);
+          bus.emit('fishFight', { rarityId: plan.made.result.rarityId, dips: fight.dips, hold: fight.hold });
+          break;
         }
+        this.resolveHook(plan, e.reactionMs, e.windowMs, 1);
+        bus.emit('reel', { waterId });
+        break;
+      }
+      case 'fightDone': {
+        const f = this.fighting;
+        this.fighting = null;
+        if (!f) break;
+        // Share of the fight done well: each dip, plus the hold for a legendary.
+        const parts = e.dips + (e.hold ? 1 : 0);
+        const quality = parts > 0 ? (e.hits + (e.hold && e.held ? 1 : 0)) / parts : 1;
+        const mult = FIGHT.escapeMissed + (FIGHT.escapeClean - FIGHT.escapeMissed) * quality;
+        this.resolveHook(f.plan, f.reactionMs, f.windowMs, mult);
+        if (this.pending && quality >= 1) this.clean = { coins: Math.max(1, Math.round(this.pending.value * FIGHT.cleanBonus)) };
         bus.emit('reel', { waterId });
         break;
       }
@@ -112,8 +146,11 @@ export class FishingController {
             this.ctx.wallet.add(this.pending.currency, this.quick.coins);
             bus.emit('quickCatch', this.quick);
           }
+          if (this.clean) this.ctx.wallet.add(this.pending.currency, this.clean.coins);
           // Listeners (like the journal) may annotate pending.flags before the popup shows.
           bus.emit('catchLanded', { catch: this.pending, source: 'hand' });
+          // After catchLanded, so the journal already has this fish to mark.
+          if (this.clean) bus.emit('cleanLanding', { fishId: this.pending.fishId, coins: this.clean.coins });
         } else {
           if (this.escaped) {
             const c = this.escaped.result;
@@ -126,8 +163,25 @@ export class FishingController {
     this.listeners.forEach((fn) => fn(e));
   }
 
+  /** Did the hooked fish slip? If not, it is pending, with its quick-catch bonus. */
+  private resolveHook(plan: Plan | null, reactionMs: number, windowMs: number, escapeMult: number): void {
+    const result = plan?.made.result ?? null;
+    const escape = plan ? Math.min(1, plan.escape * escapeMult) : 0;
+    if (result && this.ctx.rng() < escape) {
+      // It slipped the hook. The pity counter keeps counting, so luck is never lost.
+      this.escaped = { result, chance: escape };
+      this.pending = null;
+      this.state.pity += 1;
+      return;
+    }
+    this.pending = result;
+    if (plan?.made.pity !== undefined) this.state.pity = plan.made.pity;
+    const tier = result ? quickBonus(reactionMs, windowMs, CATCH.quick, this.ctx.stats.get('quickWindow')) : null;
+    this.quick = tier && result ? { label: tier.label, coins: Math.max(1, Math.round(result.value * tier.bonus)) } : null;
+  }
+
   /** Roll the next fish with everything the player has: luck, lures, bait. */
-  private plan(waterId: string): { made: { result: CatchResult; pity: number | undefined }; escape: number } | null {
+  private plan(waterId: string): Plan | null {
     const made = makeCatch(this.ctx, {
       waterId,
       luck: this.ctx.stats.get('luck'),

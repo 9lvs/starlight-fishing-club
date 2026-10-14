@@ -13,6 +13,8 @@ import { readContentFiles } from './helpers/content';
 function boot() {
   const ctx = bootstrap({ features: [], loadContent: () => parseContent(readContentFiles()), storage: new MemoryStorage(), debug: false }).ctx!;
   const ctl = new FishingController(ctx, fishingSlice.defaults());
+  // These tests are about the hook itself; the fight has its own tests (fight.test.ts).
+  ctl.easyReel = true;
   return { ctx, ctl };
 }
 

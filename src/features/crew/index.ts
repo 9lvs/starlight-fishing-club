@@ -52,7 +52,10 @@ export const crewFeature: GameFeature = {
       run: (ctx, a) => {
         const svc = getCrewService();
         const t = ctx.registries.crewTypes.get(String(a.type));
-        if (svc.freeSlots === 0) ctx.stats.setSource('debug:crew', [{ stat: 'crewSlots', op: 'add', value: ctx.registries.crewTypes.size }]);
+        if (svc.freeSlots === 0) ctx.stats.setSource('debug:crew', [
+          { stat: 'crewSlots', op: 'add', value: ctx.registries.crewTypes.size },
+          { stat: 'crewBunks', op: 'add', value: ctx.registries.crewTypes.size },
+        ]);
         ctx.wallet.add(t.currency ?? ECONOMY.defaultCurrency, t.hireCost);
         return svc.hire(t.id) ? `Hired ${t.name}` : `Could not hire ${t.name}`;
       },
@@ -62,7 +65,10 @@ export const crewFeature: GameFeature = {
       label: 'Hire every helper',
       run: (ctx) => {
         const svc = getCrewService();
-        ctx.stats.setSource('debug:crew', [{ stat: 'crewSlots', op: 'add', value: ctx.registries.crewTypes.size }]);
+        ctx.stats.setSource('debug:crew', [
+          { stat: 'crewSlots', op: 'add', value: ctx.registries.crewTypes.size },
+          { stat: 'crewBunks', op: 'add', value: ctx.registries.crewTypes.size },
+        ]);
         for (const t of ctx.registries.crewTypes.list()) {
           ctx.wallet.add(t.currency ?? ECONOMY.defaultCurrency, t.hireCost);
           svc.hire(t.id);

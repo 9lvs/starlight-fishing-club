@@ -99,6 +99,14 @@ Base values; upgrades and features change them only through modifiers.
   capped at `max`), plus the `gemChance` stat. The exchange costs `tradeCoins` (1,000) times
   `1 + clubBonus`, so 3,000 at Whisper River and 25,000 at Sky Lake. Club items cost 2 to 25 gems.
 
+## Fights and crew bunks
+
+- `FIGHT` in `config/tuning.ts`: `dipsByTier` (rare 2, epic 3, legendary 3), `holdMinTier` (legendary),
+  `dipMs` (900, the window to tap), `gapMinMs`/`gapMaxMs`, `graceMs`, `holdMs`, `holdMaxMs`,
+  `escapeClean` (x0.5) and `escapeMissed` (x1.3) on the slip chance, `cleanBonus` (+25%).
+- Crew hiring is limited by `min(crewSlots, crewBunks)`: Hire Help gives slots, boat tiers 2, 5,
+  and 8 give bunks. Boat lengths are `BOAT_WIDTHS` in `art/spriteManifest.ts`.
+
 ## Sound: `src/config/audio.ts`
 
 - `AUDIO.musicLevel`, `musicDefault`, `bedLevel`, and the `limiter` set the mix. `MUSIC.gain` per voice.

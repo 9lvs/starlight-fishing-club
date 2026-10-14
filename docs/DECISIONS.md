@@ -60,3 +60,6 @@ One line per decision, with the reason. Newest at the bottom.
 - Each water's sound and music are data (`sound` in `waters.json`); the night music box stays at every water so nights stay quiet.
 - Crew base catch time is 30 s (was 12 s). 40 s pushed the journey past 6 hours because crew also sell while you play, so 30 s is the compromise.
 - Fog is drawn as solid mist banks at partial opacity. Dithered full-screen fog read as a rendering bug.
+- Boats are longer at each tier and carry the crew (owner's request); a boat's bunks cap how many crew can be hired, alongside Hire Help contracts. Bunks come at tiers 2, 5, and 8 so the first helper still arrives in the first run.
+- Rare fish fight (owner's pick: a mix by rarity). A bad fight only raises the slip chance, it never loses the fish outright, and Easy reel turns fights off. A tap during the 280 ms after the hook or a dip is ignored so a double tap is not a fumble.
+- Next for boats (owner's idea): boat styles and upgrades that change with each water, like the per-water sound and music.

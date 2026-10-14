@@ -112,7 +112,9 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 131 unit tests.
+upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 139 unit tests.
+v0.6.0 adds bigger boats with crew on deck, crew bunks from boat tiers, and rare fish that fight
+(tap the dips, hold for a legendary, Easy reel in Settings).
 v0.5.2 keeps the coin bar clear of panel backdrops. v0.5.1 slows the crew (30 s), softens the fog, and shortens the empty creel text. v0.5.0 adds creel freshness, matching set bonuses, crew that fill the creel while you are away,
 gems (finds, the exchange, gem-only looks: outfits and clubhouse decorations), and a sound bed and
 music key for each water.

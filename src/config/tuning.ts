@@ -15,6 +15,34 @@ export const VOYAGE = {
   quick: { sailOutMs: 450, coverMs: 220, chartMs: 0, holdMs: 0, revealMs: 420, sailInMs: 800, titleMs: 1100 },
 };
 
+/**
+ * Rare fish fight back after the hook: the bobber dips and you tap each dip;
+ * a legendary also needs a short hold at the end. A good fight lowers the
+ * slip chance and a clean one pays a bonus. A poor fight never loses the
+ * fish by itself, it only raises the slip chance a little.
+ */
+export const FIGHT = {
+  /** Lowest rarity tier that fights (2 = rare). */
+  minTier: 2,
+  /** Dips by rarity tier: rare 2, epic 3, legendary 3. */
+  dipsByTier: [0, 0, 2, 3, 3],
+  /** Tiers that end with a hold (legendary). */
+  holdMinTier: 4,
+  dipMs: 900,
+  gapMinMs: 600,
+  gapMaxMs: 1100,
+  /** Taps this soon after the hook or a dip are ignored, so a double tap is not a fumble. */
+  graceMs: 280,
+  holdMs: 1400,
+  /** The hold ends on its own after this long (counted as not quite clean). */
+  holdMaxMs: 7000,
+  /** Slip chance multiplier: a clean fight halves it, a fight with every dip missed raises it. */
+  escapeClean: 0.5,
+  escapeMissed: 1.3,
+  /** A clean fight pays this share of the fish's value. */
+  cleanBonus: 0.25,
+};
+
 export const FISHING = {
   castAnimMs: 650,
   waitMinMs: 2000,

@@ -4,7 +4,7 @@ import Phaser from 'phaser';
 import { getContext, type GameContext } from '../../core/context';
 import { getLayout, type Layout } from '../../core/layout';
 import { uiState, worldAnchors } from '../../core/sceneState';
-import { CREEL, FISHING } from '../../config/tuning';
+import { CREEL, FIGHT, FISHING } from '../../config/tuning';
 import { MOTION, color, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
 import { drawPixelEllipse, drawSaggingLine } from '../../ui/pixelDraw';
@@ -32,6 +32,7 @@ const LABELS: Record<string, string> = {
   casting: '...',
   waiting: 'Waiting',
   bite: 'Reel in!',
+  fight: 'Tap the dips!',
   reeling: 'Reeling',
   landed: '',
 };
@@ -49,6 +50,10 @@ export class FishingScene extends Phaser.Scene {
   private castButton!: Button;
   private creelButton!: Button;
   private jumper: Phaser.GameObjects.Image | null = null;
+  /** The fight's marks above the bobber: one per dip, then the hold for a legendary. */
+  private fightMarks: ('todo' | 'hit' | 'miss')[] = [];
+  private fightHold = false;
+  private fightGfx!: Phaser.GameObjects.Graphics;
   private ripples: Ripple[] = [];
   private popup: CatchPopup | null = null;
   private popupHandlers: CatchPopupHandlers | null = null;
@@ -72,6 +77,8 @@ export class FishingScene extends Phaser.Scene {
     zone.on('pointerdown', () => this.tap());
 
     this.glow = this.add.graphics();
+    this.fightGfx = this.add.graphics().setDepth(5);
+    this.fightMarks = [];
     this.line = this.add.graphics();
     this.fx = this.add.graphics();
     this.bobber = this.add.sprite(bobber.x, bobber.y, 'bobber', 0).setOrigin(0.5, 0.5).setVisible(false);
@@ -107,6 +114,10 @@ export class FishingScene extends Phaser.Scene {
     kb?.on('keydown-SPACE', () => this.keyTap());
     kb?.on('keydown-ENTER', () => this.keyTap());
     kb?.on('keydown-K', () => this.popup && this.popupHandlers && this.popup.trigger('keep', this.popupHandlers));
+    // Letting go matters while holding a legendary.
+    this.input.on('pointerup', () => this.ctl.release());
+    kb?.on('keyup-SPACE', () => this.ctl.release());
+    kb?.on('keyup-ENTER', () => this.ctl.release());
 
     this.offs.push(
       this.ctl.onEvent((e) => this.onSession(e)),
@@ -169,6 +180,43 @@ export class FishingScene extends Phaser.Scene {
         this.say('It swam away. No worries!', 'sky');
         break;
       case 'hooked':
+        this.clearBite();
+        // A rare fish fights first; the reel-in comes when the fight ends.
+        if (this.ctl.session.phase === 'fight') break;
+        if (this.ctl.escaped) this.slipAway();
+        else this.reelIn();
+        break;
+      case 'fightStart':
+        this.fightMarks = Array.from({ length: e.dips }, () => 'todo' as const);
+        this.fightHold = e.hold;
+        this.bobber.setVisible(true).setFrame(0);
+        this.say(e.hold ? 'A legendary! Tap each dip, then hold.' : 'It is fighting! Tap each time it dips.', 'gold');
+        this.ctx.bus.emit('audio:play', { key: 'tug' });
+        break;
+      case 'dip':
+        this.bobber.setFrame(1);
+        this.cue.setVisible(true).setPosition(bobber.x, bobber.y - 18);
+        this.addRipple(bobber.x, bobber.y + 2, 16, 700, 'gold');
+        this.ctx.bus.emit('audio:play', { key: 'bite', volume: 0.8 });
+        break;
+      case 'dipHit':
+        this.clearBite();
+        this.fightMarks[e.index] = 'hit';
+        this.addRipple(bobber.x, bobber.y + 2, 12, 600, 'mist');
+        this.ctx.bus.emit('audio:play', { key: 'tug' });
+        break;
+      case 'dipMiss':
+        this.clearBite();
+        this.fightMarks[e.index] = 'miss';
+        this.addRipple(bobber.x, bobber.y + 2, 8, 600, 'sky');
+        this.say(e.fumble ? 'Too soon! Wait for the dip.' : 'It pulled free a little. Keep going!', 'sky');
+        break;
+      case 'hold':
+        this.say('Hold to reel it in!', 'gold');
+        break;
+      case 'fightDone':
+        this.fightMarks = [];
+        this.fightGfx.clear();
         this.clearBite();
         if (this.ctl.escaped) this.slipAway();
         else this.reelIn();
@@ -289,10 +337,19 @@ export class FishingScene extends Phaser.Scene {
       : `${article} ${name} fish slipped away. Next time!`;
   }
 
-  /** "+6 Perfect catch!" rises from the boat. */
-  private floatQuick(label: string, coins: number): void {
+  /** The bonus line on the catch card: quick catch, clean fight, or both together. */
+  private bonusLine(): string | undefined {
+    const q = this.ctl.quick;
+    const c = this.ctl.clean;
+    if (q && c) return `${q.label.replace(' catch!', '')} and clean! +${q.coins + c.coins}`;
+    if (c) return `Clean landing! +${c.coins}`;
+    return q ? `${q.label} +${q.coins}` : undefined;
+  }
+
+  /** "+6 Perfect catch!" rises from the boat (`lift` stacks a second one above). */
+  private floatQuick(label: string, coins: number, lift = 0): void {
     const { boat } = this.L;
-    const t = addText(this, boat.x + 4, boat.y - 34, `+${coins} ${label}`, { color: 'gold', originX: 0.5, outline: 'ink' }).setDepth(50);
+    const t = addText(this, boat.x + 4, boat.y - 34 - lift, `+${coins} ${label}`, { color: 'gold', originX: 0.5, outline: 'ink' }).setDepth(50);
     if (uiSignals.reducedMotion()) {
       this.time.delayedCall(1400, () => t.destroy());
       return;
@@ -306,7 +363,7 @@ export class FishingScene extends Phaser.Scene {
     uiState.modal = true;
     const full = this.ctl.creelFull;
     const handlers: CatchPopupHandlers = {
-      quick: this.ctl.quick ? `${this.ctl.quick.label} +${this.ctl.quick.coins}` : undefined,
+      quick: this.bonusLine(),
       canKeep: !full,
       hint: full
         ? 'Creel full! Open it to sell everything with a bundle bonus.'
@@ -335,11 +392,54 @@ export class FishingScene extends Phaser.Scene {
     this.refreshButtons();
   }
 
+  /** The bobber tugs during the fight; marks above it show each dip, and a ring fills while you hold. */
+  private updateFight(reduced: boolean): void {
+    const { bobber } = this.L;
+    const f = this.ctl.session.fight;
+    const g = this.fightGfx;
+    g.clear();
+    if (!f) return;
+    // The bobber dips hard during a dip, and twitches between them.
+    const dy = f.stage === 'dip' ? FISHING.biteDipPx + 1 : reduced ? 0 : Math.round(Math.sin(this.elapsed / 90)) ;
+    const dx = f.stage === 'hold' && !reduced ? Math.round(Math.sin(this.elapsed / 60)) : 0;
+    this.bobber.setPosition(bobber.x + dx, bobber.y + dy);
+    // Marks: one square per dip, then a ring for the hold.
+    const n = this.fightMarks.length + (this.fightHold ? 1 : 0);
+    const left = Math.round(bobber.x - (n * 6 - 2) / 2);
+    const y = bobber.y - 30;
+    this.fightMarks.forEach((m, i) => {
+      const c = m === 'hit' ? 'sage' : m === 'miss' ? 'coral' : i === f.index ? 'gold' : 'dusk';
+      g.fillStyle(color('ink'), 0.8);
+      g.fillRect(left + i * 6 - 1, y - 1, 6, 6);
+      g.fillStyle(color(c));
+      g.fillRect(left + i * 6, y, 4, 4);
+    });
+    if (this.fightHold) {
+      const hx = left + this.fightMarks.length * 6;
+      g.fillStyle(color('ink'), 0.8);
+      g.fillRect(hx - 1, y - 1, 6, 6);
+      g.fillStyle(color(f.stage === 'hold' ? 'gold' : 'dusk'));
+      g.fillRect(hx, y, 4, 4);
+    }
+    if (f.stage === 'hold') {
+      // A ring around the bobber fills as you hold.
+      const p = Math.min(1, f.heldMs / FIGHT.holdMs);
+      const steps = 16;
+      for (let i = 0; i < steps; i++) {
+        const a = -Math.PI / 2 + (i / steps) * Math.PI * 2;
+        g.fillStyle(color(i / steps < p ? 'gold' : 'dusk'), i / steps < p ? 1 : 0.6);
+        g.fillRect(Math.round(bobber.x + Math.cos(a) * 9) - 1, Math.round(bobber.y - 2 + Math.sin(a) * 6), 2, 1);
+      }
+    }
+    if (Math.floor(this.elapsed / 250) !== Math.floor((this.elapsed - 16) / 250)) this.refreshButtons();
+  }
+
   private refreshButtons(): void {
     const phase = this.ctl.session.phase;
     this.castButton.setVisible(phase !== 'landed');
-    this.castButton.setLabel(LABELS[phase] ?? 'Cast');
-    this.castButton.setHighlighted(phase === 'bite');
+    const holding = phase === 'fight' && this.ctl.session.fight?.stage === 'hold';
+    this.castButton.setLabel(holding ? 'Hold!' : (LABELS[phase] ?? 'Cast'));
+    this.castButton.setHighlighted(phase === 'bite' || phase === 'fight');
     this.castButton.setDisabled(phase === 'casting' || phase === 'reeling');
     const cap = this.ctx.stats.get('storageCap');
     this.creelButton.setLabel(`${this.ctl.state.creel.length}/${cap}`);
@@ -404,12 +504,14 @@ export class FishingScene extends Phaser.Scene {
       if (Math.floor(this.elapsed / 450) !== Math.floor((this.elapsed - delta) / 450)) {
         this.addRipple(bobber.x, bobber.y + 2, 16, 800, 'gold');
       }
+    } else if (phase === 'fight') {
+      this.updateFight(reduced);
     }
 
     // Line from rod tip to bobber.
     this.line.clear();
     if (this.bobber.visible) {
-      const sag = phase === 'bite' ? 2 : 6;
+      const sag = phase === 'bite' || phase === 'fight' ? 1 : 6;
       drawSaggingLine(this.line, worldAnchors.rodTip.x, worldAnchors.rodTip.y, this.bobber.x, this.bobber.y - 3, sag, 'mist');
     } else if (this.jumper) {
       drawSaggingLine(this.line, worldAnchors.rodTip.x, worldAnchors.rodTip.y, this.jumper.x, this.jumper.y, 1, 'mist');

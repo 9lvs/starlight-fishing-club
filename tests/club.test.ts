@@ -47,6 +47,21 @@ function buy(g: ReturnType<typeof boot>, id: string): boolean {
   return g.upgrades.buy(id);
 }
 
+describe('crew bunks', () => {
+  it('a helper needs both a crew contract and a bunk on the boat', () => {
+    const g = boot();
+    expect(buy(g, 'hire_help')).toBe(true);
+    expect(buy(g, 'boat_1')).toBe(true);
+    g.ctx.wallet.add('coins', 1000);
+    expect(g.crew.slots).toBe(0);
+    expect(g.crew.hire('deckhand')).toBe(false);
+    // The Painted Rowboat has the first bunk.
+    expect(buy(g, 'boat_2')).toBe(true);
+    expect(g.crew.slots).toBe(1);
+    expect(g.crew.hire('deckhand')).toBe(true);
+  });
+});
+
 describe('rod and boat tiers', () => {
   it('higher tiers stay locked until the club reaches a bigger water', () => {
     const g = boot();

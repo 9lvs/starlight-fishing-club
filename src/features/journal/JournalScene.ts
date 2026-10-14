@@ -65,6 +65,13 @@ export class JournalScene extends PanelScene<JournalData> {
       const g = this.add.graphics();
       drawPanelBox(g, x, y, CELL, CELL, { fill: 'ink', border: entry ? rarity.frame : 'midnight' });
       if (entry) drawRarityShape(g, x + CELL - 9, y + 2, rarity.shape, rarity.color);
+      // A gold corner marks a fish you have landed with a clean fight.
+      if (entry?.clean) {
+        g.fillStyle(color('gold'));
+        g.fillRect(x + 2, y + CELL - 4, 2, 2);
+        g.fillRect(x + 2, y + CELL - 6, 1, 2);
+        g.fillRect(x + 4, y + CELL - 4, 2, 1);
+      }
       scroll.add(g);
       const img = this.add.image(x + CELL / 2, y + CELL / 2 + 1, f.spriteKey);
       if (!entry) img.setTintFill(color('midnight'));
@@ -106,6 +113,7 @@ export class JournalScene extends PanelScene<JournalData> {
       lines.push(f.description, '');
       lines.push(`Caught: ${entry.count}`);
       lines.push(`Best size: ${entry.bestSize} cm`);
+      if (entry.clean) lines.push(`Clean landings: ${entry.clean}`);
       lines.push(`First caught: ${new Date(entry.firstCaught).toLocaleDateString()}`);
     } else {
       lines.push('Not caught yet.', '');

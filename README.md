@@ -9,7 +9,9 @@ with a visible upgrade tree, and hire a crew who keep fishing while you are away
 - Ten rod tiers, ten boat tiers, and six baits; bigger waters unlock the higher tiers.
 - Move the club to the next water for a fresh start and a bigger coin bonus, all the way to Sky Lake.
 - A Daily Catch: one shared fish a day, and your first five catches make a luck score to share.
-- Rarer fish glow in the water, fight harder, and can slip away: rods, boats, and bait add Tackle.
+- Rarer fish glow in the water and fight back: tap each dip (and hold for a legendary) for a clean
+  landing bonus. Rods, boats, and bait add Tackle so fewer slip away. Easy reel makes it one tap.
+- Every boat upgrade makes the boat bigger, with bunks for crew who stand on deck beside you.
 - Reel in fast for a quick-catch bonus. Wind, storms, rain, fog, and night each bring their own fish.
 - Calm composed music that follows the time of day, and a soft sound for every action.
 - Gentle tips for new players. Keep fish in your creel for bundle and matching set bonuses

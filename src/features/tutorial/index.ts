@@ -24,6 +24,7 @@ export const tutorialFeature: GameFeature = {
     bus.on('fishKept', () => svc.queue('creel'));
     bus.on('fishEscaped', () => svc.queue('tackle'));
     // These two only make sense in the moment, so they wait until the guide is done.
+    bus.on('fishFight', () => svc.queue('fight'));
     bus.on('rareNearby', () => {
       if (svc.guideDone) svc.queue('glow');
     });
@@ -35,7 +36,7 @@ export const tutorialFeature: GameFeature = {
       if (currency === 'gems' && delta > 0) svc.queue('gems');
     });
     bus.on('statsChanged', ({ stats }) => {
-      if (stats.includes('crewSlots') && ctx.stats.get('crewSlots') > 0) svc.queue('crew');
+      if ((stats.includes('crewSlots') || stats.includes('crewBunks')) && Math.min(ctx.stats.get('crewSlots'), ctx.stats.get('crewBunks')) > 0) svc.queue('crew');
     });
     bus.on('ui:openPanel', ({ sceneKey }) => svc.onPanelOpened(sceneKey));
     bus.on('help:replay', () => svc.replay());

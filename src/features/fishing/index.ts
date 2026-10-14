@@ -18,6 +18,9 @@ export const fishingFeature: GameFeature = {
     ctx.bus.on('clubMoved', () => ctl.resetForMove());
     // Crew catches from time away go into the creel (see crew/service.ts).
     ctx.bus.on('creelRoom', (q) => (q.room = ctl.creelRoom));
+    ctx.bus.on('settingsChanged', ({ key, value }) => {
+      if (key === 'easyReel') ctl.easyReel = value === true;
+    });
     ctx.bus.on('creelDeposit', (d) => (d.accepted = ctl.addToCreel(d.items)));
   },
   onTick(dt) {

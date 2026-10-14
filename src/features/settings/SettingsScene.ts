@@ -93,6 +93,21 @@ export class SettingsScene extends PanelScene {
         this.changed();
       },
     });
+    y += ROW;
+
+    // Rare fish fight back (tap the dips); Easy reel lands them with one tap.
+    label('Easy reel');
+    new Button(this, {
+      x: right - 70,
+      y,
+      w: 70,
+      label: s.easyReel ? 'On' : 'Off',
+      icon: 'icon_rod',
+      onClick: () => {
+        s.easyReel = !s.easyReel;
+        this.changed();
+      },
+    });
     y += ROW + 6;
 
     addText(this, x, y, 'Your save', { color: 'gold' });

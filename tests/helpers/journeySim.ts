@@ -67,7 +67,7 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
   const setClubBonus = () =>
     stats.setSource('club', [{ stat: 'sellValueMult', op: 'mult', value: 1 + waters[rank]!.clubBonus, priority: 10 }]);
   setClubBonus();
-  const crewOnly = (u: UpgradeDef) => u.modifiers.every((m) => m.stat.startsWith('crew') && m.stat !== 'crewSlots');
+  const crewOnly = (u: UpgradeDef) => u.modifiers.every((m) => m.stat.startsWith('crew') && m.stat !== 'crewSlots' && m.stat !== 'crewBunks');
   const open = (u: UpgradeDef) =>
     !keep.has(u.branch) &&
     !u.modifiers.every((m) => AWAY_ONLY.has(m.stat)) &&
@@ -124,7 +124,7 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
       const nextBoat = candidates.filter((u) => u.branch === 'boats' && u.id.startsWith('boat_')).sort((a, b) => cost(a) - cost(b))[0];
       const goal = nextBoat ?? candidates.filter((u) => TOP_TIERS.some((id) => u.id.split('_')[0] === id.split('_')[0])).sort((a, b) => cost(a) - cost(b))[0];
       const budget = goal ? cost(goal) * SPEND_SHARE : Infinity;
-      if (crew.length < stats.get('crewSlots')) {
+      if (crew.length < Math.min(stats.get('crewSlots'), stats.get('crewBunks'))) {
         const h = helpers.find((x) => !crew.includes(x.id));
         if (h && coins >= h.hireCost && h.hireCost <= budget) {
           coins -= h.hireCost;

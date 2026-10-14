@@ -21,6 +21,10 @@ export const journalFeature: GameFeature = {
         ctx.ui.toast(`New in the journal: ${name}`, { icon: 'icon_journal' });
       }
     });
+    ctx.bus.on('cleanLanding', ({ fishId }) => {
+      const e = slice.entries[fishId];
+      if (e) e.clean = (e.clean ?? 0) + 1;
+    });
     // Offline crew catches arrive as one batch per fish type.
     ctx.bus.on('catchesBatched', ({ entries, at }) => {
       for (const e of entries) {

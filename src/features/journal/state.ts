@@ -6,6 +6,8 @@ export interface JournalEntry {
   bestSize: number;
   firstCaught: number;
   lastCaught: number;
+  /** Times landed with a clean fight (every dip tapped). Rare fish and up. */
+  clean?: number;
 }
 
 export interface JournalSlice {

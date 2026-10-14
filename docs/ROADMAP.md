@@ -12,6 +12,7 @@ Ideas the architecture is ready for. None are built yet; each note says where it
 | Daily rewards beyond the gift | Built (daily gift, Daily Catch) | `dailyCatch` feature: one shared fish a day with a share grid. A board of fewest casts would need a small backend. |
 | Translations (Spanish first) | Not built | Move UI strings to a strings file per language; content names could come from a pack per language. |
 | Share card image of a big catch | Not built | Render the catch card to a canvas and use the Web Share API with a file. |
+| Water-specific boats | Idea | Boat styles and upgrades that change with each water, like the per-water sound and music. |
 | Moving the club (prestige) | Built | Six waters; each move resets coins, gear, and crew for a bigger permanent coin bonus (`core/club.ts`, `clubBonus` in `waters.json`). |
 | More waters after Sky Lake | Ready | Add a water with `rangeRequired: 5`, fish, a reach boat at `requiresRank: 4`, and higher tiers at `requiresRank: 5`. |
 | Boat paint and other cosmetic choices | Not built | Club branch items are kept across moves; a paint would be a `look` effect on a new slot. |

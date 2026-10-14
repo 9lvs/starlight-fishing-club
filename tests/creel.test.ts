@@ -80,7 +80,10 @@ function boot() {
   const res = bootstrap({ features, loadContent: () => parseContent(readContentFiles()), storage: new MemoryStorage(), debug: false });
   expect(res.errors).toEqual([]);
   const ctx = res.ctx!;
-  ctx.stats.setSource('test', [{ stat: 'crewSlots', op: 'add', value: 1 }]);
+  ctx.stats.setSource('test', [
+    { stat: 'crewSlots', op: 'add', value: 1 },
+    { stat: 'crewBunks', op: 'add', value: 1 },
+  ]);
   crew.slice.members.push({ id: 'c1', typeId: ctx.registries.crewTypes.list()[0]!.id, waterId: 'pond', progressMs: 0, catches: 0, earned: 0 });
   return { ctx, fishing, crew };
 }

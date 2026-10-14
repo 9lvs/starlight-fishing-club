@@ -77,6 +77,13 @@ export const TIPS: Record<string, TipDef> = {
     dismissable: false,
     autoHideMs: 7000,
   },
+  fight: {
+    id: 'fight',
+    text: 'Rare fish fight back! Tap when the bobber dips. A clean fight pays more. Easy reel in Settings makes it one tap.',
+    anchor: { kind: 'bobber' },
+    dismissable: false,
+    autoHideMs: 7000,
+  },
   weather: {
     id: 'weather',
     text: 'The weather changed! Some fish only bite in wind, rain, storms, or fog. Check the Journal.',

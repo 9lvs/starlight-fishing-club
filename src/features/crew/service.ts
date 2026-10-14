@@ -37,7 +37,8 @@ export class CrewService {
   }
 
   get slots(): number {
-    return this.ctx.stats.get('crewSlots');
+    // You need a crew contract (Hire Help) and a bunk on your boat for each helper.
+    return Math.min(this.ctx.stats.get('crewSlots'), this.ctx.stats.get('crewBunks'));
   }
 
   get freeSlots(): number {

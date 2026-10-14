@@ -15,6 +15,10 @@ export interface GameEvents {
   catchLanded: { catch: CatchResult; source: 'hand' | 'crew'; crewId?: string };
   fishSold: { fishId: string; value: number; currency: string; source: 'hand' | 'crew' | 'creel' };
   fishKept: { catch: CatchResult };
+  /** A rare fish is fighting: tap the dips (and hold at the end for a legendary). */
+  fishFight: { rarityId: string; dips: number; hold: boolean };
+  /** A fight won cleanly: every dip tapped (and the hold done). */
+  cleanLanding: { fishId: string; coins: number };
   /** The creel sold together and made matching sets (3, 5, or 10 of a rarity). */
   creelSetsSold: { sets: { rarityId: string; size: number; bonus: number }[] };
   /** A hooked fish slipped away (rarer fish, or not enough tackle). Nothing is lost. */

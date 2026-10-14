@@ -26,7 +26,7 @@ export class CrewScene extends PanelScene {
     const svc = getCrewService();
     const r = this.ctx.registries;
     this.bars = [];
-    addText(this, area.x, area.y, `Crew slots: ${svc.slice.members.length} of ${svc.slots}`, { color: 'mist', shadow: false });
+    addText(this, area.x, area.y, `Crew: ${svc.slice.members.length} of ${svc.slots} (bunks ${this.ctx.stats.get('crewBunks')})`, { color: 'mist', shadow: false });
     addText(this, area.x, area.y + 12, `Sell at ${Math.round(this.ctx.stats.get('crewSellMult') * 100)}%. Away, they fill your creel.`, {
       color: 'slate',
       shadow: false,
@@ -67,9 +67,19 @@ export class CrewScene extends PanelScene {
       y += ROW_H;
     }
 
-    if (svc.freeSlots === 0 && svc.slots === 0) {
-      scroll.add(addText(this, 0, y + 4, 'No crew bunks yet. Buy Hire Help in\nthe Crew upgrades to make room.', { color: 'sky', shadow: false }));
-      y += 30;
+    // Say which of the two limits is in the way: contracts (Hire Help) or bunks (the boat).
+    if (svc.freeSlots === 0) {
+      const contracts = this.ctx.stats.get('crewSlots');
+      const bunks = this.ctx.stats.get('crewBunks');
+      const why =
+        bunks <= contracts
+          ? bunks === 0
+            ? 'Your boat has no crew bunk yet. A bigger boat (Painted Rowboat) has room.'
+            : 'Your boat is full. A bigger boat has more bunks.'
+          : 'Buy Hire Help in the Crew upgrades for another crew contract.';
+      const t = addText(this, 0, y + 4, why, { color: 'sky', shadow: false, maxWidth: area.w - 6 });
+      scroll.add(t);
+      y += t.textHeight + 10;
     }
 
     const hireable = [...r.crewTypes.list()].filter((t) => !svc.isHired(t.id)).sort((a, b) => a.order - b.order);

@@ -73,7 +73,7 @@ export function staticSprites(): SpriteEntry[] {
  * (left), so the fisher, rod, and bobber stay put and the extra deck holds
  * crew, crates, and spare rods.
  */
-export const BOAT_WIDTHS = [32, 34, 38, 42, 48, 52, 58, 62, 68, 72] as const;
+export const BOAT_WIDTHS = [32, 44, 46, 50, 56, 60, 64, 68, 72, 76] as const;
 
 /** Tier from a boat_N or rig_N key (1 for the starter boat). */
 export function boatTier(key: string): number {
