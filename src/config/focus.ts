@@ -19,7 +19,7 @@ export const FOCUSES: readonly Focus[] = [
   { id: 'coins', name: 'More coins', color: 'gold', about: 'Every fish sells for more, and fish grow bigger.', stats: ['sellValueMult', 'fishSizeMult', 'dailyGiftCoins'] },
   { id: 'rare', name: 'Rarer fish', color: 'lavender', about: 'More rare fish bite, and fewer slip the hook.', stats: ['luck', 'tackle', 'escapeMult', 'gemChance', 'boost_'] },
   { id: 'crew', name: 'Crew and away', color: 'sage', about: 'More helpers who fish faster, also while you are away.', stats: ['crewSlots', 'crewBunks', 'crewIntervalMs', 'crewSellMult', 'crewLuck', 'offlineCapHours'] },
-  { id: 'creel', name: 'Creel', color: 'coral', about: 'Room for more kept fish, and they stay fresh longer.', stats: ['storageCap', 'freshDecayMult'] },
+  { id: 'creel', name: 'Creel', color: 'coral', about: 'Room for more kept fish, and they are ready for market sooner.', stats: ['storageCap', 'prepTimeMult'] },
   { id: 'travel', name: 'Reach new water', color: 'mist', about: 'A boat that can sail to the next water.', stats: ['boatRange'] },
 ];
 

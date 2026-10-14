@@ -5,8 +5,8 @@ export interface CreelItem {
   fishId: string;
   size: number;
   at: number;
-  /** Play time spent in the creel, for freshness (time away does not count). */
-  ageMs?: number;
+  /** When it is prepped and can be sold (wall clock). Missing means ready. */
+  readyAt?: number;
   /** Caught by the crew while you were away. */
   crew?: boolean;
 }
@@ -24,10 +24,11 @@ export interface FishingSlice {
  * v1 (Phase 1 prototype) stored the creel as a list of fish ids.
  * v2 stores size and time per kept fish.
  * v3 adds the rested bonus.
+ * v4 swaps freshness for market prep: fish already kept are ready.
  */
 export const fishingSlice: SaveSliceDef<FishingSlice> = {
   key: 'fishing',
-  version: 3,
+  version: 4,
   defaults: () => ({ pity: 0, creel: [], totals: { casts: 0, catches: 0, misses: 0 }, rested: 0, restedMs: 0 }),
   migrate: (old, from) => {
     const o = (old ?? {}) as Record<string, unknown>;
@@ -43,6 +44,7 @@ export const fishingSlice: SaveSliceDef<FishingSlice> = {
       };
     }
     if (from < 3) s = { ...s, rested: 0, restedMs: 0 };
+    if (from < 4) s = { ...s, creel: s.creel.map(({ fishId, size, at, crew }) => ({ fishId, size, at, ...(crew ? { crew } : {}) })) };
     return s;
   },
 };

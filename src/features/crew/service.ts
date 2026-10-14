@@ -131,7 +131,7 @@ export class CrewService {
       lines.push(`${this.type(m)?.name ?? m.typeId} caught ${formatNumber(res.rolls)} fish`);
     }
     if (filledAfter !== null) lines.push(`Your creel filled up after ${formatDuration(filledAfter)}. A bigger boat holds more.`);
-    if (kept.length > 0) lines.push('They are fresh now. Sell them soon for the best price.');
+    if (kept.length > 0) lines.push('They prepped them too, so they are ready to sell.');
 
     const counts: Record<string, number> = {};
     for (const k of kept) counts[k.fishId] = (counts[k.fishId] ?? 0) + 1;

@@ -1,4 +1,5 @@
-// The creel: fish you chose to keep. Sell one or all at today's prices.
+// The creel: fish you chose to keep. Each is prepped for market first, then
+// sells at today's prices, together for the bundle bonus and matching sets.
 import { ECONOMY } from '../../config/balance';
 import { CREEL } from '../../config/tuning';
 import type { Rect } from '../../core/layout';
@@ -7,12 +8,13 @@ import { Button } from '../../ui/Button';
 import { drawPanelBox } from '../../ui/pixelDraw';
 import { ScrollArea } from '../../ui/ScrollArea';
 import { addText } from '../../ui/text';
-import { formatNumber } from '../../ui/format';
+import { formatCountdown, formatNumber } from '../../ui/format';
+import { ProgressBar } from '../../ui/ProgressBar';
 import { getFishingController } from './controller';
 
 const ROW_H = 22;
-/** Freshness drifts slowly, so the list redraws now and then rather than every frame. */
-const REDRAW_MS = 10_000;
+/** While fish are being prepped, the countdowns tick once a second. */
+const REDRAW_MS = 1000;
 
 interface CreelData {
   scroll?: number;
@@ -33,8 +35,10 @@ export class CreelScene extends PanelScene<CreelData> {
     const items = ctl.state.creel;
     const coinIcon = r.currencies.tryGet(ECONOMY.defaultCurrency)?.icon;
     const sale = ctl.creelSale();
-    addText(this, area.x, area.y, `${items.length} of ${cap} spaces used`, { color: 'sky', shadow: false });
-    addText(this, area.x + area.w - 3, area.y, sale.bundleShare > 0 ? `Bundle +${Math.round(sale.bundleShare * 100)}%` : 'Bundle: keep 2+', {
+    const ready = ctl.readyCount;
+    const prepping = items.length - ready;
+    addText(this, area.x, area.y, prepping > 0 ? `${ready} ready, ${prepping} prepping (${items.length}/${cap})` : `${items.length} of ${cap} spaces used`, { color: 'sky', shadow: false });
+    addText(this, area.x + area.w - 3, area.y + 12, sale.bundleShare > 0 ? `Bundle +${Math.round(sale.bundleShare * 100)}%` : 'Bundle: 2+ ready', {
       color: sale.bundleShare > 0 ? 'gold' : 'slate',
       shadow: false,
       originX: 1,
@@ -44,18 +48,18 @@ export class CreelScene extends PanelScene<CreelData> {
     const setLine = sale.sets.length
       ? 'Sets: ' + sale.sets.map((x) => `${x.size} ${(r.rarities.tryGet(x.id)?.name ?? x.id).toLowerCase()} +${Math.round(x.share * 100)}%`).join(', ')
       : this.nearestSet();
-    const sl = addText(this, area.x, area.y + 12, setLine, { color: sale.sets.length ? 'gold' : 'slate', shadow: false, maxWidth: area.w - 3 });
-    const top = area.y + 12 + sl.textHeight + 4;
+    const sl = addText(this, area.x, area.y + 24, setLine, { color: sale.sets.length ? 'gold' : 'slate', shadow: false, maxWidth: area.w - 3 });
+    const top = area.y + 24 + sl.textHeight + 4;
 
     new Button(this, {
       x: area.x,
       y: area.y + area.h - 26,
       w: area.w,
       h: 26,
-      label: items.length ? `Sell all +${formatNumber(sale.total)}` : 'Nothing to sell',
-      icon: coinIcon,
+      label: ready > 0 ? `Sell ${ready === items.length ? 'all' : `${ready} ready`} +${formatNumber(sale.total)}` : items.length ? `First ready in ${formatCountdown(ctl.nextReadyIn)}` : 'Nothing to sell',
+      icon: ready > 0 ? coinIcon : undefined,
       variant: 'primary',
-      disabled: items.length === 0,
+      disabled: ready === 0,
       onClick: () => {
         const got = ctl.sellAllCreel();
         if (got.total > 0) {
@@ -68,7 +72,7 @@ export class CreelScene extends PanelScene<CreelData> {
     });
 
     if (items.length === 0) {
-      addText(this, area.x + area.w / 2, top + 16, 'Tap Keep to save a catch here.\n\nSell together for a bonus, more for 3, 5, or 10 of a rarity. Sell while fresh.', {
+      addText(this, area.x + area.w / 2, top + 16, `Tap Keep to save a catch here.\n\nKept fish take ${formatCountdown(ctl.prepMs)} to prep for market. Then they sell together for a bonus, more for 3, 5, or 10 of a rarity.`, {
         maxWidth: area.w - 8,
         originX: 0.5,
         align: 'center',
@@ -87,20 +91,26 @@ export class CreelScene extends PanelScene<CreelData> {
       list.add(g);
       if (fish) {
         list.add(this.add.image(3, y + 2, fish.spriteKey).setOrigin(0, 0));
-        list.add(addText(this, 22, y + 2, fish.name, { shadow: false, color: rarity?.color ?? 'mist', maxWidth: area.w - 74 }));
+        list.add(addText(this, 22, y + 1, fish.name, { shadow: false, color: rarity?.color ?? 'mist', maxWidth: area.w - 74 }));
       }
-      // Freshness under the name; crew catches are marked.
-      const f = ctl.freshness(item);
-      const fresh = f >= 0.999 ? 'Fresh' : `${Math.round(f * 100)}% fresh`;
-      list.add(addText(this, 22, y + 11, item.crew ? `${fresh}, crew` : fresh, { shadow: false, color: f >= 0.999 ? 'sage' : f > 0.8 ? 'sand' : 'coral' }));
+      // Under the name: ready to sell, or a bar filling while it is prepped. Crew catches are marked.
+      const left = ctl.prepLeft(item);
+      if (left <= 0) {
+        list.add(addText(this, 22, y + 11, item.crew ? 'Ready, crew' : 'Ready', { shadow: false, color: 'sage' }));
+      } else {
+        const bar = new ProgressBar(this, 22, y + 13, area.w - 74 - 4, 3, 'sand');
+        bar.setValue(1 - left / Math.max(1, ctl.prepMs));
+        list.add(bar);
+      }
       list.add(
         new Button(this, {
           x: area.w - 46,
           y: y + 1,
           w: 42,
           h: 18,
-          label: `+${formatNumber(ctl.creelValue(i))}`,
+          label: left <= 0 ? `+${formatNumber(ctl.creelValue(i))}` : formatCountdown(left),
           variant: 'secondary',
+          disabled: left > 0,
           onClick: () => {
             ctl.sellFromCreel(i);
             this.refresh({ scroll: list.position });
@@ -110,7 +120,7 @@ export class CreelScene extends PanelScene<CreelData> {
     });
     list.setContentHeight(items.length * ROW_H);
     if (data?.scroll) list.scrollTo(data.scroll);
-    this.time.addEvent({ delay: REDRAW_MS, callback: () => this.refresh({ scroll: list.position }) });
+    if (prepping > 0) this.time.addEvent({ delay: REDRAW_MS, callback: () => this.refresh({ scroll: list.position }) });
   }
 
   /** The rarity closest to its next set, as a nudge. */

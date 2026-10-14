@@ -37,7 +37,7 @@ export const GUIDE: TipDef[] = [
 export const TIPS: Record<string, TipDef> = {
   creel: {
     id: 'creel',
-    text: 'Kept fish wait in your creel. Sell together for a bonus, and more for 3, 5, or 10 of a rarity. Fresher fish sell for more.',
+    text: 'Kept fish are prepped in your creel, then sell together for a bonus, and more for 3, 5, or 10 of a rarity.',
     anchor: { kind: 'creel' },
     dismissable: true,
     opens: 'Creel',

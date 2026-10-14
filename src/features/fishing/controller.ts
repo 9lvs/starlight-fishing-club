@@ -2,7 +2,7 @@
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
 import { CATCH, CREEL, FIGHT, FISHING, FX, RESTED } from '../../config/tuning';
-import { bundleBonus, freshness, matchingSets, type SetResult } from '../../systems/economy';
+import { bundleBonus, matchingSets, type SetResult } from '../../systems/economy';
 import { conditionWeight, fishValue, makeCatch, rarityBoosts } from '../../core/catching';
 import { escapeChance, quickBonus } from '../../systems/catchOdds';
 import type { GameContext } from '../../core/context';
@@ -11,8 +11,10 @@ import { FishingSession, type SessionEvent } from './fishingSession';
 import { addRest, type CreelItem, type FishingSlice } from './state';
 
 export interface CreelSale {
-  /** Value of every fish at today's prices and freshness. */
+  /** Value of every ready fish at today's prices. */
   base: number;
+  /** How many fish this sale includes (only prepped ones sell). */
+  count: number;
   bundleShare: number;
   bundle: number;
   sets: SetResult[];
@@ -85,8 +87,6 @@ export class FishingController {
 
   update(dt: number): void {
     this.session.update(dt);
-    // Kept fish age only while you play, so time away never spoils them.
-    for (const item of this.state.creel) item.ageMs = (item.ageMs ?? 0) + dt;
   }
 
   private onSession(e: SessionEvent): void {
@@ -258,23 +258,42 @@ export class FishingController {
     const c = this.pending;
     if (!c || this.creelFull) return false;
     this.pending = null;
-    this.state.creel.push({ fishId: c.fishId, size: c.size, at: c.at });
+    this.state.creel.push({ fishId: c.fishId, size: c.size, at: c.at, readyAt: this.ctx.clock.now() + this.prepMs });
     this.ctx.bus.emit('fishKept', { catch: c });
     this.session.finishLanded();
     return true;
   }
 
-  /** Value share left after waiting in the creel (1 = fresh). */
-  freshness(item: CreelItem): number {
-    return freshness(item.ageMs ?? 0, CREEL.freshness, this.ctx.stats.get('freshDecayMult'));
+  /** How long a fish kept now takes to prep for market (the Ice Chest shortens it). */
+  get prepMs(): number {
+    return Math.round(CREEL.prepMs * this.ctx.stats.get('prepTimeMult'));
   }
 
-  /** Kept fish sell at today's prices, so upgrades bought later still count, times their freshness. */
+  /** Time until this kept fish can be sold (0 = ready). */
+  prepLeft(item: CreelItem): number {
+    return Math.max(0, (item.readyAt ?? 0) - this.ctx.clock.now());
+  }
+
+  isReady(item: CreelItem): boolean {
+    return this.prepLeft(item) <= 0;
+  }
+
+  /** Fish in the creel that can be sold now. */
+  get readyCount(): number {
+    return this.state.creel.filter((i) => this.isReady(i)).length;
+  }
+
+  /** Time until the next fish is ready, or 0 if one is ready (or the creel is empty). */
+  get nextReadyIn(): number {
+    const waits = this.state.creel.map((i) => this.prepLeft(i));
+    return waits.length === 0 || waits.some((w) => w <= 0) ? 0 : Math.min(...waits);
+  }
+
+  /** Kept fish sell at today's prices, so upgrades bought later still count. */
   creelValue(index: number): number {
     const item = this.state.creel[index];
     if (!item || !this.ctx.registries.fish.has(item.fishId)) return 0;
-    const full = fishValue(this.ctx, item.fishId, this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('fishSizeMult'));
-    return Math.max(1, Math.round(full * this.freshness(item)));
+    return Math.max(1, Math.round(fishValue(this.ctx, item.fishId, this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('fishSizeMult'))));
   }
 
   /** Free creel slots. */
@@ -282,19 +301,22 @@ export class FishingController {
     return Math.max(0, this.ctx.stats.get('storageCap') - this.state.creel.length);
   }
 
-  /** Crew catches from time away land in the creel, as many as fit. Returns how many fit. */
+  /** Crew catches from time away land in the creel, as many as fit, already prepped. Returns how many fit. */
   addToCreel(items: readonly CreelItem[]): number {
     const fit = items.slice(0, this.creelRoom);
-    this.state.creel.push(...fit.map((i) => ({ ...i, ageMs: 0 })));
+    this.state.creel.push(...fit.map(({ readyAt: _r, ...i }) => i));
     return fit.length;
   }
 
-  /** What selling the whole creel now would pay: values, the bundle bonus, and matching sets. */
+  /** What selling every ready fish now would pay: values, the bundle bonus, and matching sets. */
   creelSale(): CreelSale {
     const r = this.ctx.registries;
     const groups = new Map<string, { count: number; value: number }>();
     let base = 0;
+    let count = 0;
     this.state.creel.forEach((item, i) => {
+      if (!this.isReady(item)) return;
+      count += 1;
       const v = this.creelValue(i);
       base += v;
       const rarity = r.fish.tryGet(item.fishId)?.rarity;
@@ -308,15 +330,16 @@ export class FishingController {
       [...groups].map(([id, g]) => ({ id, ...g, mult: r.rarities.tryGet(id)?.setMult ?? 1 })),
       CREEL.sets,
     ).sort((a, b) => (r.rarities.tryGet(b.id)?.tier ?? 0) - (r.rarities.tryGet(a.id)?.tier ?? 0));
-    const bundleShare = this.bundleShare;
+    const bundleShare = bundleBonus(count, CREEL.bundlePerFish, CREEL.bundleMax);
     const bundle = Math.round(base * bundleShare);
     const total = base + bundle + sets.reduce((s, x) => s + x.bonus, 0);
-    return { base, bundleShare, bundle, sets, total };
+    return { base, count, bundleShare, bundle, sets, total };
   }
 
+  /** Sell one ready fish. Fish still being prepped stay put. */
   sellFromCreel(index: number): void {
     const item = this.state.creel[index];
-    if (!item) return;
+    if (!item || !this.isReady(item)) return;
     const value = this.creelValue(index);
     this.state.creel.splice(index, 1);
     this.ctx.wallet.add(ECONOMY.defaultCurrency, value);
@@ -328,15 +351,10 @@ export class FishingController {
     this.state.creel.length = 0;
   }
 
-  /** The bundle bonus share if the whole creel were sold now. */
-  get bundleShare(): number {
-    return bundleBonus(this.state.creel.length, CREEL.bundlePerFish, CREEL.bundleMax);
-  }
-
-  /** Sell everything at once: today's prices, the bundle bonus, and matching sets. */
+  /** Sell every ready fish at once: today's prices, the bundle bonus, and matching sets. */
   sellAllCreel(): CreelSale {
     const sale = this.creelSale();
-    while (this.state.creel.length > 0) this.sellFromCreel(0);
+    for (let i = this.state.creel.length - 1; i >= 0; i--) this.sellFromCreel(i);
     const bonus = sale.total - sale.base;
     if (bonus > 0) {
       this.ctx.wallet.add(ECONOMY.defaultCurrency, bonus);

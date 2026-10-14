@@ -9,6 +9,7 @@ import { MOTION, PALETTE, color, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
 import { drawPixelEllipse, drawSaggingLine } from '../../ui/pixelDraw';
 import { addText, type PixelText } from '../../ui/text';
+import { formatCountdown } from '../../ui/format';
 import { uiSignals } from '../../ui/uiSignals';
 import { CatchPopup, type CatchPopupHandlers } from './CatchPopup';
 import { getFishingController, type FishingController } from './controller';
@@ -314,7 +315,7 @@ export class FishingScene extends Phaser.Scene {
       const legend = this.ctl.pendingTier >= FX.legendary.minTier && !uiSignals.reducedMotion();
       const rarityColor = this.ctx.registries.rarities.tryGet(pending.rarityId)?.color ?? 'gold';
       this.jumper = this.add.image(bobber.x, bobber.y, fish.spriteKey).setFlipX(true).setDepth(legend ? 45 : 0);
-      if (legend) this.startMoment();
+      if (legend) this.startMoment(rarityColor);
       const to = { x: this.L.boat.x + 4, y: this.L.boat.y - 20 };
       const arc = legend ? FX.legendary.arcPx : 26;
       const t = { p: 0 };
@@ -337,7 +338,7 @@ export class FishingScene extends Phaser.Scene {
           const now = tw.elapsed;
           if (now - trail > FX.legendary.trailEveryMs) {
             trail = now;
-            this.addMote(j.x + (Math.random() * 6 - 3), j.y + (Math.random() * 4 - 2), 0, 0.006, 700, Math.random() < 0.5 ? 'gold' : rarityColor);
+            this.addMote(j.x + (Math.random() * 6 - 3), j.y + (Math.random() * 4 - 2), 0, 0.006, 700, rarityColor);
           }
           if (!burst && t.p >= 0.5) {
             burst = true;
@@ -350,12 +351,12 @@ export class FishingScene extends Phaser.Scene {
   }
 
   /** A legendary's leap: the screen eases in a little toward it and a warm gold glow rims the screen. */
-  private startMoment(): void {
+  private startMoment(tint: PaletteName): void {
     this.endMoment();
     const cfg = FX.legendary;
     const sparks = this.add.graphics().setDepth(46);
     const { bobber, boat } = this.L;
-    this.ctx.bus.emit('camera:zoom', { x: Math.round((bobber.x + boat.x) / 2), y: Math.round(Math.min(bobber.y, boat.y) - cfg.arcPx / 2), scale: cfg.zoom, inMs: cfg.zoomInMs, glow: `#${PALETTE.gold.toString(16).padStart(6, '0')}` });
+    this.ctx.bus.emit('camera:zoom', { x: Math.round((bobber.x + boat.x) / 2), y: Math.round(Math.min(bobber.y, boat.y) - cfg.arcPx / 2), scale: cfg.zoom, inMs: cfg.zoomInMs, glow: `#${PALETTE[tint].toString(16).padStart(6, '0')}` });
     this.moment = { sparks, motes: [] };
   }
 
@@ -388,7 +389,7 @@ export class FishingScene extends Phaser.Scene {
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2;
       const v = FX.legendary.burstPx / 700;
-      this.addMote(x, y, Math.cos(a) * v, Math.sin(a) * v * 0.7, 700 + (i % 3) * 120, i % 3 === 0 ? 'mist' : i % 2 ? 'gold' : c);
+      this.addMote(x, y, Math.cos(a) * v, Math.sin(a) * v * 0.7, 700 + (i % 3) * 120, c);
     }
   }
 
@@ -521,9 +522,11 @@ export class FishingScene extends Phaser.Scene {
       quick: this.bonusLine(),
       canKeep: !full,
       hint: full
-        ? 'Creel full! Open it to sell everything with a bundle bonus.'
+        ? this.ctl.readyCount > 0
+          ? 'Creel full! Sell the ready fish in it to make room.'
+          : `Creel full! The next fish is ready in ${formatCountdown(this.ctl.nextReadyIn)}.`
         : this.ctl.state.totals.catches <= CREEL.hintCatches
-          ? `Keep fills your creel. Sell together for a bundle bonus, more for 3 of a rarity.`
+          ? `Sell for coins now, or Keep: ready in ${formatCountdown(this.ctl.prepMs)}, then sell together for bonuses.`
           : undefined,
       onSell: () => {
         this.ctl.sellPending();

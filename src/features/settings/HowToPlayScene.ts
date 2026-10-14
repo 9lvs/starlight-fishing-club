@@ -14,7 +14,7 @@ const SECTIONS: { title: string; text: string }[] = [
   },
   {
     title: 'Your creel',
-    text: 'Keep a catch to sell later. Fish sold together earn a bundle bonus, and more for 3, 5, or 10 of one rarity. Kept fish lose freshness while you play, so sell them soon.',
+    text: 'Sell a catch for coins now, or keep it. Kept fish take a couple of minutes to prep for market (also while you are away). Then fish sold together earn a bundle bonus, and more for 3, 5, or 10 of one rarity.',
   },
   { title: 'Crew', text: 'Hire helpers in the Crew tab. Each needs a crew contract and a bunk on your boat. While you play they sell their catch; while you are away they fill your creel.' },
   {

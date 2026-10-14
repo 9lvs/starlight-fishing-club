@@ -20,8 +20,8 @@ export const CORE_STATS: StatDef[] = [
   { id: 'crewSellMult', base: 0.5, min: 0, max: 1, label: 'Crew sell value', format: 'mult' },
   { id: 'crewLuck', base: 0, min: 0, label: 'Crew luck', format: 'int' },
   { id: 'offlineCapHours', base: 8, min: 0, max: 24, label: 'Offline cap', format: 'hours' },
-  /** Below 1 means kept fish lose freshness more slowly (Ice Chest). */
-  { id: 'freshDecayMult', base: 1, min: 0.1, label: 'Creel spoiling', format: 'percent' },
+  /** Below 1 means kept fish are ready for market sooner (Ice Chest). */
+  { id: 'prepTimeMult', base: 1, min: 0.1, label: 'Creel prep time', format: 'percent' },
   /** Chance a hand catch also brings up a gem, before the rarity bonus (see GEMS in tuning). */
   { id: 'gemChance', base: 0, min: 0, max: 1, label: 'Gem chance', format: 'percent' },
   /** Rods, boats, and bait: how well you can land rarer fish (see systems/catchOdds.ts). */

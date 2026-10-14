@@ -101,8 +101,12 @@ export const CREEL = {
   bundleMax: 0.5,
   /** Show the "why keep?" line on the catch card for a player's first this-many catches. */
   hintCatches: 25,
-  /** Kept fish lose value while you play (fresher sells for more). Time away does not count. */
-  freshness: { graceMs: 3 * 60_000, perMinute: 0.02, floor: 0.6 },
+  /**
+   * Kept fish are prepped for market (cleaned and iced) before they can sell.
+   * Each takes this long, all at once, and the clock runs while you are away.
+   * The choice: sell a catch now, or keep it and wait for the bundle and sets.
+   */
+  prepMs: 2 * 60_000,
   /** Matching sets when the creel sells together: 3, 5, or 10 of one rarity. Scaled by each rarity's setMult. */
   sets: [
     { size: 3, share: 0.12 },

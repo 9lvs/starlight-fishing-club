@@ -15,21 +15,6 @@ export function bundleBonus(count: number, perFish: number, max: number): number
   return Math.max(0, Math.min(max, (count - 1) * perFish));
 }
 
-export interface FreshnessConfig {
-  /** Kept fish stay at full value this long. */
-  graceMs: number;
-  /** Then they lose this share of value per minute... */
-  perMinute: number;
-  /** ...down to this share, never lower. */
-  floor: number;
-}
-
-/** Value share of a kept fish that has waited `ageMs` of play time (1 = fresh). */
-export function freshness(ageMs: number, cfg: FreshnessConfig, decayMult = 1): number {
-  const stale = Math.max(0, ageMs - cfg.graceMs) / 60000;
-  return Math.max(cfg.floor, 1 - stale * cfg.perMinute * decayMult);
-}
-
 export interface SetRule {
   /** Fish of one rarity needed for this set. */
   size: number;

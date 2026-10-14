@@ -26,3 +26,10 @@ export function formatDuration(ms: number): string {
   if (m > 0) return `${m}m`;
   return `${s}s`;
 }
+
+/** A short countdown: "1:05", or "45s" under a minute. */
+export function formatCountdown(ms: number): string {
+  const s = Math.ceil(ms / 1000);
+  if (s < 60) return `${s}s`;
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}

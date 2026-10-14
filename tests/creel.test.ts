@@ -1,5 +1,5 @@
-// The creel: freshness while you play, matching sets when it sells together,
-// and crew catches from time away filling it (and only it).
+// The creel: kept fish are prepped before they can sell, matching sets when
+// they sell together, and crew catches from time away filling it (and only it).
 import { describe, expect, it } from 'vitest';
 import { CREEL } from '../src/config/tuning';
 import { bootstrap } from '../src/core/bootstrap';
@@ -9,24 +9,10 @@ import { CrewService } from '../src/features/crew/service';
 import { crewSlice, type CrewSlice } from '../src/features/crew/state';
 import { FishingController } from '../src/features/fishing/controller';
 import { fishingSlice, type FishingSlice } from '../src/features/fishing/state';
-import { freshness, matchingSets } from '../src/systems/economy';
+import { debugOverrides } from '../src/core/debugOverrides';
+import { matchingSets } from '../src/systems/economy';
 import { MemoryStorage } from '../src/systems/saveManager';
 import { readContentFiles } from './helpers/content';
-
-describe('freshness', () => {
-  const cfg = CREEL.freshness;
-  it('is full for a few minutes, then drops slowly to a floor', () => {
-    expect(freshness(0, cfg)).toBe(1);
-    expect(freshness(cfg.graceMs, cfg)).toBe(1);
-    expect(freshness(cfg.graceMs + 5 * 60_000, cfg)).toBeCloseTo(1 - 5 * cfg.perMinute);
-    expect(freshness(10 * 3_600_000, cfg)).toBe(cfg.floor);
-  });
-
-  it('an ice chest slows it down', () => {
-    const t = cfg.graceMs + 10 * 60_000;
-    expect(freshness(t, cfg, 0.5)).toBeGreaterThan(freshness(t, cfg));
-  });
-});
 
 describe('matching sets', () => {
   const rules = CREEL.sets;
@@ -94,7 +80,7 @@ describe('crew while you are away', () => {
     const cap = ctx.stats.get('storageCap');
     const report = crew.catchUp(6 * 3_600_000);
     expect(fishing.state.creel).toHaveLength(cap);
-    expect(fishing.state.creel.every((i) => i.crew && (i.ageMs ?? 0) === 0)).toBe(true);
+    expect(fishing.state.creel.every((i) => i.crew && fishing.isReady(i))).toBe(true);
     expect(ctx.wallet.get('coins')).toBe(0);
     expect(report && report.kept).toBe(cap);
     expect(report && report.lines.join(' ')).toContain('creel filled up');
@@ -112,17 +98,72 @@ describe('crew while you are away', () => {
     expect(report && report.lines[0]).toContain('already full');
   });
 
-  it('kept fish lose value only while you play, and the sale adds sets', () => {
-    const { ctx, fishing } = boot();
-    // A pricey fish, so rounding does not hide the drop.
-    const fish = ctx.registries.fish.list().find((f) => f.baseValue >= 100)!;
-    fishing.addToCreel([0, 1, 2].map(() => ({ fishId: fish.id, size: 5, at: 0 })));
-    const fresh = fishing.creelValue(0);
-    fishing.update(CREEL.freshness.graceMs + 20 * 60_000);
-    expect(fishing.creelValue(0)).toBeLessThan(fresh);
-    const sale = fishing.creelSale();
-    expect(sale.sets).toHaveLength(1);
+});
+
+describe('prepping kept fish for market', () => {
+  /** Hold the game clock still so prep only moves when the test says so. */
+  function frozen() {
+    const b = boot();
+    let now = 1_000_000;
+    b.ctx.clock.now = () => now;
+    return { ...b, advance: (ms: number) => (now += ms) };
+  }
+
+  it('a kept fish cannot be sold until it is prepped, then sells at full value', () => {
+    const { ctx, fishing, advance } = frozen();
+    debugOverrides.forceRarity = 'common';
+    keepOne(fishing);
+    const item = fishing.state.creel[0]!;
+    expect(fishing.isReady(item)).toBe(false);
+    expect(fishing.prepLeft(item)).toBe(CREEL.prepMs);
+    const coins = ctx.wallet.get('coins');
+    fishing.sellFromCreel(0);
+    expect(fishing.state.creel).toHaveLength(1);
+    expect(fishing.creelSale().total).toBe(0);
+    advance(CREEL.prepMs);
+    expect(fishing.isReady(item)).toBe(true);
+    const value = fishing.creelValue(0);
+    fishing.sellFromCreel(0);
+    expect(fishing.state.creel).toHaveLength(0);
+    expect(ctx.wallet.get('coins')).toBe(coins + value);
+    debugOverrides.forceRarity = null;
+  });
+
+  it('selling all takes the ready fish with sets and leaves the rest prepping', () => {
+    const { fishing, advance } = frozen();
+    const fish = fishing['ctx'].registries.fish.list().find((f) => f.baseValue >= 100)!;
+    const now = () => fishing['ctx'].clock.now();
+    fishing.state.creel.push(...[0, 1, 2].map(() => ({ fishId: fish.id, size: 5, at: 0, readyAt: now() })));
+    fishing.state.creel.push({ fishId: fish.id, size: 5, at: 0, readyAt: now() + 60_000 });
+    const sale = fishing.sellAllCreel();
+    expect(sale.count).toBe(3);
     expect(sale.sets[0]!.size).toBe(3);
     expect(sale.total).toBeGreaterThan(sale.base + sale.bundle);
+    expect(fishing.state.creel).toHaveLength(1);
+    advance(60_000);
+    expect(fishing.readyCount).toBe(1);
+  });
+
+  it('the Ice Chest shortens prep for fish kept after it', () => {
+    const { ctx, fishing } = frozen();
+    ctx.stats.setSource('ice', [{ stat: 'prepTimeMult', op: 'mult', value: 0.5 }]);
+    expect(fishing.prepMs).toBe(CREEL.prepMs / 2);
+  });
+
+  it('old saves keep their creel, ready to sell', () => {
+    const migrated = fishingSlice.migrate!({ pity: 0, creel: [{ fishId: 'x', size: 1, at: 0, ageMs: 99999 }], totals: { casts: 0, catches: 0, misses: 0 }, rested: 0, restedMs: 0 }, 3);
+    expect(migrated.creel[0]).toEqual({ fishId: 'x', size: 1, at: 0 });
   });
 });
+
+/** Cast, hook, and keep whatever bites (Easy reel, so nothing fights). */
+function keepOne(fishing: FishingController): void {
+  fishing.easyReel = true;
+  fishing.update(500);
+  fishing.tap();
+  fishing.update(1000);
+  fishing.update(60000);
+  fishing.tap();
+  fishing.update(3000);
+  expect(fishing.keepPending()).toBe(true);
+}
