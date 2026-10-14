@@ -47,7 +47,7 @@ describe('gems', () => {
     expect(ctx.wallet.get('gems')).toBe(found);
   });
 
-  it('trades 1,000 coins for a gem at the pond, more after a move', () => {
+  it('trades 1,000 coins for a gem at the pond, more after a move (river fish pay more)', () => {
     const { ctx, gems } = boot();
     expect(gems.rate).toBe(1000);
     ctx.wallet.add('coins', 2500);
@@ -56,7 +56,7 @@ describe('gems', () => {
     expect(ctx.wallet.get('coins')).toBe(1500);
     expect(ctx.wallet.get('gems')).toBe(1);
     moveClub(ctx, 'river', { force: true });
-    expect(gems.rate).toBe(3000);
+    expect(gems.rate).toBe(3050);
   });
 
   it('gems and gem looks stay when the club moves', () => {

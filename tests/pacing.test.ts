@@ -6,7 +6,7 @@ describe('journey pacing (goal-directed player model, median of 15 runs)', () =>
   const { content } = loadBaseContent();
   const sims = Array.from({ length: 15 }, (_, i) => simulateJourney(content, 1000 + i));
   const runMin = (i: number) => median(sims.map((s) => s.runs[i]?.minutes ?? Infinity));
-  const boat3 = (i: number) => median(sims.map((s) => s.runs[i]?.boat3Min ?? Infinity));
+  const start = (i: number) => median(sims.map((s) => s.runs[i]?.startMin ?? Infinity));
   const first = median(sims.map((s) => s.firstUpgradeMin));
   const crew = median(sims.map((s) => s.firstCrewMin));
   const finale = median(sims.map((s) => s.finaleMin));
@@ -17,8 +17,8 @@ describe('journey pacing (goal-directed player model, median of 15 runs)', () =>
   console.log(
     `[pacing] first upgrade ${first.toFixed(2)} min, first crew ${crew.toFixed(1)} min, runs ${idx
       .map((i) => `${sims[0]!.runs[i]?.waterId} ${runMin(i).toFixed(0)}m`)
-      .join(', ')}, Sky Lake finale ${finale.toFixed(0)}m, total ${(total / 60).toFixed(1)} h; Sturdy Skiff at ${idx
-      .map((i) => boat3(i).toFixed(1))
+      .join(', ')}, Sky Lake finale ${finale.toFixed(0)}m, total ${(total / 60).toFixed(1)} h; first ten buys at ${idx
+      .map((i) => start(i).toFixed(1))
       .join(' / ')} min`,
   );
 
@@ -43,9 +43,9 @@ describe('journey pacing (goal-directed player model, median of 15 runs)', () =>
     }
   });
 
-  it('the club bonus makes starting over quick: the first boats come back about twice as fast', () => {
+  it('richer waters make starting over quick: the first ten buys come about twice as fast', () => {
     // Not exactly half: after a move, rarer fish need tackle you have not rebought yet.
-    for (let i = 1; i < runs; i++) expect(boat3(i)).toBeLessThan(boat3(0) * 0.55);
+    for (let i = 1; i < runs; i++) expect(start(i)).toBeLessThan(start(0) * 0.6);
   });
 
   it('Sky Lake has a finale of top gear to work toward, and the whole journey is a few hours', () => {

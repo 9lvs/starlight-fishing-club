@@ -38,9 +38,11 @@ export class GemService {
     return found;
   }
 
-  /** Coins for one gem right now. */
+  /** Coins for one gem right now: it follows what fish pay at the club's water, so gems stay a choice later on. */
   get rate(): number {
-    return Math.round(GEMS.tradeCoins * (1 + clubBonus(this.ctx)));
+    const water = this.ctx.registries.waters.tryGet(this.ctx.world.clubWater());
+    const raw = GEMS.tradeCoins * (water?.fishValue ?? 1) * (1 + clubBonus(this.ctx));
+    return Math.round(raw / GEMS.tradeRound) * GEMS.tradeRound;
   }
 
   canTrade(gems: number): boolean {

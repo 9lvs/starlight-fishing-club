@@ -75,14 +75,28 @@ function boot() {
 }
 
 describe('crew while you are away', () => {
-  it('fill the creel up to its space and earn no coins', () => {
+  it('bring back only a few fish, ready to sell at the crew price, and earn no coins', () => {
     const { ctx, fishing, crew } = boot();
-    const cap = ctx.stats.get('storageCap');
+    const carry = ctx.stats.get('awayCatchCap');
+    expect(carry).toBeLessThan(ctx.stats.get('storageCap'));
     const report = crew.catchUp(6 * 3_600_000);
-    expect(fishing.state.creel).toHaveLength(cap);
+    expect(fishing.state.creel).toHaveLength(carry);
     expect(fishing.state.creel.every((i) => i.crew && fishing.isReady(i))).toBe(true);
     expect(ctx.wallet.get('coins')).toBe(0);
-    expect(report && report.kept).toBe(cap);
+    expect(report && report.kept).toBe(carry);
+    expect(report && report.lines.join(' ')).toContain('all they could carry');
+    // A crew catch sells for the crew share of what the same fish caught by hand would.
+    const item = fishing.state.creel[0]!;
+    fishing.state.creel.push({ fishId: item.fishId, size: item.size, at: 0 });
+    const last = fishing.state.creel.length - 1;
+    expect(fishing.creelValue(0)).toBeLessThan(fishing.creelValue(last));
+  });
+
+  it('a Cozy Hammock lets them bring back more, up to what the creel holds', () => {
+    const { ctx, fishing, crew } = boot();
+    ctx.stats.setSource('hammock', [{ stat: 'awayCatchCap', op: 'add', value: 99 }]);
+    const report = crew.catchUp(6 * 3_600_000);
+    expect(fishing.state.creel).toHaveLength(ctx.stats.get('storageCap'));
     expect(report && report.lines.join(' ')).toContain('creel filled up');
   });
 

@@ -6,19 +6,19 @@
     "scene": { "landmarks": ["willows", "shed", "jetty"], "effects": ["leaves", "dragonflies"], "hills": "rolling", "foreground": "reeds" }
   },
   {
-    "id": "river", "name": "Whisper River", "order": 1, "rangeRequired": 1, "clubBonus": 2, "tackleNeed": 3, "spriteKey": "water_river",
+    "id": "river", "name": "Whisper River", "order": 1, "rangeRequired": 1, "clubBonus": 0.05, "fishValue": 2.9, "tackleNeed": 3, "spriteKey": "water_river",
     "description": "A slow river through pine woods. Trout and salmon drift here.",
     "sound": {"bed": ["stream", "birds", "owl"], "music": {"transpose": 2, "voice": "harp", "tempo": 1.04}},
     "scene": { "landmarks": ["cabin", "dock"], "effects": ["current", "smoke"], "hills": "pines", "foreground": "rocks" }
   },
   {
-    "id": "cove", "name": "Moonlit Cove", "order": 2, "rangeRequired": 2, "clubBonus": 4, "tackleNeed": 10, "spriteKey": "water_cove",
+    "id": "cove", "name": "Moonlit Cove", "order": 2, "rangeRequired": 2, "clubBonus": 0.1, "fishValue": 4.5, "tackleNeed": 10, "spriteKey": "water_cove",
     "description": "A quiet sea cove where the moon pulls up strange and lovely things.",
     "sound": {"bed": ["surf", "gulls", "bell_buoy"], "music": {"transpose": -3, "voice": "pluck", "tempo": 0.95}},
     "scene": { "landmarks": ["harbor", "moored_boats", "lighthouse"], "effects": ["beam", "gulls", "buoy"], "hills": "cliffs", "foreground": "lilies", "tint": { "night": { "waterTop": "teal" } } }
   },
   {
-    "id": "reef", "name": "Sunlit Reef", "order": 3, "rangeRequired": 3, "clubBonus": 6, "tackleNeed": 13, "spriteKey": "water_reef",
+    "id": "reef", "name": "Sunlit Reef", "order": 3, "rangeRequired": 3, "clubBonus": 0.2, "fishValue": 5.8, "tackleNeed": 13, "spriteKey": "water_reef",
     "description": "Clear shallows over coral, with bungalows on stilts. The club's resort.",
     "sound": {"bed": ["lagoon", "gulls", "crickets"], "music": {"transpose": 4, "voice": "marimba", "tempo": 1.08}},
     "scene": {
@@ -27,7 +27,7 @@
     }
   },
   {
-    "id": "glowing_cave", "name": "Glowing Cave", "order": 4, "rangeRequired": 4, "clubBonus": 9, "tackleNeed": 17, "spriteKey": "water_cave",
+    "id": "glowing_cave", "name": "Glowing Cave", "order": 4, "rangeRequired": 4, "clubBonus": 0.4, "fishValue": 7.1, "tackleNeed": 17, "spriteKey": "water_cave",
     "description": "Mushrooms glow on the walls of an underground lake.",
     "sound": {"bed": ["cave_hum", "drips"], "music": {"transpose": -5, "voice": "bell", "tempo": 0.85}},
     "scene": { "landmarks": ["lantern_string", "grotto"], "effects": ["drips"],
@@ -41,7 +41,7 @@
     }
   },
   {
-    "id": "sky_lake", "name": "Sky Lake", "order": 5, "rangeRequired": 5, "clubBonus": 24, "tackleNeed": 25, "spriteKey": "water_sky",
+    "id": "sky_lake", "name": "Sky Lake", "order": 5, "rangeRequired": 5, "clubBonus": 0.8, "fishValue": 13.9, "tackleNeed": 25, "spriteKey": "water_sky",
     "description": "A lake high above the clouds. Nobody knows how the fish got there.",
     "sound": {"bed": ["high_breeze", "chimes"], "music": {"transpose": 7, "voice": "harp", "tempo": 0.9}},
     "scene": { "landmarks": ["floating_isles", "pavilion"], "effects": ["waterfall", "balloon", "sky_lanterns"],

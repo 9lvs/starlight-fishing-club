@@ -39,7 +39,7 @@ export class GemsScene extends PanelScene {
 
     addText(this, cx, y, `Trade: ${formatNumber(svc.rate)} coins for 1 gem`, { originX: 0.5, color: 'gold', shadow: false });
     y += 12;
-    const note = addText(this, cx, y, 'The price rises with your club bonus.', { originX: 0.5, color: 'slate', shadow: false, maxWidth: area.w - 4, align: 'center' });
+    const note = addText(this, cx, y, 'The price rises in richer waters.', { originX: 0.5, color: 'slate', shadow: false, maxWidth: area.w - 4, align: 'center' });
     y += note.textHeight + 6;
     const steps = GEMS.tradeSteps;
     const gap = 4;

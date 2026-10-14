@@ -102,15 +102,19 @@ export class CrewService {
     }
     const room = { room: 0 };
     this.ctx.bus.emit('creelRoom', room);
+    // They bring back only so many (Cozy Hammock), and only what the creel can hold.
+    const carry = this.ctx.stats.get('awayCatchCap');
+    const limit = Math.min(room.room, carry);
     if (room.room <= 0) {
       return { featureId: 'crew', title: 'Your crew', lines: ['Your creel was already full, so your crew rested.', 'Sell your catch and they will fish again.'] };
     }
     const start = this.ctx.clock.now() - elapsedMs;
     let result = this.simulate(start, elapsedMs);
     let filledAfter: number | null = null;
-    if (result.rolls > room.room) {
-      // The crew fish at a steady pace, so the creel filled about this far in.
-      filledAfter = Math.max(1, Math.floor((elapsedMs * room.room) / result.rolls));
+    if (limit <= 0) return { featureId: 'crew', title: 'Your crew', lines: ['Your crew rested.', 'A Cozy Hammock lets them bring back fish.'] };
+    if (result.rolls > limit) {
+      // The crew fish at a steady pace, so they were done about this far in.
+      filledAfter = Math.max(1, Math.floor((elapsedMs * limit) / result.rolls));
       result = this.simulate(start, filledAfter);
     }
     // Rarest first, so if rounding leaves one too many, a common one is dropped.
@@ -119,7 +123,7 @@ export class CrewService {
     const items = Object.entries(result.catches)
       .sort((a, b) => tier(b[0]) - tier(a[0]))
       .flatMap(([fishId, n]) => Array.from({ length: n }, () => ({ fishId, size: rollSize(r.fish.get(fishId), this.ctx.rng), at: this.ctx.clock.now(), crew: true })));
-    const deposit = { items: items.slice(0, room.room), accepted: 0 };
+    const deposit = { items: items.slice(0, limit), accepted: 0 };
     this.ctx.bus.emit('creelDeposit', deposit);
     const kept = deposit.items.slice(0, deposit.accepted);
 
@@ -130,8 +134,14 @@ export class CrewService {
       m.catches += res.rolls;
       lines.push(`${this.type(m)?.name ?? m.typeId} caught ${formatNumber(res.rolls)} fish`);
     }
-    if (filledAfter !== null) lines.push(`Your creel filled up after ${formatDuration(filledAfter)}. A bigger boat holds more.`);
-    if (kept.length > 0) lines.push('They prepped them too, so they are ready to sell.');
+    if (filledAfter !== null) {
+      lines.push(
+        carry < room.room
+          ? `They brought back ${formatNumber(limit)}, all they could carry. A Cozy Hammock lets them bring back more.`
+          : `Your creel filled up after ${formatDuration(filledAfter)}. A bigger boat holds more.`,
+      );
+    }
+    if (kept.length > 0) lines.push('They are ready to sell, at the crew price.');
 
     const counts: Record<string, number> = {};
     for (const k of kept) counts[k.fishId] = (counts[k.fishId] ?? 0) + 1;

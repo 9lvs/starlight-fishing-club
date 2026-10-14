@@ -1,7 +1,7 @@
 // Journey simulator: a goal-directed player who fishes by hand from Willow Pond
-// to Sky Lake. Each run they save toward the next boat (the boat that reaches the
-// next water is what lets the club move), buy anything else that costs under
-// SPEND_SHARE of that boat, hire helpers when a bunk opens, and move the club as
+// to Sky Lake. Each run they follow the in-game goal bar (the boat that reaches
+// the next water, or the first thing it still needs, which can be a rod, the
+// creel, or crew), buy anything else that costs under SPEND_SHARE of that goal, hire helpers when a bunk opens, and move the club as
 // soon as they can. Moving resets coins, upgrades, and crew, and raises the club
 // bonus. Cosmetics are skipped (they change nothing here). Used by the pacing test.
 import { LOOT } from '../../src/config/balance';
@@ -14,13 +14,14 @@ import { seededRng } from '../../src/core/rng';
 import { StatsService, modifierAtLevel } from '../../src/core/stats';
 import { costAt, sellValue } from '../../src/systems/economy';
 import { fishChances, rollCatch } from '../../src/systems/lootTable';
+import { nextGoal } from '../../src/features/upgrades/goals';
 
 export interface RunResult {
   waterId: string;
   /** Minutes spent at this water before moving on (or until the horizon at the last water). */
   minutes: number;
-  /** Minutes into this run when the Sturdy Skiff (boat_3) was bought. */
-  boat3Min: number;
+  /** Minutes into this run when its first ten purchases were made (how quick a fresh start feels). */
+  startMin: number;
   purchases: { min: number; id: string; level: number }[];
 }
 
@@ -39,10 +40,12 @@ const MISS_RATE = 0.08;
 /** Side purchases are made while they cost under this share of the next boat. */
 const SPEND_SHARE = 0.35;
 /** Stats this model cannot value (it never leaves the tab), so it skips upgrades that only touch them. */
-const AWAY_ONLY = new Set(['offlineCapHours', 'prepTimeMult']);
+const AWAY_ONLY = new Set(['offlineCapHours', 'awayCatchCap', 'prepTimeMult']);
 /** The model always fishes on a clear day, so night and weather bait would be wasted here. */
 const conditionOnly = (u: UpgradeDef) => u.modifiers.every((m) => m.stat.startsWith('boost_time_') || m.stat.startsWith('boost_weather_'));
 const TOP_TIERS = ['rod_10', 'boat_10', 'bait_6'];
+/** A fresh start is measured by how soon this many things are bought. */
+const START_BUYS = 10;
 
 export function simulateJourney(content: CoreContent, seed: number, horizonHours = 10): JourneyResult {
   const rng = seededRng(seed);
@@ -60,7 +63,7 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
   let t = 0;
   let runStart = 0;
   let pity = 0;
-  let run: RunResult = { waterId: waters[0]!.id, minutes: 0, boat3Min: Infinity, purchases: [] };
+  let run: RunResult = { waterId: waters[0]!.id, minutes: 0, startMin: Infinity, purchases: [] };
   const res: JourneyResult = { firstUpgradeMin: Infinity, firstCrewMin: Infinity, runs: [], finaleMin: Infinity, totalMin: 0 };
 
   const lv = (id: string) => levels[id] ?? 0;
@@ -77,13 +80,20 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
     rank >= u.requiresRank &&
     u.prerequisites.every((p) => (typeof p === 'string' ? lv(p) >= 1 : lv(p.id) >= p.level));
   const cost = (u: UpgradeDef) => costAt(u.baseCost, u.costGrowth ?? 1.15, lv(u.id));
+  // A goal only needs to be buyable, even if this model would not choose it on its own (a crew upgrade before any crew).
+  const reachable = (u: UpgradeDef) =>
+    lv(u.id) < u.maxLevel && rank >= u.requiresRank && u.prerequisites.every((p) => (typeof p === 'string' ? lv(p) >= 1 : lv(p.id) >= p.level));
+  const goalBar = () => {
+    const g = nextGoal({ clubRank: rank, nextWater: waters[rank + 1]?.id ?? null, waterName: (id) => id, canMove: false, upgrades: content.upgrades, level: lv, cost });
+    return g.kind === 'buy' && reachable(g.upgrade) ? g.upgrade : undefined;
+  };
   const buy = (u: UpgradeDef) => {
     coins -= cost(u);
     levels[u.id] = lv(u.id) + 1;
     stats.setSource(`upgrade:${u.id}`, u.modifiers.map((m) => modifierAtLevel(m, levels[u.id]!)));
     const min = (t - runStart) / 60;
     run.purchases.push({ min: Math.round(min * 10) / 10, id: u.id, level: levels[u.id]! });
-    if (u.id === 'boat_3' && run.boat3Min === Infinity) run.boat3Min = min;
+    if (run.purchases.length === START_BUYS && run.startMin === Infinity) run.startMin = min;
     if (res.firstUpgradeMin === Infinity) res.firstUpgradeMin = t / 60;
   };
   const boosts = () => Object.fromEntries(content.rarities.map((r) => [r.id, stats.has(rarityBoostStat(r.id)) ? stats.get(rarityBoostStat(r.id)) : 0]));
@@ -121,8 +131,7 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
 
     for (;;) {
       const candidates = content.upgrades.filter(open);
-      const nextBoat = candidates.filter((u) => u.branch === 'boats' && u.id.startsWith('boat_')).sort((a, b) => cost(a) - cost(b))[0];
-      const goal = nextBoat ?? candidates.filter((u) => TOP_TIERS.some((id) => u.id.split('_')[0] === id.split('_')[0])).sort((a, b) => cost(a) - cost(b))[0];
+      const goal = goalBar() ?? candidates.filter((u) => TOP_TIERS.some((id) => u.id.split('_')[0] === id.split('_')[0])).sort((a, b) => cost(a) - cost(b))[0];
       const budget = goal ? cost(goal) * SPEND_SHARE : Infinity;
       if (crew.length < Math.min(stats.get('crewSlots'), stats.get('crewBunks'))) {
         const h = helpers.find((x) => !crew.includes(x.id));
@@ -151,7 +160,7 @@ export function simulateJourney(content: CoreContent, seed: number, horizonHours
       crew = [];
       coins = 0;
       runStart = t;
-      run = { waterId: waters[rank]!.id, minutes: 0, boat3Min: Infinity, purchases: [] };
+      run = { waterId: waters[rank]!.id, minutes: 0, startMin: Infinity, purchases: [] };
       setClubBonus();
     }
     if (rank === waters.length - 1 && res.finaleMin === Infinity && TOP_TIERS.every((id) => lv(id) > 0)) {

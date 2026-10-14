@@ -19,7 +19,7 @@ const SECTIONS: { title: string; text: string }[] = [
   { title: 'Crew', text: 'Hire helpers in the Crew tab. Each needs a crew contract and a bunk on your boat. While you play they sell their catch; while you are away they fill your creel.' },
   {
     title: 'Moving the club',
-    text: 'A better boat reaches the next water. Move the club there from the Map: coins and gear start over, but every fish sells for more. Gems and looks stay with you.',
+    text: 'A better boat reaches the next water. Move the club there from the Map: coins and gear start over, but fish there are worth more, and the club bonus (tap your coins to see it) grows a little. Gems and looks stay with you.',
   },
   { title: 'Goals and the Logbook', text: 'The goal bar in Upgrades shows your next step. The Logbook lists tasks for your water that pay coins, and moving the club pays gems.' },
   { title: 'Gems', text: 'A rare find on any catch, or traded for coins in the Club tab. They buy looks for your boat, fisher, and clubhouse.' },

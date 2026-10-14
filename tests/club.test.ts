@@ -55,7 +55,9 @@ describe('crew bunks', () => {
     g.ctx.wallet.add('coins', 1000);
     expect(g.crew.slots).toBe(0);
     expect(g.crew.hire('deckhand')).toBe(false);
-    // The Painted Rowboat has the first bunk.
+    // The Painted Rowboat has the first bunk (and needs a patched hull first).
+    expect(buy(g, 'boat_2')).toBe(false);
+    expect(buy(g, 'patched_hull')).toBe(true);
     expect(buy(g, 'boat_2')).toBe(true);
     expect(g.crew.slots).toBe(1);
     expect(g.crew.hire('deckhand')).toBe(true);
@@ -86,14 +88,17 @@ describe('moving the club', () => {
     expect(g.ctx.world.nextWater()).toBe('river');
     expect(g.ctx.world.canMoveTo('river')).toBe(false);
     expect(moveClub(g.ctx, 'river')).toBe(false);
-    for (const id of ['boat_1', 'boat_2', 'boat_3']) expect(buy(g, id)).toBe(true);
+    // Boats also need gear from other branches: a patched hull, then the first rod.
+    for (const id of ['boat_1', 'patched_hull', 'boat_2']) expect(buy(g, id)).toBe(true);
+    expect(buy(g, 'boat_3')).toBe(false);
+    for (const id of ['rod_1', 'boat_3']) expect(buy(g, id)).toBe(true);
     expect(g.ctx.world.canMoveTo('river')).toBe(true);
     expect(g.ctx.world.canMoveTo('cove')).toBe(false);
   });
 
   it('starts coins, gear, and crew over, keeps the journal side of things, and pays the bonus', () => {
     const g = boot();
-    for (const id of ['boat_1', 'boat_2', 'boat_3', 'rod_1', 'hire_help', 'paper_lanterns']) expect(buy(g, id)).toBe(true);
+    for (const id of ['boat_1', 'patched_hull', 'boat_2', 'rod_1', 'boat_3', 'hire_help', 'paper_lanterns']) expect(buy(g, id)).toBe(true);
     g.ctx.wallet.add('coins', 100);
     expect(g.crew.hire('deckhand')).toBe(true);
     g.ctx.wallet.add('coins', 5000);
@@ -111,9 +116,9 @@ describe('moving the club', () => {
     // Club cosmetics (bought with gems) are kept, and so are gems.
     expect(g.upgrades.level('paper_lanterns')).toBe(1);
     expect(g.ctx.world.activeDecorations()).toContain('lanterns');
-    // +200% coins at Whisper River.
-    expect(clubBonus(g.ctx)).toBe(2);
-    expect(g.ctx.stats.get('sellValueMult')).toBeCloseTo(sellBefore * 3);
+    // +5% coins at Whisper River (its fish pay more on their own).
+    expect(clubBonus(g.ctx)).toBe(0.05);
+    expect(g.ctx.stats.get('sellValueMult')).toBeCloseTo(sellBefore * 1.05);
     // The pond can still be visited, and river tiers are now for sale.
     expect(g.ctx.world.isUnlocked('pond')).toBe(true);
     expect(g.ctx.world.setWater('pond')).toBe(true);
@@ -124,12 +129,12 @@ describe('moving the club', () => {
   it('remembers the club home and bonus across a reload', () => {
     const storage = new MemoryStorage();
     const g = boot(storage);
-    for (const id of ['boat_1', 'boat_2', 'boat_3']) buy(g, id);
+    for (const id of ['boat_1', 'patched_hull', 'boat_2', 'rod_1', 'boat_3']) buy(g, id);
     moveClub(g.ctx, 'river');
     g.ctx.save.save();
     const again = boot(storage);
     expect(again.ctx.world.clubRank).toBe(1);
-    expect(clubBonus(again.ctx)).toBe(2);
+    expect(clubBonus(again.ctx)).toBe(0.05);
     expect(again.upgrades.level('boat_3')).toBe(0);
   });
 
@@ -144,7 +149,7 @@ describe('moving the club', () => {
     const old = boot(storage);
     expect(old.ctx.world.clubRank).toBe(2);
     expect(old.ctx.world.waterId).toBe('cove');
-    expect(clubBonus(old.ctx)).toBe(4);
+    expect(clubBonus(old.ctx)).toBe(0.1);
   });
 
   it('saves from before Sunlit Reef keep their home water', () => {

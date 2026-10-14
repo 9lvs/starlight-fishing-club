@@ -121,8 +121,8 @@ export const CREEL = {
  */
 export const RESTED = {
   /** One charge for this much time away (counted up to the offline cap). */
-  perChargeMs: 6 * 60_000,
-  max: 20,
+  perChargeMs: 10 * 60_000,
+  max: 15,
   /** Extra share of the fish's value per rested catch (1 = pays double). */
   bonus: 1,
 };
@@ -163,8 +163,10 @@ export const GEMS = {
   base: 0.01,
   perTier: 0.005,
   max: 0.03,
-  /** Coins for one gem at Willow Pond. It rises with the club bonus, so it stays a choice later on. */
+  /** Coins for one gem at Willow Pond. It rises with what fish pay at the club's water, so it stays a choice later on. */
   tradeCoins: 1000,
+  /** The price is rounded to this, so it reads cleanly. */
+  tradeRound: 50,
   /** Amounts offered in the exchange. */
   tradeSteps: [1, 5, 10],
 };

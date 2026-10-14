@@ -20,6 +20,8 @@ export const CORE_STATS: StatDef[] = [
   { id: 'crewSellMult', base: 0.5, min: 0, max: 1, label: 'Crew sell value', format: 'mult' },
   { id: 'crewLuck', base: 0, min: 0, label: 'Crew luck', format: 'int' },
   { id: 'offlineCapHours', base: 8, min: 0, max: 24, label: 'Offline cap', format: 'hours' },
+  /** Most fish the crew bring back from one stretch away (Cozy Hammock raises it). Kept low so away time is a treat, not the income. */
+  { id: 'awayCatchCap', base: 4, min: 0, integer: true, label: 'Fish brought back', format: 'int' },
   /** Below 1 means kept fish are ready for market sooner (Ice Chest). */
   { id: 'prepTimeMult', base: 1, min: 0.1, label: 'Creel prep time', format: 'percent' },
   /** Chance a hand catch also brings up a gem, before the rarity bonus (see GEMS in tuning). */

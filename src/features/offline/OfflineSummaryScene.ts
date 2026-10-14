@@ -27,7 +27,7 @@ export class OfflineSummaryScene extends PanelScene<OfflineSummaryData> {
     addText(this, cx, y, `You were away ${formatDuration(data.elapsedMs)}`, { originX: 0.5, color: 'mist' });
     y += 16;
     if (data.appliedMs < data.elapsedMs) {
-      const t = addText(this, cx, y, `Your crew rested after ${formatDuration(data.appliedMs)}.\nA Cozy Hammock lets them fish longer.`, {
+      const t = addText(this, cx, y, `Your crew fish for up to ${formatDuration(data.appliedMs)} while you are away.`, {
         originX: 0.5,
         align: 'center',
         color: 'slate',

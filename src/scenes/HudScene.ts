@@ -7,6 +7,7 @@ import { getLayout, menuSlots, type Layout } from '../core/layout';
 import { uiState } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { FX, UI_TIMING } from '../config/tuning';
+import { ECONOMY } from '../config/balance';
 import { MOTION, color } from '../design/tokens';
 import { uiSignals } from '../ui/uiSignals';
 import { Button } from '../ui/Button';
@@ -28,7 +29,6 @@ export class HudScene extends Phaser.Scene {
   private L!: Layout;
   private currencies: CurrencyView[] = [];
   private waterText!: PixelText;
-  private bonusText!: PixelText;
   private phaseIcon!: Phaser.GameObjects.Image;
   private weatherIcon!: Phaser.GameObjects.Image;
   private toasts!: ToastLayer;
@@ -70,7 +70,6 @@ export class HudScene extends Phaser.Scene {
     attachTooltip(this, this.phaseIcon, () => TIME.phases.find((p) => p.id === this.ctx.world.phase)?.name ?? '');
     attachTooltip(this, this.weatherIcon, () => this.ctx.registries.weather.tryGet(this.ctx.world.weather)?.name ?? '');
     this.waterText = addText(this, this.L.width / 2, topBar.y + topBar.h + 4, '', { color: 'mist', outline: 'ink' });
-    this.bonusText = addText(this, this.L.width / 2, topBar.y + topBar.h + 4, '', { color: 'gold', outline: 'ink' });
     this.refreshWorld();
 
     this.buildMenu(menuBar.x, menuBar.y, menuBar.w, menuBar.h);
@@ -111,6 +110,14 @@ export class HudScene extends Phaser.Scene {
       const icon = addIcon(this, 0, this.L.topBar.y + 3, c.icon);
       const text = addText(this, 0, this.L.topBar.y + 4, '0', { color: c.color, outline: 'ink' });
       this.currencies.push({ id: c.id, icon, text, shown: this.ctx.wallet.get(c.id) });
+      // The club bonus lives here, out of the way: tap the coins to see it.
+      if (c.id === ECONOMY.defaultCurrency) {
+        icon.setInteractive();
+        attachTooltip(this, icon, () => {
+          const bonus = clubBonus(this.ctx);
+          return bonus > 0 ? `Club bonus: +${Math.round(bonus * 100)}% on every sale` : 'Moving the club adds a lasting coin bonus';
+        });
+      }
     }
     this.layoutCurrencies();
   }
@@ -133,13 +140,7 @@ export class HudScene extends Phaser.Scene {
   private refreshWorld(): void {
     const w = this.ctx.registries.waters.tryGet(this.ctx.world.waterId);
     this.waterText.setText(w?.name ?? '');
-    // The club bonus sits next to the water name so the reward for moving stays in view.
-    const bonus = clubBonus(this.ctx);
-    this.bonusText.setText(bonus > 0 ? `+${Math.round(bonus * 100)}%` : '');
-    const total = this.waterText.textWidth + (bonus > 0 ? 4 + this.bonusText.textWidth : 0);
-    const x = Math.round(this.L.width / 2 - total / 2);
-    this.waterText.setX(x);
-    this.bonusText.setX(x + this.waterText.textWidth + 4);
+    this.waterText.setX(Math.round(this.L.width / 2 - this.waterText.textWidth / 2));
     const phase = TIME.phases.find((p) => p.id === this.ctx.world.phase);
     if (phase && this.textures.exists(phase.icon)) this.phaseIcon.setTexture(phase.icon);
     const weather = this.ctx.registries.weather.tryGet(this.ctx.world.weather);

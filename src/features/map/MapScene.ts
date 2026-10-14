@@ -1,6 +1,6 @@
 // Map: the club's journey, one card per water from waters.json. Waters the club
 // has reached can be visited. The next one opens when the boat can reach it, and
-// moving there is a fresh start that pays a bigger coin bonus forever. Moving
+// moving there is a fresh start in richer water, with a small lasting coin bonus. Moving
 // asks twice and says exactly what starts over.
 import { clubBonus, moveClub } from '../../core/club';
 import type { WaterDef } from '../../core/content/schemas';
@@ -19,8 +19,10 @@ interface MapData {
 
 const STATUS_H = 22;
 
-export function bonusText(bonus: number): string {
-  return `+${Math.round(bonus * 100)}% coins`;
+/** What a water pays: how much its fish are worth, and the lasting club bonus for moving there. */
+export function payText(w: WaterDef): string {
+  const fish = `Fish x${Number.isInteger(w.fishValue) ? w.fishValue : w.fishValue.toFixed(1)}`;
+  return w.clubBonus > 0 ? `${fish}  +${Math.round(w.clubBonus * 100)}%` : fish;
 }
 
 export class MapScene extends PanelScene<MapData> {
@@ -79,8 +81,8 @@ export class MapScene extends PanelScene<MapData> {
       if (!unlocked && w.id !== next) icon.setAlpha(0.35);
       scroll.add(icon);
       scroll.add(addText(this, 40, y + 4, w.name, { color: unlocked || w.id === next ? 'mist' : 'slate', shadow: false }));
-      if (w.clubBonus > 0 && !w.comingSoon) {
-        scroll.add(addText(this, area.w - 7, y + 4, bonusText(w.clubBonus), { color: 'gold', shadow: false, originX: 1 }));
+      if (!w.comingSoon) {
+        scroll.add(addText(this, area.w - 7, y + 4, payText(w), { color: 'gold', shadow: false, originX: 1 }));
       }
       desc.setY(y + 16);
       scroll.add(desc);
@@ -151,7 +153,7 @@ export class MapScene extends PanelScene<MapData> {
         }),
       );
       const gain = w.clubBonus - clubBonus(this.ctx);
-      if (gain > 0) note(`${bonusText(w.clubBonus)}`, 'sage', 96);
+      if (gain > 0) note(`Fish x${w.fishValue}`, 'sage', 96);
       return;
     }
     scroll.add(
@@ -165,7 +167,7 @@ export class MapScene extends PanelScene<MapData> {
         variant: 'primary',
         onClick: () => {
           if (moveClub(this.ctx, w.id)) {
-            this.ctx.ui.toast(`Welcome to ${w.name}! Coins now earn ${bonusText(w.clubBonus).replace(' coins', '')}.`, {
+            this.ctx.ui.toast(`Welcome to ${w.name}! Fish here sell for more, and your club bonus is now +${Math.round(w.clubBonus * 100)}%.`, {
               icon: 'icon_flag',
               color: 'gold',
             });

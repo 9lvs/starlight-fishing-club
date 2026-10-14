@@ -289,11 +289,13 @@ export class FishingController {
     return waits.length === 0 || waits.some((w) => w <= 0) ? 0 : Math.min(...waits);
   }
 
-  /** Kept fish sell at today's prices, so upgrades bought later still count. */
+  /** Kept fish sell at today's prices, so upgrades bought later still count. Crew catches from time away sell at the crew price. */
   creelValue(index: number): number {
     const item = this.state.creel[index];
     if (!item || !this.ctx.registries.fish.has(item.fishId)) return 0;
-    return Math.max(1, Math.round(fishValue(this.ctx, item.fishId, this.ctx.stats.get('sellValueMult') * this.ctx.stats.get('fishSizeMult'))));
+    const s = this.ctx.stats;
+    const mult = s.get('sellValueMult') * s.get('fishSizeMult') * (item.crew ? s.get('crewSellMult') : 1);
+    return Math.max(1, Math.round(fishValue(this.ctx, item.fishId, mult)));
   }
 
   /** Free creel slots. */

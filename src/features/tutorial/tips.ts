@@ -65,7 +65,7 @@ export const TIPS: Record<string, TipDef> = {
   },
   move: {
     id: 'move',
-    text: 'Your boat can reach a new water! Moving the club starts fresh with a bigger coin bonus.',
+    text: 'Your boat can reach a new water! Moving the club starts fresh in richer water, where fish sell for more.',
     anchor: { kind: 'menu', entry: 'map' },
     dismissable: true,
     opens: 'Map',

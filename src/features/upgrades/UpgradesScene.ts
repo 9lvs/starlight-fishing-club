@@ -293,13 +293,8 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     // Lay the body out from 0, then place it: directly if it fits, else in a scroll area.
     const body: Phaser.GameObjects.GameObject[] = [helps, desc, eff];
     let by = 0;
-    helps.setY(by);
-    by += helps.textHeight + 2;
-    desc.setY(by);
-    by += desc.textHeight + 3;
-    eff.setY(by);
-    by += eff.textHeight + 4;
-    if (needsHead) {
+    const placeNeeds = () => {
+      if (!needsHead) return;
       body.push(needsHead);
       needsHead.setY(by);
       by += 12;
@@ -310,7 +305,17 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
         by += Math.max(12, q.label.textHeight + 1);
       }
       by += 2;
-    }
+    };
+    // Unmet requirements come first: a boat that needs a rod should say so without scrolling.
+    const blocked = reqs.some((q) => !q.met);
+    helps.setY(by);
+    by += helps.textHeight + 2;
+    if (blocked) placeNeeds();
+    desc.setY(by);
+    by += desc.textHeight + 3;
+    eff.setY(by);
+    by += eff.textHeight + 4;
+    if (!blocked) placeNeeds();
     if (leadsText) {
       body.push(leadsText);
       leadsText.setY(by);

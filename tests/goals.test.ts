@@ -36,15 +36,18 @@ describe('upgrade focus tags', () => {
 });
 
 describe('the next goal', () => {
-  it('starts with the first boat on the way to Whisper River', () => {
+  it('is not always a boat: the Sturdy Skiff needs the first rod, the Painted Rowboat a patched hull', () => {
     const g = nextGoal(world({}));
     expect(g.kind).toBe('buy');
-    expect(g.kind === 'buy' && g.upgrade.id).toBe('boat_1');
-    expect(g.kind === 'buy' && g.stepsLeft).toBe(3);
+    expect(g.kind === 'buy' && g.upgrade.id).toBe('rod_1');
+    expect(g.text).toBe('Buy Willow Switch, on the way to Whisper River');
+    const next = nextGoal(world({ rod_1: 1 }));
+    expect(next.kind === 'buy' && next.upgrade.id).toBe('patched_hull');
+    expect(nextGoal(world({ rod_1: 1, patched_hull: 1 })).kind === 'buy' && nextGoal(world({ rod_1: 1, patched_hull: 1 }))).toMatchObject({ upgrade: { id: 'boat_1' } });
   });
 
   it('then names the reach boat itself', () => {
-    const g = nextGoal(world({ boat_1: 1, boat_2: 1 }));
+    const g = nextGoal(world({ rod_1: 1, patched_hull: 1, boat_1: 1, boat_2: 1 }));
     expect(g.kind === 'buy' && g.upgrade.id).toBe('boat_3');
     expect(g.text).toBe('Buy Sturdy Skiff to reach Whisper River');
   });
@@ -57,9 +60,15 @@ describe('the next goal', () => {
 
 describe('the goal deeper in the journey', () => {
   it('points at the boat that reaches the next water, walked back to what you can buy', () => {
-    const levels = { boat_1: 1, boat_2: 1, boat_3: 1, boat_4: 1, boat_5: 1, boat_6: 1, boat_7: 1 };
-    const g = nextGoal(world(levels, { clubRank: 3, nextWater: 'glowing_cave' }));
-    expect(g.kind === 'buy' && g.upgrade.id).toBe('boat_8');
-    expect(g.text).toBe('Buy Glowshell Barge to reach Glowing Cave');
+    const boats = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((n) => [`boat_${n}`, 1]));
+    const rods = Object.fromEntries([1, 2, 3, 4, 5, 6].map((n) => [`rod_${n}`, 1]));
+    const bait = { bait_1: 1, bait_2: 1, bait_3: 1, bait_4: 1 };
+    // The Glowshell Barge needs the seventh rod first...
+    const g = nextGoal(world({ ...boats, ...rods, ...bait, patched_hull: 5 }, { clubRank: 3, nextWater: 'glowing_cave' }));
+    expect(g.kind === 'buy' && g.upgrade.id).toBe('rod_7');
+    // ...then it is the goal itself.
+    const g2 = nextGoal(world({ ...boats, ...rods, rod_7: 1, ...bait, patched_hull: 5 }, { clubRank: 3, nextWater: 'glowing_cave' }));
+    expect(g2.kind === 'buy' && g2.upgrade.id).toBe('boat_8');
+    expect(g2.text).toBe('Buy Glowshell Barge to reach Glowing Cave');
   });
 });
