@@ -131,3 +131,7 @@
 ## v0.8.1: Fish shadows swim on phones
 - Fixed: on a phone the fish shadow moved only about 26 game pixels (half the screen distance it covers on a laptop) and, as dark ink on night water, was hard to see, so it did not read as swimming. It now starts up to 48 pixels away (as far as the screen edge allows, choosing the side with room), takes 2.6 s along a soft curve, flicks its tail, and leaves a faint wake of light ripples that shows on any water. Playtest feedback.
 - Verified: 158 tests, typecheck, and build pass. Traced and recorded at 320x568 and 390x844, day and night.
+
+## v0.8.2: Fish shadow back to the v0.8.0 swim
+- Reverted: the v0.8.1 shadow path (longer swim, curve, wake). The owner prefers the original glide. Phone visibility is parked for later, for example if the game becomes an app.
+- Verified: 158 tests, typecheck, and build pass.

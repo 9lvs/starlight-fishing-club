@@ -71,3 +71,4 @@ One line per decision, with the reason. Newest at the bottom.
 - Fish shadows never hint at the fish: plain, random shape and size (owner's rule). The rare glow at the bobber stays as a rarity hint.
 - The legendary moment zooms the whole canvas with CSS rather than the Phaser camera, since a camera zoom resamples pixel art; its glow uses the legendary rarity color. Dimming the screen was tried and dropped (felt unrewarding).
 - Later (owner's list): forecast, trader, weekly events, money ideas, and more polish (jumping fish, gulls, the cat walking, lanterns, a whale, rain ripples, line wobble, Logbook confetti, journal page flips).
+- The fish shadow keeps the v0.8.0 glide (owner preferred it over the longer v0.8.1 path with a wake). How it reads on small phones is a later question, for example if the game becomes an app.
