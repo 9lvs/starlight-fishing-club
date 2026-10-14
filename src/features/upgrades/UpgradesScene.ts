@@ -14,6 +14,8 @@ import { attachTooltip } from '../../ui/Tooltip';
 import { formatNumber } from '../../ui/format';
 import { ECONOMY } from '../../config/balance';
 import { color, type PaletteName } from '../../design/tokens';
+import { focusesOf } from './focus';
+import { nextGoal } from './goals';
 import { layoutBranch, prereqList } from './logic';
 import { getUpgradeService } from './service';
 
@@ -81,14 +83,16 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     const cardMax = Math.max(64, Math.floor(area.h * CARD_MAX_SHARE));
     const cardH = sel ? this.buildCard(area, sel, branch, () => scrollRef?.position ?? 0, cardMax) : 0;
 
+    // The next goal on the journey, always in view; tap it to jump there.
+    let barH = this.buildGoal(area.x, area.y + TAB_H + 3, area.w);
+
     // A branch can offer a panel above its tree (the Club tab opens the gem exchange).
     const b = r.branches.get(branch);
-    let barH = 0;
     if (b.panel && this.scene.manager.keys[b.panel.sceneKey]) {
       const sceneKey = b.panel.sceneKey;
       new Button(this, {
         x: area.x,
-        y: area.y + TAB_H + 3,
+        y: area.y + TAB_H + 3 + barH,
         w: area.w,
         h: 16,
         label: b.panel.label,
@@ -96,7 +100,7 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
         variant: 'secondary',
         onClick: () => this.ctx.ui.openPanel(sceneKey),
       });
-      barH = 19;
+      barH += 19;
     }
 
     // Tree.
@@ -136,6 +140,15 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
       );
       node.setNode(svc.state(u), svc.level(u.id), u.maxLevel, u.id === selected, u.label, r.currencies.tryGet(u.currency ?? ECONOMY.defaultCurrency)?.icon);
       scroll.add(node);
+      // Colored marks down the left edge: what this upgrade helps (see focus.ts).
+      const marks = this.add.graphics();
+      focusesOf(u).forEach((f, i) => {
+        marks.fillStyle(color('ink'));
+        marks.fillRect(p.x - 5, p.y + 3 + i * 5, 4, 4);
+        marks.fillStyle(color(f.color));
+        marks.fillRect(p.x - 4, p.y + 4 + i * 5, 2, 2);
+      });
+      scroll.add(marks);
     }
     const maxRow = Math.max(0, ...slots.map((s) => s.row));
     scroll.setContentHeight(8 + (maxRow + 1) * (TREE_NODE.h + ROW_GAP));
@@ -145,6 +158,48 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
 
 
     this.listen('currencyChanged', () => this.refresh({ branch, selected, scroll: scroll.position }));
+  }
+
+  /** The goal bar: the next step toward the next water, with coins saved so far. Returns its height. */
+  private buildGoal(x: number, y: number, w: number): number {
+    const svc = getUpgradeService();
+    const world = this.ctx.world;
+    const r = this.ctx.registries;
+    const goal = nextGoal({
+      clubRank: world.clubRank,
+      nextWater: world.nextWater(),
+      waterName: (id) => r.waters.tryGet(id)?.name ?? id,
+      canMove: world.nextWater() !== null && world.canMoveTo(world.nextWater()!),
+      upgrades: [...r.upgrades.list()].sort((a, b) => a.requiresRank - b.requiresRank || (a.position?.row ?? 0) - (b.position?.row ?? 0)),
+      level: (id) => svc.level(id),
+      cost: (u) => svc.cost(u),
+    });
+    const h = 22;
+    const g = this.add.graphics();
+    drawPanelBox(g, x, y, w, h, { fill: 'ink', border: goal.kind === 'move' ? 'gold' : 'dusk' });
+    this.add.image(x + 3, y + 3, 'icon_flag').setOrigin(0, 0);
+    const label = goal.kind === 'buy' ? `Next goal: ${goal.short}` : goal.short;
+    addText(this, x + 17, y + 3, label, { color: goal.kind === 'move' ? 'gold' : 'mist', shadow: false });
+    if (goal.kind === 'buy') {
+      const have = this.ctx.wallet.get(goal.upgrade.currency ?? ECONOMY.defaultCurrency);
+      addText(this, x + w - 4, y + 3, `${formatNumber(Math.min(have, goal.cost))}/${formatNumber(goal.cost)}`, { color: 'slate', shadow: false, originX: 1 });
+      const p = Math.min(1, have / Math.max(1, goal.cost));
+      g.fillStyle(color('midnight'));
+      g.fillRect(x + 17, y + h - 6, w - 21, 3);
+      g.fillStyle(color(p >= 1 ? 'gold' : 'sage'));
+      g.fillRect(x + 17, y + h - 6, Math.round((w - 21) * p), 3);
+    }
+    const hit = this.add.zone(x, y, w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+    attachTooltip(this, hit, () => goal.text);
+    hit.on('pointerup', () => {
+      this.ctx.bus.emit('ui:click', {});
+      if (goal.kind === 'buy') this.refresh({ branch: goal.upgrade.branch, selected: goal.upgrade.id });
+      else if (goal.kind === 'move') {
+        this.close();
+        this.ctx.ui.openPanel('Map');
+      }
+    });
+    return h + 3;
   }
 
   /** First node worth looking at: the next tier to buy, else the first node. */
@@ -193,6 +248,7 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
       parts.push('Fully upgraded');
     }
     const eff = text(parts.join(compact ? '  ' : '\n'), 'sage');
+    const helps = text(`Helps: ${focusesOf(u).map((f) => f.name).join(', ')}`, focusesOf(u)[0]?.color ?? 'mist');
 
     // Requirements: each one listed, met or not, so the path is never a mystery.
     const reqs: { label: string; met: boolean }[] = [];
@@ -225,8 +281,10 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     const footH = showBuy ? 24 : 4;
     const head = 15;
     // Lay the body out from 0, then place it: directly if it fits, else in a scroll area.
-    const body: Phaser.GameObjects.GameObject[] = [desc, eff];
+    const body: Phaser.GameObjects.GameObject[] = [helps, desc, eff];
     let by = 0;
+    helps.setY(by);
+    by += helps.textHeight + 2;
     desc.setY(by);
     by += desc.textHeight + 3;
     eff.setY(by);
