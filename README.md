@@ -14,6 +14,8 @@ with a visible upgrade tree, and hire a crew who keep fishing while you are away
 - Every boat upgrade makes the boat bigger, with bunks for crew who stand on deck beside you.
 - Reel in fast for a quick-catch bonus. Wind, storms, rain, fog, and night each bring their own fish.
 - Calm composed music that follows the time of day, and a soft sound for every action.
+- A goal bar that always shows your next step, a Logbook of tasks for each water, tags on every
+  upgrade that say what it helps, and a How to play page in Settings.
 - Gentle tips for new players. Keep fish in your creel for bundle and matching set bonuses
   (3, 5, or 10 of a rarity), but sell them while they are fresh.
 - Gems: a rare find on any catch, or traded for coins. They buy looks for your boat,

@@ -35,7 +35,7 @@ export const ART_FILES: Record<string, string> = {};
 const ICONS = [
   'coin', 'rod', 'boat', 'crew', 'journal', 'settings', 'mute', 'sound', 'lock', 'map',
   'star', 'bait', 'creel', 'note', 'moon', 'sun', 'dusk', 'dawn', 'clear', 'rain', 'fog',
-  'lantern', 'cat', 'flag', 'close', 'check', 'gift', 'arrow', 'motion', 'daily', 'wind', 'storm', 'gem',
+  'lantern', 'cat', 'flag', 'close', 'check', 'gift', 'arrow', 'motion', 'daily', 'wind', 'storm', 'gem', 'task',
 ] as const;
 
 export type IconName = (typeof ICONS)[number];

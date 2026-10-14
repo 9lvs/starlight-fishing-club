@@ -27,8 +27,9 @@ export function nextGoal(w: GoalWorld): Goal {
   if (!w.nextWater) return { kind: 'done', text: 'You reached the last water! Finish your gear and fill the journal.', short: 'Fill the journal' };
   const water = w.waterName(w.nextWater);
   if (w.canMove) return { kind: 'move', waterId: w.nextWater, text: `Move the club to ${water} (Map)`, short: `Move to ${water}` };
-  // The boat that reaches the next water from here.
-  const reach = w.upgrades.find((u) => u.requiresRank <= w.clubRank && u.modifiers.some((m) => m.stat === 'boatRange') && w.level(u.id) < u.maxLevel);
+  // The boat that reaches the next water from here: the last reach boat you can work toward.
+  const reaches = w.upgrades.filter((u) => u.requiresRank <= w.clubRank && u.modifiers.some((m) => m.stat === 'boatRange') && w.level(u.id) < u.maxLevel);
+  const reach = reaches.sort((a, b) => b.requiresRank - a.requiresRank || (b.position?.row ?? 0) - (a.position?.row ?? 0))[0];
   if (!reach) return { kind: 'done', text: `Keep fishing to reach ${water}.`, short: 'Keep fishing' };
   // Walk back through what it needs until we find something you can buy now.
   const byId = new Map(w.upgrades.map((u) => [u.id, u]));

@@ -1,7 +1,7 @@
 // Upgrade guidance: what each upgrade helps (from its stats), and the next goal
 // on the journey, walked back to the first thing you can buy now.
 import { describe, expect, it } from 'vitest';
-import { focusesOf } from '../src/features/upgrades/focus';
+import { focusesOf } from '../src/config/focus';
 import { nextGoal, type GoalWorld } from '../src/features/upgrades/goals';
 import { loadBaseContent } from './helpers/content';
 
@@ -52,5 +52,14 @@ describe('the next goal', () => {
   it('says to move once the boat can reach, and is done at the last water', () => {
     expect(nextGoal(world({}, { canMove: true })).kind).toBe('move');
     expect(nextGoal(world({}, { nextWater: null })).kind).toBe('done');
+  });
+});
+
+describe('the goal deeper in the journey', () => {
+  it('points at the boat that reaches the next water, walked back to what you can buy', () => {
+    const levels = { boat_1: 1, boat_2: 1, boat_3: 1, boat_4: 1, boat_5: 1, boat_6: 1, boat_7: 1 };
+    const g = nextGoal(world(levels, { clubRank: 3, nextWater: 'glowing_cave' }));
+    expect(g.kind === 'buy' && g.upgrade.id).toBe('boat_8');
+    expect(g.text).toBe('Buy Glowshell Barge to reach Glowing Cave');
   });
 });

@@ -63,3 +63,6 @@ One line per decision, with the reason. Newest at the bottom.
 - Boats are longer at each tier and carry the crew (owner's request); a boat's bunks cap how many crew can be hired, alongside Hire Help contracts. Bunks come at tiers 2, 5, and 8 so the first helper still arrives in the first run.
 - Rare fish fight (owner's pick: a mix by rarity). A bad fight only raises the slip chance, it never loses the fish outright, and Easy reel turns fights off. A tap during the 280 ms after the hook or a dip is ignored so a double tap is not a fumble.
 - Next for boats (owner's idea): boat styles and upgrades that change with each water, like the per-water sound and music.
+- Guidance is two layers: a goal bar that always points along the journey (the main progression), and the Logbook for everything else the game wants to teach. Logbook tasks pay coins; only moving the club (and one Sky Lake task) pays gems, since gems are the premium currency (owner's direction).
+- Upgrade tags are derived from stats in `config/focus.ts`, so new upgrades are tagged without extra data.
+- Sign in and cloud saves are on hold until later (owner's call). Naming the club, boat, and crew and a favorite color are on the roadmap.

@@ -1,12 +1,16 @@
 // Settings feature: sound, volume, reduced motion, and save management.
 import type { GameFeature } from '../../core/feature';
+import { HowToPlayScene } from './HowToPlayScene';
 import { SettingsScene } from './SettingsScene';
 import { applySettings, settingsSlice, type SettingsSlice } from './state';
 
 export const settingsFeature: GameFeature = {
   id: 'settings',
   saveSlice: settingsSlice,
-  scenes: [{ key: 'Settings', scene: SettingsScene, kind: 'panel' }],
+  scenes: [
+    { key: 'Settings', scene: SettingsScene, kind: 'panel' },
+    { key: 'HowToPlay', scene: HowToPlayScene, kind: 'panel' },
+  ],
   menuEntries: [{ id: 'settings', label: 'Settings', icon: 'icon_settings', order: 90, sceneKey: 'Settings' }],
   init(ctx) {
     const s = ctx.save.slice<SettingsSlice>('settings');

@@ -1,4 +1,4 @@
 [
   { "id": "coins", "name": "Coins", "icon": "icon_coin", "color": "gold", "start": 0, "order": 0 },
-  { "id": "gems", "name": "Gems", "icon": "icon_gem", "color": "lavender", "start": 0, "order": 1, "hidden": true, "keepOnMove": true }
+  { "id": "gems", "name": "Gems", "icon": "icon_gem", "color": "lavender", "start": 0, "order": 1, "keepOnMove": true }
 ]

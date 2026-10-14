@@ -14,7 +14,7 @@ import { attachTooltip } from '../../ui/Tooltip';
 import { formatNumber } from '../../ui/format';
 import { ECONOMY } from '../../config/balance';
 import { color, type PaletteName } from '../../design/tokens';
-import { focusesOf } from './focus';
+import { focusesOf } from '../../config/focus';
 import { nextGoal } from './goals';
 import { layoutBranch, prereqList } from './logic';
 import { getUpgradeService } from './service';
@@ -178,17 +178,27 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     const g = this.add.graphics();
     drawPanelBox(g, x, y, w, h, { fill: 'ink', border: goal.kind === 'move' ? 'gold' : 'dusk' });
     this.add.image(x + 3, y + 3, 'icon_flag').setOrigin(0, 0);
-    const label = goal.kind === 'buy' ? `Next goal: ${goal.short}` : goal.short;
-    addText(this, x + 17, y + 3, label, { color: goal.kind === 'move' ? 'gold' : 'mist', shadow: false });
+    let room = w - 21;
     if (goal.kind === 'buy') {
       const have = this.ctx.wallet.get(goal.upgrade.currency ?? ECONOMY.defaultCurrency);
-      addText(this, x + w - 4, y + 3, `${formatNumber(Math.min(have, goal.cost))}/${formatNumber(goal.cost)}`, { color: 'slate', shadow: false, originX: 1 });
+      const count = addText(this, x + w - 4, y + 3, `${formatNumber(Math.min(have, goal.cost))}/${formatNumber(goal.cost)}`, { color: 'slate', shadow: false, originX: 1 });
+      room -= count.textWidth + 4;
       const p = Math.min(1, have / Math.max(1, goal.cost));
       g.fillStyle(color('midnight'));
       g.fillRect(x + 17, y + h - 6, w - 21, 3);
       g.fillStyle(color(p >= 1 ? 'gold' : 'sage'));
       g.fillRect(x + 17, y + h - 6, Math.round((w - 21) * p), 3);
     }
+    // Longest wording that fits on one line, never running into the coin count.
+    const label = addText(this, x + 17, y + 3, '', { color: goal.kind === 'move' ? 'gold' : 'mist', shadow: false });
+    const tries = goal.kind === 'buy' ? [`Next goal: ${goal.short}`, `Next: ${goal.short}`, goal.short] : [goal.short];
+    let fit = tries.find((t) => (label.setText(t), label.textWidth <= room));
+    if (!fit) {
+      let t = tries[tries.length - 1]!;
+      while (t.length > 3 && (label.setText(`${t}..`), label.textWidth > room)) t = t.slice(0, -1);
+      fit = `${t}..`;
+    }
+    label.setText(fit);
     const hit = this.add.zone(x, y, w, h).setOrigin(0, 0).setInteractive({ useHandCursor: true });
     attachTooltip(this, hit, () => goal.text);
     hit.on('pointerup', () => {

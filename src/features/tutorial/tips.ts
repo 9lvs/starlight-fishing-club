@@ -49,9 +49,16 @@ export const TIPS: Record<string, TipDef> = {
     dismissable: true,
     opens: 'Crew',
   },
+  logbook: {
+    id: 'logbook',
+    text: 'You finished a Logbook task! Claim your coins in the Logbook.',
+    anchor: { kind: 'menu', entry: 'logbook' },
+    dismissable: true,
+    opens: 'Logbook',
+  },
   gems: {
     id: 'gems',
-    text: 'You found a gem! Gems buy looks in the Club tab, and they stay when the club moves.',
+    text: 'You found a gem! Your gems show by your coins. They buy looks in the Club tab and stay when the club moves.',
     anchor: { kind: 'menu', entry: 'upgrades' },
     dismissable: true,
     opens: 'Upgrades',

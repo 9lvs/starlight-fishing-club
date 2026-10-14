@@ -100,6 +100,7 @@ comments that explain *why*. Small files.
   `src/art/spriteManifest.ts`. Sizes in `docs/SPRITES.md`.
 - **Sound**: drop files in `public/audio/` and set `files` in `src/config/audio.ts`. Music is
   composed live (`MUSIC` in that file); list a file in `MUSIC_FILES` to replace it.
+- **Logbook task**: add to `src/content/logbook/tasks.json` (kinds: catch, species, keep, set, clean, buy, hire, move).
 - **Tip**: add to `TIPS` in `src/features/tutorial/tips.ts` and queue it from an event in the
   feature's `index.ts`.
 
@@ -112,7 +113,9 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 139 unit tests.
+upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 149 unit tests.
+v0.7.0 adds the next-goal bar and focus tags in Upgrades, the Logbook (tasks for coins, gems on a move),
+How to play in Settings, and gems always shown in the top bar.
 v0.6.1 caps the upgrade card so the tree stays visible. v0.6.0 adds bigger boats with crew on deck, crew bunks from boat tiers, and rare fish that fight
 (tap the dips, hold for a legendary, Easy reel in Settings).
 v0.5.2 keeps the coin bar clear of panel backdrops. v0.5.1 slows the crew (30 s), softens the fog, and shortens the empty creel text. v0.5.0 adds creel freshness, matching set bonuses, crew that fill the creel while you are away,

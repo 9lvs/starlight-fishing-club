@@ -141,6 +141,19 @@ export class SettingsScene extends PanelScene {
 
     addText(this, x, y, 'Help and feedback', { color: 'gold' });
     y += 14;
+    new Button(this, {
+      x,
+      y,
+      w: area.w,
+      label: 'How to play',
+      icon: 'icon_journal',
+      variant: 'primary',
+      onClick: () => {
+        this.close();
+        this.ctx.ui.openPanel('HowToPlay');
+      },
+    });
+    y += ROW;
     const feedback = feedbackLink(GAME_VERSION);
     new Button(this, {
       x,

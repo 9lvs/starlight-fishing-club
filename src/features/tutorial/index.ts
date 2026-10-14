@@ -25,6 +25,7 @@ export const tutorialFeature: GameFeature = {
     bus.on('fishEscaped', () => svc.queue('tackle'));
     // These two only make sense in the moment, so they wait until the guide is done.
     bus.on('fishFight', () => svc.queue('fight'));
+    bus.on('logbookTaskDone', () => svc.queue('logbook'));
     bus.on('rareNearby', () => {
       if (svc.guideDone) svc.queue('glow');
     });

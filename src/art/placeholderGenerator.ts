@@ -641,6 +641,23 @@ function drawIcon(f: FrameCanvas, name: string): void {
       f.px(9, 4, 'coral');
       f.px(10, 3, 'coral');
       return;
+    case 'task':
+      // A small clipboard with ticked lines.
+      f.stamp(0, 0, [
+        '....bbbb....',
+        '..yyybbyyy..',
+        '..ymmmmmmy..',
+        '..ymemmmmy..',
+        '..yeemaamy..',
+        '..ymmmmmmy..',
+        '..ymemmmmy..',
+        '..yeemaamy..',
+        '..ymmmmmmy..',
+        '..ymmmmmmy..',
+        '..yyyyyyyy..',
+        '............',
+      ]);
+      return;
     case 'gem':
       f.stamp(0, 0, [
         '............',

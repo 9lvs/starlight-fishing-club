@@ -1,0 +1,1 @@
+{ "id": "logbook", "name": "Logbook tasks", "order": 0, "enabled": true, "requires": ["logbook"] }

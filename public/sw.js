@@ -1,7 +1,7 @@
 // Offline play. Pages are fetched network first (so updates arrive) and fall
 // back to the cache; everything else is served from the cache right away and
 // refreshed in the background. Bump CACHE to drop old files after a big change.
-const CACHE = 'sfc-v8';
+const CACHE = 'sfc-v9';
 
 self.addEventListener('install', () => self.skipWaiting());
 

@@ -7,6 +7,7 @@ import { dailyGiftFeature } from './dailyGift';
 import { fishingFeature } from './fishing';
 import { gemsFeature } from './gems';
 import { journalFeature } from './journal';
+import { logbookFeature } from './logbook';
 import { mapFeature } from './map';
 import { offlineFeature } from './offline';
 import { settingsFeature } from './settings';
@@ -17,6 +18,7 @@ export const FEATURES: GameFeature[] = [
   fishingFeature,
   upgradesFeature,
   journalFeature,
+  logbookFeature,
   crewFeature,
   mapFeature,
   offlineFeature,

@@ -112,3 +112,11 @@
 ## v0.6.1: Upgrade card no longer hides the tree
 - Fixed: on long upgrades (the boats with five effects and a requirement) the detail card grew over most of the panel and hid the tree. The card is now capped at 45% of the panel; longer text scrolls inside the card, so the tree always shows at least a few rows. Playtest feedback.
 - Verified: Keelboat, Glowshell Barge, Ice Chest, and Sharp Hooks at 320x568, 390x844, and 1280x720.
+
+## v0.7.0: Goals, the Logbook, and How to play
+- Built: a next-goal bar in the Upgrades panel (`features/upgrades/goals.ts`). It finds the boat that reaches the next water and walks back through its requirements to the first thing you can buy, with coins saved toward it; tapping jumps to that upgrade, or opens the Map when the club can move. The label shortens to fit beside the coin count.
+- Built: focus tags (`config/focus.ts`): every upgrade is tagged from the stats it changes (Faster fishing, More coins, Rarer fish, Crew and away, Creel, Reach new water, Looks only), shown as colored marks in the tree and a Helps line on each card.
+- Built: the Logbook feature (`features/logbook`, tasks in `content/logbook/tasks.json`): 36 tasks across the six waters (catch, different fish, keep, sets, clean fights, buy, hire, move). Tasks pay coins when claimed; moving the club pays 3 to 5 gems at once, since coins reset on a move. A menu entry with a badge for claimable tasks, a toast when one finishes, and a one-time tip.
+- Built: How to play (Settings > How to play): short sections on fishing, rare fish, the creel, crew, moving the club, goals and the Logbook, and gems, plus a legend for the upgrade tags.
+- Changed: gems always show next to coins in the top bar.
+- Verified: 149 tests, typecheck, and build pass. In the browser at 320x568, 390x844, and 1280x720: the goal bar, the Logbook with progress and claims, How to play, and the eight-icon menu bar.
