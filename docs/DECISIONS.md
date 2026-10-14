@@ -66,3 +66,8 @@ One line per decision, with the reason. Newest at the bottom.
 - Guidance is two layers: a goal bar that always points along the journey (the main progression), and the Logbook for everything else the game wants to teach. Logbook tasks pay coins; only moving the club (and one Sky Lake task) pays gems, since gems are the premium currency (owner's direction).
 - Upgrade tags are derived from stats in `config/focus.ts`, so new upgrades are tagged without extra data.
 - Sign in and cloud saves are on hold until later (owner's call). Naming the club, boat, and crew and a favorite color are on the roadmap.
+- No caps or cooldowns on play (owner's call). Return visits are rewarded instead: fresh bait from time away and three daily tasks.
+- Keep for market replaces freshness (owner's pick): kept fish cannot sell for 2 minutes, which makes Sell (coins now) and Keep (more coins later with sets) a real choice. Two timers on one fish would feel like a penalty, so freshness was removed.
+- Fish shadows never hint at the fish: plain, random shape and size (owner's rule). The rare glow at the bobber stays as a rarity hint.
+- The legendary moment zooms the whole canvas with CSS rather than the Phaser camera, since a camera zoom resamples pixel art; its glow uses the legendary rarity color. Dimming the screen was tried and dropped (felt unrewarding).
+- Later (owner's list): forecast, trader, weekly events, money ideas, and more polish (jumping fish, gulls, the cat walking, lanterns, a whale, rain ripples, line wobble, Logbook confetti, journal page flips).

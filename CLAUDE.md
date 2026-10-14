@@ -100,7 +100,7 @@ comments that explain *why*. Small files.
   `src/art/spriteManifest.ts`. Sizes in `docs/SPRITES.md`.
 - **Sound**: drop files in `public/audio/` and set `files` in `src/config/audio.ts`. Music is
   composed live (`MUSIC` in that file); list a file in `MUSIC_FILES` to replace it.
-- **Logbook task**: add to `src/content/logbook/tasks.json` (kinds: catch, species, keep, set, clean, buy, hire, move).
+- **Logbook task**: add to `src/content/logbook/tasks.json` (kinds: catch, species, keep, set, clean, buy, hire, move). Daily tasks go in `dailies.json` there.
 - **Tip**: add to `TIPS` in `src/features/tutorial/tips.ts` and queue it from an event in the
   feature's `index.ts`.
 
@@ -113,7 +113,10 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 149 unit tests.
+upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 158 unit tests.
+v0.8.0 adds fresh bait (rested bonus from time away), three daily Logbook tasks, keep for market
+(kept fish prep 2 min before they sell, freshness removed), fish shadows, the legendary zoom and gold glow,
+crew that react and doze, and coins that fly to the counter.
 v0.7.0 adds the next-goal bar and focus tags in Upgrades, the Logbook (tasks for coins, gems on a move),
 How to play in Settings, and gems always shown in the top bar.
 v0.6.1 caps the upgrade card so the tree stays visible. v0.6.0 adds bigger boats with crew on deck, crew bunks from boat tiers, and rare fish that fight
