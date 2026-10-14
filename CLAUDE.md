@@ -88,7 +88,7 @@ comments that explain *why*. Small files.
 ## How to add X (short version, full recipes in docs/)
 
 - **Fish**: add an entry to `src/content/base/fish.json` (or a new pack). See `docs/ADDING_CONTENT.md`.
-- **Water**: add to `waters.json` with the next `rangeRequired`, a `clubBonus` above the last water's,
+- **Water**: add to `waters.json` with the next `rangeRequired`, a `clubBonus` above the last water's, fish priced above the last water's,
   a reach boat for it, a scene preset, and its landmarks and effects (`docs/ADDING_CONTENT.md`).
 - **Upgrade**: add to `upgrades.json` with `modifiers: [{ "stat": "luck", "op": "add", "value": 1 }]`.
 - **Crew type / weather / rarity / decoration / currency**: add to the matching JSON file.
@@ -113,7 +113,9 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 158 unit tests.
+upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 159 unit tests.
+v0.9.0 makes the club bonus small (+5% to +80%, later fish simply cost more), has every boat need gear from
+another branch, and cuts away earnings (crew price, a 4-fish cap raised by the Cozy Hammock).
 v0.8.2 restores the v0.8.0 fish shadow (v0.8.1 tried a longer path with a wake). v0.8.0 adds fresh bait (rested bonus from time away), three daily Logbook tasks, keep for market
 (kept fish prep 2 min before they sell, freshness removed), fish shadows, the legendary zoom and gold glow,
 crew that react and doze, and coins that fly to the counter.

@@ -84,7 +84,8 @@ export class DailyCatchScene extends PanelScene {
     new RarityBanner(this, cx, y, { name: rarity.name, color: rarity.color, frame: rarity.frame, glow: rarity.glow, pips: rarity.pips, shape: rarity.shape });
     y += 17;
     const when = fish.timeOfDay.length > 0 ? ` at ${fish.timeOfDay.map((p) => TIME.phases.find((x) => x.id === p)?.name.toLowerCase() ?? p).join(' or ')}` : '';
-    line(`Bites at ${water?.name ?? 'the pond'}${when}`, 'slate', 3);
+    // It only bites at the starting water, wherever the club lives now: say so plainly.
+    line(`Only bites at ${water?.name ?? 'the pond'}${when}`, 'sky', 3);
     line(
       caught
         ? `Caught in ${caught.casts} ${caught.casts === 1 ? 'cast' : 'casts'}! It sold for ${DAILY_CATCH.valueMult}x.`

@@ -118,10 +118,8 @@ export const waterSchema = z.object({
    * can move here once boatRange reaches this value and it is the next stop.
    */
   rangeRequired: z.number().int().min(0).default(0),
-  /** Extra coins earned everywhere once the club has moved here (0.05 = +5%). Kept small: waters pay more through fishValue. */
+  /** Extra coins earned everywhere once the club has moved here (0.05 = +5%). Kept small: later waters pay more because their fish are priced higher. */
   clubBonus: z.number().min(0).default(0),
-  /** Fish that live here are worth this many times their listed baseValue (the starting water is 1). */
-  fishValue: z.number().positive().default(1),
   /** Fish here fight harder: added to every rarity's tackle need. */
   tackleNeed: z.number().min(0).default(0),
   comingSoon: z.boolean().default(false),

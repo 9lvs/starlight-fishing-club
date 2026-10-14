@@ -19,12 +19,6 @@ interface MapData {
 
 const STATUS_H = 22;
 
-/** What a water pays: how much its fish are worth, and the lasting club bonus for moving there. */
-export function payText(w: WaterDef): string {
-  const fish = `Fish x${Number.isInteger(w.fishValue) ? w.fishValue : w.fishValue.toFixed(1)}`;
-  return w.clubBonus > 0 ? `${fish}  +${Math.round(w.clubBonus * 100)}%` : fish;
-}
-
 export class MapScene extends PanelScene<MapData> {
   readonly title = 'Map';
   override readonly icon = 'icon_map';
@@ -81,8 +75,8 @@ export class MapScene extends PanelScene<MapData> {
       if (!unlocked && w.id !== next) icon.setAlpha(0.35);
       scroll.add(icon);
       scroll.add(addText(this, 40, y + 4, w.name, { color: unlocked || w.id === next ? 'mist' : 'slate', shadow: false }));
-      if (!w.comingSoon) {
-        scroll.add(addText(this, area.w - 7, y + 4, payText(w), { color: 'gold', shadow: false, originX: 1 }));
+      if (w.clubBonus > 0 && !w.comingSoon) {
+        scroll.add(addText(this, area.w - 7, y + 4, `+${Math.round(w.clubBonus * 100)}% coins`, { color: 'gold', shadow: false, originX: 1 }));
       }
       desc.setY(y + 16);
       scroll.add(desc);
@@ -153,7 +147,7 @@ export class MapScene extends PanelScene<MapData> {
         }),
       );
       const gain = w.clubBonus - clubBonus(this.ctx);
-      if (gain > 0) note(`Fish x${w.fishValue}`, 'sage', 96);
+      if (gain > 0) note(`+${Math.round(w.clubBonus * 100)}% coins`, 'sage', 96);
       return;
     }
     scroll.add(

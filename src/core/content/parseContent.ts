@@ -165,21 +165,7 @@ export function parseContent(
     });
   }
 
-  applyWaterValues(content);
   return { content, errors };
-}
-
-/**
- * Fish are priced on the starting water's scale in fish.json; each water's
- * fishValue multiplies the fish that live there (by their first listed
- * water), so later waters pay more without retyping every price.
- */
-function applyWaterValues(content: ParsedContent): void {
-  const mult = new Map(content.waters.map((w) => [w.id, w.fishValue]));
-  content.fish = content.fish.map((f) => {
-    const m = mult.get(f.waters[0] ?? '') ?? 1;
-    return m === 1 ? f : { ...f, baseValue: Math.round(f.baseValue * m * 100) / 100 };
-  });
 }
 
 function stripOverride(entry: unknown): unknown {

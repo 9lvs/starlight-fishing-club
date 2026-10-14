@@ -135,3 +135,10 @@
 ## v0.8.2: Fish shadow back to the v0.8.0 swim
 - Reverted: the v0.8.1 shadow path (longer swim, curve, wake). The owner prefers the original glide. Phone visibility is parked for later, for example if the game becomes an app.
 - Verified: 158 tests, typecheck, and build pass.
+
+## v0.9.0: One small club bonus, boats that need other gear, gentler time away
+- Changed: the club bonus is small and is the only bonus shown: +5% at Whisper River, +10%, +20%, +40%, and +80% at Sky Lake (was +200% to +2,400%). Later waters pay more because their fish are priced higher in `fish.json` (about x2.9 river, x4.5 cove, x5.8 reef, x7.1 cave, x13.9 Sky Lake over pond prices), so the journey's pace is unchanged. The bonus left the top banner: tap the coins to see it; the Map lists each water's bonus. The gem price follows average fish prices at the club's water.
+- Changed: every boat also needs gear from another branch (rods, the Fish Hold, crew, or bait); see `upgrades.json`. The goal bar walks back through them, so goals are often rods, creel, or crew. A boat's card lists unmet needs first. Four Logbook "buy this boat" tasks became rod, bait, and crew tasks.
+- Changed: crew catches from time away sell at the crew price, and the crew bring back at most 4 fish (`awayCatchCap`); the Cozy Hammock now adds 3 per level (up to 28) instead of more hours. Fresh bait fills at one per 10 minutes, up to 15. Eight hours away now pays about half what it did (1.5 minutes of hand fishing early, 3.2 minutes late).
+- Changed: the Daily Catch says it only bites at Willow Pond.
+- Verified: 159 tests, typecheck, and build pass. The pacing sim follows the goal bar: 5.8 hours in all. Checked at 320x568, 390x844, and 1280x720.

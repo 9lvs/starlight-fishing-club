@@ -72,3 +72,6 @@ One line per decision, with the reason. Newest at the bottom.
 - The legendary moment zooms the whole canvas with CSS rather than the Phaser camera, since a camera zoom resamples pixel art; its glow uses the legendary rarity color. Dimming the screen was tried and dropped (felt unrewarding).
 - Later (owner's list): forecast, trader, weekly events, money ideas, and more polish (jumping fish, gulls, the cat walking, lanterns, a whale, rain ripples, line wobble, Logbook confetti, journal page flips).
 - The fish shadow keeps the v0.8.0 glide (owner preferred it over the longer v0.8.1 path with a wake). How it reads on small phones is a later question, for example if the game becomes an app.
+- One bonus, kept small (owner's call): the club bonus is the only percentage players see (+5% to +80%). Later waters pay more because their fish cost more, not through a second multiplier. Revisiting earlier waters is for looks, the journal, and the Daily Catch at Willow Pond.
+- Boats need gear from other branches (owner's request), so goals are not always boats. Prerequisites list the other branch first so the goal bar points there.
+- Time away is a treat, not the income (owner's direction): away crew fish sell at the crew price and the crew bring back a capped number of fish, raised by the Cozy Hammock.

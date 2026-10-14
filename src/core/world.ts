@@ -218,7 +218,7 @@ export class WorldState {
     return rank;
   }
 
-  private firstWater(): string {
+  firstWater(): string {
     const first = this.unlockedWaters()[0];
     if (!first) throw new Error('no playable water: check rangeRequired in waters.json');
     return first;

@@ -40,9 +40,20 @@ export class GemService {
 
   /** Coins for one gem right now: it follows what fish pay at the club's water, so gems stay a choice later on. */
   get rate(): number {
-    const water = this.ctx.registries.waters.tryGet(this.ctx.world.clubWater());
-    const raw = GEMS.tradeCoins * (water?.fishValue ?? 1) * (1 + clubBonus(this.ctx));
+    const raw = GEMS.tradeCoins * this.priceScale() * (1 + clubBonus(this.ctx));
     return Math.round(raw / GEMS.tradeRound) * GEMS.tradeRound;
+  }
+
+  /** How much more fish at the club's water sell for than at the starting water (by average price). */
+  private priceScale(): number {
+    const r = this.ctx.registries;
+    const avg = (waterId: string) => {
+      const vals = r.fish.list().filter((f) => f.waters[0] === waterId).map((f) => f.baseValue);
+      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    };
+    const first = avg(this.ctx.world.firstWater());
+    const here = avg(this.ctx.world.clubWater());
+    return first > 0 && here > 0 ? here / first : 1;
   }
 
   canTrade(gems: number): boolean {
