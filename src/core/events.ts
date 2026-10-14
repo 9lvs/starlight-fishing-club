@@ -83,4 +83,6 @@ export interface GameEvents {
   /** Show the getting-started tips again (Settings). */
   'help:replay': Record<string, never>;
   'audio:play': { key: string; volume?: number };
+  /** A gentle zoom of the whole screen toward a point (game pixels), with an optional glow at the screen edges, then back. Presentation only. */
+  'camera:zoom': { x: number; y: number; scale: number; inMs: number; glow?: string } | { reset: true; outMs: number };
 }

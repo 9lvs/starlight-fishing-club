@@ -31,6 +31,27 @@ body {
   outline: none;
 }
 
+/* The gold glow around the screen for a legendary catch (see main.ts). */
+.edge-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    inset 0 0 0 3px color-mix(in srgb, var(--glow, #ffd166) 70%, transparent),
+    inset 0 0 28px 10px color-mix(in srgb, var(--glow, #ffd166) 55%, transparent),
+    inset 0 0 90px 30px color-mix(in srgb, var(--glow, #ffd166) 22%, transparent);
+  animation: edge-glow-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes edge-glow-breathe {
+  50% { filter: brightness(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge-glow { animation: none; }
+}
+
 #safe-area-probe {
   position: fixed;
   top: 0;

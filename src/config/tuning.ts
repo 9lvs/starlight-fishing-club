@@ -139,10 +139,13 @@ export const DAILY_TASKS = {
  * turns the moving parts off.
  */
 export const FX = {
-  /** A fish shadow glides up to the bobber just before the bite. Rarer fish are bigger and tinted. */
-  shadow: { leadMs: 1800, startDx: 26, baseLen: 5, perTier: 2, alpha: 0.35, rimAlpha: 0.45 },
-  /** Landing a legendary: the leap slows, the water dims around it, and gold sparkles burst. */
-  legendary: { minTier: 4, slow: 2.2, arcPx: 40, dim: 0.35, dimInMs: 400, sparkles: 14, burstPx: 22, trailEveryMs: 50 },
+  /**
+   * A fish shadow glides up to the bobber just before the bite. Only a dark
+   * shape: its size and shape are random, so it never gives the fish away.
+   */
+  shadow: { leadMs: 1800, startDx: 26, minLen: 5, maxLen: 11, alpha: 0.35 },
+  /** Landing a legendary: the leap slows, the screen zooms in a little, a gold glow rims the edges, and sparkles burst. */
+  legendary: { minTier: 4, slow: 2.2, arcPx: 40, zoom: 1.12, zoomInMs: 600, zoomOutMs: 700, sparkles: 14, burstPx: 22, trailEveryMs: 50 },
   /** Crew on deck: a hop for a rare catch, their own little lines, and dozing at night. */
   crew: { cheerMinTier: 2, hopPx: 3, hopMs: 150, staggerMs: 90, zEveryMs: 2600, zRisePx: 10, zLifeMs: 1800 },
   /** Coins fly from the boat to the coin counter when you sell. */

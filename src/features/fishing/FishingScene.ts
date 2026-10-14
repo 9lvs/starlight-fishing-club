@@ -5,7 +5,7 @@ import { getContext, type GameContext } from '../../core/context';
 import { getLayout, type Layout } from '../../core/layout';
 import { uiState, worldAnchors } from '../../core/sceneState';
 import { CREEL, FIGHT, FISHING, FX } from '../../config/tuning';
-import { MOTION, color, type PaletteName } from '../../design/tokens';
+import { MOTION, PALETTE, color, type PaletteName } from '../../design/tokens';
 import { Button } from '../../ui/Button';
 import { drawPixelEllipse, drawSaggingLine } from '../../ui/pixelDraw';
 import { addText, type PixelText } from '../../ui/text';
@@ -47,8 +47,10 @@ export class FishingScene extends Phaser.Scene {
   /** The fish's shadow gliding up to the bobber before a bite. */
   private shadow!: Phaser.GameObjects.Graphics;
   private shadowSide = 1;
-  /** The legendary moment: the dim around the leap, and its sparkles. */
-  private moment: { dim: Phaser.GameObjects.Rectangle; sparks: Phaser.GameObjects.Graphics; motes: { x: number; y: number; vx: number; vy: number; age: number; life: number; c: PaletteName }[] } | null = null;
+  /** This cast's shadow: a random length and plumpness. */
+  private shadowShape = { len: 7, h: 1 };
+  /** The legendary moment: the gold glow at the screen edges, and its sparkles. */
+  private moment: { sparks: Phaser.GameObjects.Graphics; motes: { x: number; y: number; vx: number; vy: number; age: number; life: number; c: PaletteName }[] } | null = null;
   private bobber!: Phaser.GameObjects.Sprite;
   private cue!: PixelText;
   private message!: PixelText;
@@ -156,6 +158,7 @@ export class FishingScene extends Phaser.Scene {
     );
     this.events.once('shutdown', () => {
       this.offs.forEach((off) => off());
+      if (this.moment) this.ctx.bus.emit('camera:zoom', { reset: true, outMs: 0 });
       uiState.modal = false;
     });
 
@@ -185,6 +188,11 @@ export class FishingScene extends Phaser.Scene {
         this.say('');
         this.throwBobber();
         this.shadowSide = Math.random() < 0.5 ? -1 : 1;
+        // Random on purpose: the shadow says a fish is coming, not which one.
+        this.shadowShape = {
+          len: FX.shadow.minLen + Math.floor(Math.random() * (FX.shadow.maxLen - FX.shadow.minLen + 1)),
+          h: Math.random() < 0.5 ? 1 : 2,
+        };
         break;
       case 'early':
         this.say('Wait for the bite...', 'sky');
@@ -341,21 +349,22 @@ export class FishingScene extends Phaser.Scene {
     this.bobber.setVisible(false);
   }
 
-  /** Dim the water around a legendary's leap, gently, so the eye follows the fish. */
+  /** A legendary's leap: the screen eases in a little toward it and a warm gold glow rims the screen. */
   private startMoment(): void {
     this.endMoment();
-    const dim = this.add.rectangle(0, 0, this.L.width, this.L.height, color('ink'), 1).setOrigin(0, 0).setDepth(40).setAlpha(0);
+    const cfg = FX.legendary;
     const sparks = this.add.graphics().setDepth(46);
-    this.tweens.add({ targets: dim, alpha: FX.legendary.dim, duration: FX.legendary.dimInMs, ease: MOTION.easeOut });
-    this.moment = { dim, sparks, motes: [] };
+    const { bobber, boat } = this.L;
+    this.ctx.bus.emit('camera:zoom', { x: Math.round((bobber.x + boat.x) / 2), y: Math.round(Math.min(bobber.y, boat.y) - cfg.arcPx / 2), scale: cfg.zoom, inMs: cfg.zoomInMs, glow: `#${PALETTE.gold.toString(16).padStart(6, '0')}` });
+    this.moment = { sparks, motes: [] };
   }
 
-  /** The catch card takes over: the dim fades and the sparkles finish on their own. */
+  /** The catch card takes over: the zoom and glow ease back, and the sparkles finish on their own. */
   private endMoment(): void {
     const m = this.moment;
     if (!m) return;
     this.moment = null;
-    this.tweens.add({ targets: m.dim, alpha: 0, duration: MOTION.popupIn, onComplete: () => m.dim.destroy() });
+    this.ctx.bus.emit('camera:zoom', { reset: true, outMs: FX.legendary.zoomOutMs });
     this.time.delayedCall(900, () => m.sparks.destroy());
     // Let the last sparkles fade under the card.
     const left = m.motes;
@@ -408,14 +417,13 @@ export class FishingScene extends Phaser.Scene {
   }
 
   /**
-   * Before the bite, the fish's shadow glides in under the bobber from one
-   * side. Bigger for rarer fish, with a rim in its rarity color from rare up.
+   * Before the bite, a fish's shadow glides in under the bobber from one side.
+   * Just a dark shape of random size: you only see the fish once it leaves the water.
    */
   private drawShadow(phase: string, reduced: boolean): void {
     const g = this.shadow;
     g.clear();
-    const tier = this.ctl.upcomingTier;
-    if (tier < 0 || (phase !== 'waiting' && phase !== 'bite')) return;
+    if (this.ctl.upcomingTier < 0 || (phase !== 'waiting' && phase !== 'bite')) return;
     const s = this.ctl.session;
     const cfg = FX.shadow;
     const left = phase === 'bite' ? 0 : s.duration - s.elapsed;
@@ -423,21 +431,13 @@ export class FishingScene extends Phaser.Scene {
     const p = 1 - left / cfg.leadMs;
     const ease = 1 - (1 - p) ** 2;
     const { bobber } = this.L;
+    const { len, h } = this.shadowShape;
     const dx = reduced ? 0 : Math.round(this.shadowSide * cfg.startDx * (1 - ease));
-    const wiggle = reduced ? 0 : Math.round(Math.sin(this.elapsed / 160));
-    const len = cfg.baseLen + tier * cfg.perTier;
+    const wiggle = reduced || phase === 'bite' ? 0 : Math.round(Math.sin(this.elapsed / 160));
     const cx = bobber.x + dx + this.shadowSide * Math.round(len / 2);
-    const cy = bobber.y + 5 + (phase === 'bite' ? 0 : wiggle);
-    const fade = Math.min(1, p * 2);
-    const alpha = cfg.alpha * fade;
-    const rarity = this.ctx.registries.rarities.tryGet(this.ctl.upcomingRarity ?? '');
+    const cy = bobber.y + 5 + wiggle;
+    g.fillStyle(color('ink'), cfg.alpha * Math.min(1, p * 2));
     // Body: a soft lozenge, with the tail on the side it came from.
-    const h = tier >= 3 ? 2 : 1;
-    if (rarity && tier >= FISHING.glowMinTier) {
-      g.fillStyle(color(rarity.color), cfg.rimAlpha * fade);
-      g.fillRect(cx - Math.floor(len / 2) - 1, cy - h, len + 2, h * 2 + 1);
-    }
-    g.fillStyle(color('ink'), alpha);
     g.fillRect(cx - Math.floor(len / 2), cy - h + 1, len, h * 2 - 1);
     g.fillRect(cx - Math.floor(len / 2) + 1, cy - h, len - 2, h * 2 + 1);
     const tailX = this.shadowSide > 0 ? cx + Math.ceil(len / 2) : cx - Math.floor(len / 2) - 2;

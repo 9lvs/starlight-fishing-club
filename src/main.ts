@@ -92,6 +92,33 @@ function main(): void {
     window.setTimeout(onResize, DISPLAY.orientationSettleMs);
   });
 
+  // A gentle zoom of the whole canvas (the legendary moment). Done with CSS on
+  // the upscaled canvas, so game pixels stay crisp instead of being resampled.
+  // The edge glow sits over the canvas, so the zoom never pushes it off screen.
+  const edgeGlow = document.createElement('div');
+  edgeGlow.className = 'edge-glow';
+  document.getElementById('game')?.appendChild(edgeGlow);
+  ctx.bus.on('camera:zoom', (z) => {
+    const canvas = game.canvas;
+    if (!canvas) return;
+    if ('reset' in z) {
+      canvas.style.transition = `transform ${z.outMs}ms ease-in-out`;
+      canvas.style.transform = '';
+      edgeGlow.style.transition = `opacity ${z.outMs}ms ease-in-out`;
+      edgeGlow.style.opacity = '0';
+      return;
+    }
+    if (z.glow) {
+      edgeGlow.style.setProperty('--glow', z.glow);
+      edgeGlow.style.transition = `opacity ${z.inMs}ms ease-out`;
+      edgeGlow.style.opacity = '1';
+    }
+    if (ctx.flags.reducedMotion) return;
+    canvas.style.transformOrigin = `${z.x * vp.cssZoom}px ${z.y * vp.cssZoom}px`;
+    canvas.style.transition = `transform ${z.inMs}ms ease-out`;
+    canvas.style.transform = `scale(${z.scale})`;
+  });
+
   // Autosave on a timer and whenever the page is hidden or closed.
   const save = () => {
     ctx.bus.emit('beforeSave', {});
