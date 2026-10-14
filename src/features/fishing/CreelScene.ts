@@ -93,11 +93,9 @@ export class CreelScene extends PanelScene<CreelData> {
         list.add(this.add.image(3, y + 2, fish.spriteKey).setOrigin(0, 0));
         list.add(addText(this, 22, y + 1, fish.name, { shadow: false, color: rarity?.color ?? 'mist', maxWidth: area.w - 74 }));
       }
-      // Under the name: ready to sell, or a bar filling while it is prepped. Crew catches are marked.
+      // A bar under the name fills while the fish is prepped. Ready fish just show their lit sell button.
       const left = ctl.prepLeft(item);
-      if (left <= 0) {
-        list.add(addText(this, 22, y + 11, item.crew ? 'Ready, crew' : 'Ready', { shadow: false, color: 'sage' }));
-      } else {
+      if (left > 0) {
         const bar = new ProgressBar(this, 22, y + 13, area.w - 74 - 4, 3, 'sand');
         bar.setValue(1 - left / Math.max(1, ctl.prepMs));
         list.add(bar);
