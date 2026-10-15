@@ -42,25 +42,6 @@ export class CrewScene extends PanelScene {
       if (t) scroll.add(this.add.sprite(4, y + 9, t.spriteKey, 0).setOrigin(0, 0));
       scroll.add(addText(this, 24, y + 3, t?.name ?? m.typeId, { color: 'mist', shadow: false }));
       scroll.add(addText(this, 24, y + 14, `${formatNumber(m.catches)} fish  +${formatNumber(m.earned)}`, { color: 'slate', shadow: false }));
-      const unlocked = this.ctx.world.unlockedWaters();
-      const waterName = r.waters.tryGet(m.waterId)?.name ?? m.waterId;
-      scroll.add(
-        new Button(this, {
-          x: area.w - 82,
-          y: y + 3,
-          w: 76,
-          h: 18,
-          label: waterName.split(' ').slice(-1)[0] ?? waterName,
-          icon: 'icon_map',
-          variant: 'secondary',
-          disabled: unlocked.length < 2,
-          onClick: () => {
-            const next = unlocked[(unlocked.indexOf(m.waterId) + 1) % unlocked.length]!;
-            svc.assign(m.id, next);
-            this.scene.restart();
-          },
-        }),
-      );
       const bar = new ProgressBar(this, 24, y + 28, area.w - 32, 6, 'sage');
       scroll.add(bar);
       this.bars.push({ bar, id: m.id });

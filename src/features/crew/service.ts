@@ -57,17 +57,15 @@ export class CrewService {
     const t = this.ctx.registries.crewTypes.get(typeId);
     if (!this.canHire(t)) return false;
     if (!this.ctx.wallet.spend(t.currency ?? ECONOMY.defaultCurrency, t.hireCost)) return false;
-    const m: CrewMember = { id: `c${this.slice.nextId++}`, typeId, waterId: this.ctx.world.waterId, progressMs: 0, catches: 0, earned: 0 };
+    const m: CrewMember = { id: `c${this.slice.nextId++}`, typeId, waterId: this.ctx.world.clubWater(), progressMs: 0, catches: 0, earned: 0 };
     this.slice.members.push(m);
     this.ctx.bus.emit('crewHired', { crewId: m.id, typeId });
     return true;
   }
 
-  assign(crewId: string, waterId: string): void {
-    const m = this.slice.members.find((x) => x.id === crewId);
-    if (!m || !this.ctx.world.isUnlocked(waterId)) return;
-    m.waterId = waterId;
-    this.ctx.bus.emit('crewAssigned', { crewId, waterId });
+  /** Crew fish where the club is: earlier waters pay less, so there is no reason to send them back. */
+  private get waterId(): string {
+    return this.ctx.world.clubWater();
   }
 
   /** The club moved: helpers stay behind, and new ones are hired at the new water. */
@@ -82,7 +80,7 @@ export class CrewService {
       m.progressMs += dt;
       while (m.progressMs >= interval) {
         m.progressMs -= interval;
-        const made = makeCatch(this.ctx, { waterId: m.waterId, luck: this.luck(m), valueMult: this.valueMult(m) });
+        const made = makeCatch(this.ctx, { waterId: this.waterId, luck: this.luck(m), valueMult: this.valueMult(m) });
         if (!made) continue;
         const c = made.result;
         m.catches += 1;
@@ -156,7 +154,7 @@ export class CrewService {
       elapsedMs,
       crew: this.slice.members.map((m) => ({
         id: m.id,
-        waterId: m.waterId,
+        waterId: this.waterId,
         intervalMs: this.intervalMs(m),
         progressMs: m.progressMs,
         luck: this.luck(m),

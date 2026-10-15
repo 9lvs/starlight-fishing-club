@@ -45,7 +45,6 @@ export interface GameEvents {
   upgradePurchased: { upgradeId: string; level: number };
   statsChanged: { stats: string[] };
   crewHired: { crewId: string; typeId: string };
-  crewAssigned: { crewId: string; waterId: string };
 
   // World
   waterUnlocked: { waterId: string };

@@ -78,7 +78,8 @@ describe('rod and boat tiers', () => {
     buy(g, 'rod_1');
     buy(g, 'rod_2');
     expect(g.ctx.stats.get('luck')).toBe(2);
-    expect(g.ctx.world.look('rod')?.color).toBe('sand');
+    expect(g.ctx.world.look('rod')?.color).toBe('sage');
+    expect(g.ctx.world.look('rod')?.pattern).toBe('nodes');
   });
 });
 

@@ -7,16 +7,16 @@ import { getLayout, type Layout } from '../core/layout';
 import { deckState, uiState, worldAnchors } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { FISHING, FX, VOYAGE } from '../config/tuning';
-import { MOTION, PALETTE_NAMES, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
+import { MOTION, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
 import { FISHER_HAND, RIG_RAISE } from '../art/placeholderGenerator';
 import { phaseAt } from '../systems/timeOfDay';
 import type { VoyageData } from './VoyageScene';
-import { drawPixelLine } from '../ui/pixelDraw';
 import { uiSignals } from '../ui/uiSignals';
 import { LANDMARK_LAYER_H, paintLandmarks } from './world/landmarks';
 import { PhasedLayer } from './world/PhasedLayer';
 import { SceneEffects } from './world/sceneEffects';
 import { DeckLife } from './world/deckLife';
+import { drawRodArt } from './world/rodArt';
 import {
   paintClouds,
   paintForeground,
@@ -79,10 +79,6 @@ const FOG = {
 
 /** Rod length the ROD table was drawn for; rod looks give their own length. */
 const ROD_BASE_LEN = 17;
-
-function isPalette(v: unknown): v is PaletteName {
-  return typeof v === 'string' && (PALETTE_NAMES as readonly string[]).includes(v);
-}
 
 /** Rod angle (radians, 0 = right, negative = up) and length per fisher pose. */
 const ROD = [
@@ -672,23 +668,20 @@ export class WorldScene extends Phaser.Scene {
     // Better rods are longer and take on their own colors (rod tier looks).
     const look = this.ctx.world.look('rod');
     const len = rod.len + (typeof look?.length === 'number' ? look.length - ROD_BASE_LEN : 0);
-    const shaft = isPalette(look?.color) ? look.color : 'bark';
-    const tip = isPalette(look?.tip) ? look.tip : 'sand';
-    const hx = DECK.fisherX + this.extra + hand.x;
-    const hy = -2 + hand.y;
-    const tx = Math.round(hx + Math.cos(rod.angle) * len);
-    const ty = Math.round(hy + Math.sin(rod.angle) * len);
     this.rod.clear();
-    drawPixelLine(this.rod, hx, hy, tx, ty, shaft);
-    this.rod.fillStyle(color(tip));
-    this.rod.fillRect(tx, ty, 1, 1);
-    // A small reel on rods from the third tier up.
-    if (typeof look?.priority === 'number' && look.priority >= 3) {
-      this.rod.fillStyle(color(tip));
-      this.rod.fillRect(hx + 1, hy - 2, 1, 1);
-    }
-    worldAnchors.rodTip.x = this.boat.x + tx;
-    worldAnchors.rodTip.y = this.boat.y + ty;
+    // Each rod tier has its own shape: grip, reel, guides, pattern, and tip (scenes/world/rodArt.ts).
+    const phase = this.ctx.world.phase;
+    const tip = drawRodArt(this.rod, look, {
+      hx: DECK.fisherX + this.extra + hand.x,
+      hy: -2 + hand.y,
+      angle: rod.angle,
+      len,
+      dark: phase === 'night' || phase === 'dusk',
+      elapsed: this.elapsed,
+      reduced: uiSignals.reducedMotion(),
+    });
+    worldAnchors.rodTip.x = this.boat.x + tip.x;
+    worldAnchors.rodTip.y = this.boat.y + tip.y;
   }
 
   private drawShimmer(celestialX: number): void {
