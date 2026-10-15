@@ -2,6 +2,13 @@
 
 Ideas the architecture is ready for. None are built yet; each note says where it plugs in.
 
+## Next passes (owner's order, each on its own so it is done right)
+
+1. **Animation polish.** Walk through each piece with the owner: fish that jump now and then, gulls landing on the mast, the ship cat walking the deck, lanterns lighting at dusk, a whale far out at sea, rain rings on the water, a little line wobble, Logbook confetti, journal pages that turn.
+2. **Logins and cloud saves.** Keep GitHub Pages hosting; Supabase for sign in (Google or email link) and the save. Playing signed out keeps working. Needs the owner's OK for the library and a free Supabase account in the owner's name, plus a short privacy note.
+3. **Friends and a friendly leaderboard.** After logins: add friends by a short club code, weekly boards among friends only (Daily Catch luck, biggest fish of the week, journal %, fastest to Sky Lake), reset every Monday, no public lists or chat.
+4. **Local gear (later).** Three upgrades per later water, sold only there (Snorkel Mask, Coral Charm, Glass Bottom at the reef; Mushroom Lamps, Echo Bell, Glow-worm Line in the cave; Cloud Nets, Wind Vane, Star Chart at Sky Lake). The owner likes the idea but wants it on the roadmap for now.
+
 | Idea | Status | How it fits |
 |---|---|---|
 | Random encounters and events (a passing whale, a lantern festival night) | Not built | Feature with `onTick` and a layer scene; event definitions as a feature content type; effects as temporary stat sources. |
@@ -12,9 +19,8 @@ Ideas the architecture is ready for. None are built yet; each note says where it
 | Daily rewards beyond the gift | Built (daily gift, Daily Catch) | `dailyCatch` feature: one shared fish a day with a share grid. A board of fewest casts would need a small backend. |
 | Translations (Spanish first) | Not built | Move UI strings to a strings file per language; content names could come from a pack per language. |
 | Share card image of a big catch | Not built | Render the catch card to a canvas and use the Web Share API with a file. |
-| Sign in and cloud saves | Later | Owner's call: not yet. Plan: Supabase with Google or email link, offline first, sync the save. |
 | Make it yours | Idea | Name the club, boat, and crew; pick a favorite color for the pennant, sails, and menus. |
-| Water-specific boats | Idea | Boat styles and upgrades that change with each water, like the per-water sound and music. |
+| Water-specific boats | Started | Tiers 7 to 10 each have their own design (`src/art/boatsHigh.ts`) with lights (`scenes/world/boatGlow.ts`). Local upgrades per water are pass 4 above. |
 | Moving the club (prestige) | Built | Six waters; each move resets coins, gear, and crew for a bigger permanent coin bonus (`core/club.ts`, `clubBonus` in `waters.json`). |
 | More waters after Sky Lake | Ready | Add a water with `rangeRequired: 5`, fish, a reach boat at `requiresRank: 4`, and higher tiers at `requiresRank: 5`. |
 | Boat paint and other cosmetic choices | Not built | Club branch items are kept across moves; a paint would be a `look` effect on a new slot. |

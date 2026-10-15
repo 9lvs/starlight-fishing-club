@@ -59,7 +59,7 @@ export const PREFIX_RULES: { prefix: string; width: number; height: number; fram
   // Boat tiers: boat_N is the hull, rig_N the mast and sail drawn behind the fisher.
   // A rig is 16 px taller than the hull and sits 16 px higher, so sails clear the fisher.
   { prefix: 'boat_', width: 32, height: 32, frames: 1, kind: 'boat' },
-  { prefix: 'rig_', width: 32, height: 48, frames: 1, kind: 'boat' },
+  { prefix: 'rig_', width: 32, height: 56, frames: 1, kind: 'boat' },
   // Fisher outfits (gem cosmetics): same frames as the fisher.
   { prefix: 'fisher_', width: 16, height: 24, frames: 4, kind: 'fisher' },
 ];

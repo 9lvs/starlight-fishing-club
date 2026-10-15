@@ -17,6 +17,9 @@ import { PhasedLayer } from './world/PhasedLayer';
 import { SceneEffects } from './world/sceneEffects';
 import { DeckLife } from './world/deckLife';
 import { drawRodArt } from './world/rodArt';
+import { BoatGlow } from './world/boatGlow';
+import { boatLights } from '../art/boatsHigh';
+import { boatTier } from '../art/spriteManifest';
 import {
   paintClouds,
   paintForeground,
@@ -115,6 +118,7 @@ export class WorldScene extends Phaser.Scene {
   private deck!: Phaser.GameObjects.Graphics;
   private deckCrew: Phaser.GameObjects.Sprite[] = [];
   private deckLife!: DeckLife;
+  private boatGlow!: BoatGlow;
   /** Extra hull length beyond the starter boat, in pixels (the boat grows toward the stern). */
   private extra = 0;
   private decorations: Phaser.GameObjects.Image[] = [];
@@ -461,6 +465,7 @@ export class WorldScene extends Phaser.Scene {
     this.boat.add([this.rig, this.deck, this.rod, this.fisher, this.hull]);
     this.deckCrew = [];
     this.deckLife = new DeckLife(this, this.boat);
+    this.boatGlow = new BoatGlow(this, this.boat);
     this.applyBoatLook();
   }
 
@@ -531,6 +536,8 @@ export class WorldScene extends Phaser.Scene {
     this.fisher.setTexture(typeof outfit === 'string' && this.textures.exists(outfit) ? outfit : 'fisher', this.pose);
     this.rig.setVisible(!!rig);
     if (rig) this.rig.setTexture(rig);
+    // The top boats carry lamps and sparkles that glimmer (art/boatsHigh.ts).
+    this.boatGlow.setLights(sprite === 'boat' ? [] : boatLights(boatTier(sprite), this.hull.width, RIG_RAISE));
     this.applyDecorations();
     this.layoutDeck();
   }
@@ -641,6 +648,8 @@ export class WorldScene extends Phaser.Scene {
     const dozing = this.ctx.world.phase === 'night';
     this.deckCrew.forEach((s, i) => s.setFrame(reduced || dozing ? 0 : Math.floor(this.elapsed / 1700 + i * 0.6) % 2));
     this.deckLife.update(delta, { night: dozing, reduced });
+    const dark = dozing || this.ctx.world.phase === 'dusk' || this.shapeCache.hills === 'cave';
+    this.boatGlow.update(delta, { dark, reduced });
     this.drawRod();
 
     if (Math.floor(this.elapsed / 250) !== Math.floor((this.elapsed - delta) / 250)) {

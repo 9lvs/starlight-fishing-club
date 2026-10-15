@@ -4,6 +4,7 @@
 import type { PaletteName } from '../design/tokens';
 import { hashString, seededRng } from '../core/rng';
 import { FrameCanvas, PixelCanvas, SHADE_DOWN, SHADE_UP } from './pixelCanvas';
+import { HIGH_BOAT_TIER, drawHighHull, drawHighRig } from './boatsHigh';
 import { BOAT_WIDTHS, boatTier, type SpriteEntry } from './spriteManifest';
 
 export interface FishArtHint {
@@ -200,6 +201,8 @@ function tierOf(key: string): number {
 function drawBoatTier(f: FrameCanvas, tier: number): void {
   const s = BOAT_STYLES[tier - 1]!;
   const w = BOAT_WIDTHS[tier - 1]!;
+  // The top boats each have their own design (art/boatsHigh.ts).
+  if (tier >= HIGH_BOAT_TIER) return drawHighHull(f, tier, w);
   // Bigger boats sit a touch longer in the water.
   const bow = w - (tier >= 6 ? 1 : 2);
   f.poly([[1, 19], [bow - 3, 17.5], [bow, 15.5], [bow - 3, 26], [6, 26]], s.hull);
@@ -222,16 +225,18 @@ function drawBoatTier(f: FrameCanvas, tier: number): void {
   if (tier >= 6) for (let x = 10; x < bow - 5; x += 5) f.px(x, 21, tier >= 9 ? 'gold' : 'sky');
 }
 
-/** Rig sprites are taller than the hull: RIG_RAISE extra rows above, so sails clear the fisher's head. */
-export const RIG_RAISE = 16;
+/** Rig sprites are taller than the hull: RIG_RAISE extra rows above, so sails clear the crew's heads. */
+export const RIG_RAISE = 24;
 
 function drawRig(f: FrameCanvas, tier: number): void {
+  if (tier >= HIGH_BOAT_TIER) return drawHighRig(f, tier, BOAT_WIDTHS[tier - 1]!, RIG_RAISE);
   const s = BOAT_STYLES[tier - 1]!;
   const o = RIG_RAISE;
   const deck = o + 20;
   // The mast stays by the fisher; the boat grows behind it.
   const m = BOAT_WIDTHS[tier - 1]! - 15;
-  const top = s.sail === 2 ? 2 : s.sail === 1 ? 8 : o + 3;
+  // Mast heights are measured from the deck, so a taller rig sprite keeps these boats as drawn.
+  const top = s.sail === 2 ? o - 14 : s.sail === 1 ? o - 8 : o + 3;
   // A little cabin at the stern on the bigger boats, behind the crew.
   if (tier >= 7) {
     const cw = tier >= 9 ? 16 : 12;
