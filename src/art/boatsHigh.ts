@@ -45,7 +45,7 @@ export function boatLights(tier: number, w: number, rigRaise: number): BoatLight
         { x: w - 3, y: 13, color: 'gold', kind: 'lamp' },
         { x: w - 15, y: r(1), color: 'gold', kind: 'twinkle' },
         { x: 27, y: r(9), color: 'gold', kind: 'twinkle' },
-        { x: w - 9, y: r(13), color: 'gold', kind: 'twinkle' },
+        { x: w - 19, y: r(15), color: 'gold', kind: 'twinkle' },
       ];
     default:
       return [];
@@ -232,28 +232,34 @@ function schoonerHull(f: FrameCanvas, w: number): void {
 }
 
 function schoonerRig(f: FrameCanvas, w: number, deck: number): void {
-  // Two masts, each square-rigged with gold sails on both sides, and a gold jib.
+  // Two masts, each square-rigged with full gold sails above the crew's heads.
+  // Rigging lines run from the mastheads to the stern and the bowsprit, so the
+  // masts read as part of the ship even where the crew stand in front of them.
   const masts = [w - 15, 26];
+  f.line(26, 4, 2, deck - 8, 'bark');
+  f.line(w - 15, 1, w - 1, deck - 30, 'bark');
+  f.line(w - 15, 1, 26, 4, 'bark');
   masts.forEach((m, i) => {
     const top = i === 0 ? 1 : 4;
     f.rect(m, top, 1, deck - top, 'bark');
     const half = i === 0 ? 8 : 7;
-    // Topsail, then a bigger course below it, above the crew's heads.
+    // Topsail, then a bigger course below it, each hung from a yard that
+    // reaches past the sail so it reads as a whole sail.
     for (const [y, h, wd] of [
       [top + 3, 6, half - 2],
-      [top + 10, 8, half],
+      [top + 11, 7, half],
     ] as const) {
+      f.rect(m - wd - 1, y - 1, wd * 2 + 3, 1, 'bark');
       f.rect(m - wd, y, wd * 2 + 1, h, 'gold');
-      f.rect(m - wd, y, wd * 2 + 1, 1, 'bark');
       f.line(m - wd + 1, y + h - 1, m + wd - 1, y + h - 1, 'sand');
+      f.px(m - wd, y + h - 1, 'sand');
+      f.px(m + wd, y + h - 1, 'sand');
       f.px(m - wd + 2, y + 2, 'mist');
     }
     // A long coral pennant streaming from each masthead.
     f.rect(m + 1, top, 5, 1, 'coral');
     f.rect(m + 1, top + 1, 3, 1, 'coral');
   });
-  f.poly([[w - 14, 6], [w - 14, deck - 26], [w - 2, deck - 26]], 'gold');
-  f.line(w - 14, 6, w - 2, deck - 26, 'sand');
   // The masthead star.
   const sx = w - 15;
   f.px(sx, 0, 'mist');
