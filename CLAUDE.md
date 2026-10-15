@@ -114,6 +114,8 @@ comments that explain *why*. Small files.
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
 upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 159 unit tests.
+v0.10.0 gives every rod its own shape (`scenes/world/rodArt.ts`, looks in `upgrades.json`), redraws the top four boats for
+their waters with lights (`art/boatsHigh.ts`, `scenes/world/boatGlow.ts`), and has crew always fish at the club water.
 v0.9.0 makes the club bonus small (+5% to +80%, later fish simply cost more), has every boat need gear from
 another branch, and cuts away earnings (crew price, a 4-fish cap raised by the Cozy Hammock).
 v0.8.2 restores the v0.8.0 fish shadow (v0.8.1 tried a longer path with a wake). v0.8.0 adds fresh bait (rested bonus from time away), three daily Logbook tasks, keep for market

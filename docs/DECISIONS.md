@@ -75,3 +75,6 @@ One line per decision, with the reason. Newest at the bottom.
 - One bonus, kept small (owner's call): the club bonus is the only percentage players see (+5% to +80%). Later waters pay more because their fish cost more, not through a second multiplier. Revisiting earlier waters is for looks, the journal, and the Daily Catch at Willow Pond.
 - Boats need gear from other branches (owner's request), so goals are not always boats. Prerequisites list the other branch first so the goal bar points there.
 - Time away is a treat, not the income (owner's direction): away crew fish sell at the crew price and the crew bring back a capped number of fish, raised by the Cozy Hammock.
+- Rod looks are data (shaft pattern, grip, reel, guides, tip style, glow) on each rod's `look` effect, drawn by one module, so a new rod needs no code.
+- The top boats are drawn per design in `art/boatsHigh.ts` with a light list per tier; owner approved each over three design rounds. Crew always fish at the club's water (the per-helper water button was confusing once earlier waters paid less).
+- Local gear, animation polish, logins, and friends are parked for their own passes (see `docs/ROADMAP.md`), owner's order.

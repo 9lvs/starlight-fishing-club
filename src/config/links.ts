@@ -1,7 +1,7 @@
 // Public links and the version shown to players and in feedback reports.
 
 /** Keep in step with package.json "version" (a test checks). */
-export const GAME_VERSION = '0.9.0';
+export const GAME_VERSION = '0.10.0';
 
 export const LINKS = {
   /** The game's public address, used in share text. Empty: use the page's own address. */

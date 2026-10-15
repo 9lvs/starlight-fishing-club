@@ -142,3 +142,10 @@
 - Changed: crew catches from time away sell at the crew price, and the crew bring back at most 4 fish (`awayCatchCap`); the Cozy Hammock now adds 3 per level (up to 28) instead of more hours. Fresh bait fills at one per 10 minutes, up to 15. Eight hours away now pays about half what it did (1.5 minutes of hand fishing early, 3.2 minutes late).
 - Changed: the Daily Catch says it only bites at Willow Pond.
 - Verified: 159 tests, typecheck, and build pass. The pacing sim follows the goal bar: 5.8 hours in all. Checked at 320x568, 390x844, and 1280x720.
+
+## v0.10.0: Rods with their own shapes, boats for the later waters
+- Built: every rod tier has its own shape, not just a color (`scenes/world/rodArt.ts`; the look lives in each rod's `look` effect in `upgrades.json`): a grip, a reel from tier 3, line guides from tier 4, a shaft pattern (green bamboo joints, wood grain, stripes, crystal facets), and a tip (willow leaves, coral branches, a crescent moon, a crystal shard, a glowing mushroom cap, a star). Moonsilver and Glowcap glow at dusk and night; Crystal and Starlight twinkle.
+- Built: the top four boats each belong to a water (`art/boatsHigh.ts`): the Coral Catamaran (two pontoons, rail, portholes, striped sail, bunting), the Glowshell Barge (shell hull, a roof above the crew, mushroom lamps, glow-worms), the Cloud Skimmer (a futuristic bowl with running lights, fins, a blinking antenna, and thrusters), and the Starlight Schooner (a navy and gold ship of the line with a raised stern, gunports, and two masts of square gold sails on yards with rigging). Their lamps and sparkles glimmer by day and glow at night and in the cave (`scenes/world/boatGlow.ts`). Rig sprites are 8 px taller so sails clear the crew; lower tiers are unchanged.
+- Changed: the crew panel's water button is gone; crew always fish where the club is.
+- Process: designs were reviewed on a design board with Keep, Change, or Drop per idea, over three rounds.
+- Verified: 159 tests, typecheck, and build pass. All rods and the four boats checked in the game by day and at night.
