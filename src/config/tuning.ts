@@ -154,8 +154,7 @@ export const FX = {
   crew: { cheerMinTier: 2, hopPx: 3, hopMs: 150, staggerMs: 90, zEveryMs: 2600, zRisePx: 10, zLifeMs: 1800 },
   /**
    * Life around the boat, all rare and small: a fish jumps now and then, gulls
-   * cross the sky and sometimes rest on the mast, the ship cat strolls the deck,
-   * and on open sea a whale surfaces far out once in a while.
+   * cross the sky and sometimes rest on the mast, and on open sea a whale surfaces far out once in a while.
    */
   ambient: {
     jumpEveryMs: [16_000, 40_000],
@@ -164,8 +163,6 @@ export const FX = {
     gullSpeed: 0.018,
     gullLandChance: 0.45,
     gullRestMs: [8_000, 18_000],
-    catSpeed: 0.006,
-    catPauseMs: [3_000, 9_000],
     whaleEveryMs: [150_000, 320_000],
     whaleMs: 5200,
     whaleWaters: ['cove', 'reef', 'sky_lake'],
@@ -174,12 +171,6 @@ export const FX = {
   lantern: { fadeMs: 1600 },
   /** Rain leaves small rings where it meets the water. */
   rainRings: { lifeMs: 450, max: 40 },
-  /** The fishing line sways gently while you wait (sag in pixels). */
-  lineSway: { sag: 6, amp: 1.5, periodMs: 1100, windAmp: 1.5 },
-  /** Confetti when a Logbook task is claimed. */
-  confetti: { count: 22, lifeMs: 1000, spread: 0.11, gravity: 0.00035 },
-  /** The journal turns a page when you open a fish or go back. */
-  pageTurnMs: 260,
   /** Coins fly from the boat to the coin counter when you sell. */
   coins: { min: 2, max: 6, flyMs: 650, staggerMs: 55, liftPx: 18 },
 };

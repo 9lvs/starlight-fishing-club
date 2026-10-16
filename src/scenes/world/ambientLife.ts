@@ -1,7 +1,7 @@
 // Life around the boat: a fish jumps now and then, gulls cross the sky and
-// sometimes rest on the mast, the ship cat strolls the deck, and on open sea a
-// whale surfaces far out once in a while. All rare, small, and soft; reduced
-// motion turns them off (the cat just sits). Presentation only.
+// sometimes rest on the mast, and on open sea a whale surfaces far out once in
+// a while. All rare, small, and soft; reduced motion turns them off.
+// Presentation only.
 import type Phaser from 'phaser';
 import { FX } from '../../config/tuning';
 import type { Layout } from '../../core/layout';
@@ -55,8 +55,6 @@ export class AmbientLife {
   private rings: Ring[] = [];
   private gull: Gull | null = null;
   private whale: Whale | null = null;
-  /** `x` is kept unrounded: a step is smaller than the quarter pixel the image snaps to. */
-  private cat: { img: Phaser.GameObjects.Image; x: number; min: number; max: number; dir: number; pause: number } | null = null;
 
   constructor(
     private readonly L: Layout,
@@ -65,11 +63,6 @@ export class AmbientLife {
     /** Drawn in front of the boat (gulls). */
     private readonly air: Phaser.GameObjects.Graphics,
   ) {}
-
-  /** The ship cat walks between these x positions on the deck (boat container space). */
-  setCat(img: Phaser.GameObjects.Image | null, min = 0, max = 0): void {
-    this.cat = img ? { img, x: img.x, min, max, dir: -1, pause: rand(A.catPauseMs) } : null;
-  }
 
   update(delta: number, o: AmbientOpts): void {
     this.elapsed += delta;
@@ -81,33 +74,9 @@ export class AmbientLife {
       this.whale = null;
       return;
     }
-    this.updateCat(delta);
     this.updateJumps(delta);
     this.updateWhale(delta, o);
     this.updateGull(delta, o);
-  }
-
-  // ---------------------------------------------------------------- the cat
-
-  private updateCat(delta: number): void {
-    const c = this.cat;
-    if (!c) return;
-    if (c.pause > 0) {
-      c.pause -= delta;
-      return;
-    }
-    c.x += c.dir * A.catSpeed * delta;
-    c.img.setFlipX(c.dir < 0);
-    // Turn only at the end it is walking toward: it may start past either end (the bow seat).
-    if ((c.dir < 0 && c.x <= c.min) || (c.dir > 0 && c.x >= c.max)) {
-      c.x = Math.max(c.min, Math.min(c.max, c.x));
-      c.dir = -c.dir;
-      c.pause = rand(A.catPauseMs);
-    } else if (Math.random() < delta / 6000) {
-      // Now and then it stops mid-deck to look at the water.
-      c.pause = rand(A.catPauseMs) / 2;
-    }
-    c.img.x = Math.round(c.x);
   }
 
   // ---------------------------------------------------------------- jumping fish

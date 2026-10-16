@@ -272,15 +272,6 @@ export class FishingScene extends Phaser.Scene {
     this.refreshButtons();
   }
 
-  /** A slack line sways a little while you wait, more in the wind. */
-  private lineSag(reduced: boolean): number {
-    const c = FX.lineSway;
-    if (reduced) return c.sag;
-    const wind = this.ctx.registries.weather.tryGet(this.ctx.world.weather)?.visuals.wind ?? 0;
-    const t = this.elapsed / c.periodMs;
-    return c.sag + Math.sin(t) * c.amp + Math.sin(t * 0.6 + 1) * wind * c.windAmp;
-  }
-
   /** True while the first fight of its kind is being explained. */
   private learning = false;
 
@@ -694,7 +685,7 @@ export class FishingScene extends Phaser.Scene {
     // Line from rod tip to bobber.
     this.line.clear();
     if (this.bobber.visible) {
-      const sag = phase === 'bite' || phase === 'fight' ? 1 : this.lineSag(reduced);
+      const sag = phase === 'bite' || phase === 'fight' ? 1 : 6;
       drawSaggingLine(this.line, worldAnchors.rodTip.x, worldAnchors.rodTip.y, this.bobber.x, this.bobber.y - 3, sag, 'mist');
     } else if (this.jumper) {
       drawSaggingLine(this.line, worldAnchors.rodTip.x, worldAnchors.rodTip.y, this.jumper.x, this.jumper.y, 1, 'mist');
