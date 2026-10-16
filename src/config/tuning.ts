@@ -152,6 +152,34 @@ export const FX = {
   legendary: { minTier: 4, slow: 2.2, arcPx: 40, zoom: 1.12, zoomInMs: 600, zoomOutMs: 700, sparkles: 14, burstPx: 22, trailEveryMs: 50 },
   /** Crew on deck: a hop for a rare catch, their own little lines, and dozing at night. */
   crew: { cheerMinTier: 2, hopPx: 3, hopMs: 150, staggerMs: 90, zEveryMs: 2600, zRisePx: 10, zLifeMs: 1800 },
+  /**
+   * Life around the boat, all rare and small: a fish jumps now and then, gulls
+   * cross the sky and sometimes rest on the mast, the ship cat strolls the deck,
+   * and on open sea a whale surfaces far out once in a while.
+   */
+  ambient: {
+    jumpEveryMs: [16_000, 40_000],
+    jumpMs: 650,
+    gullEveryMs: [35_000, 80_000],
+    gullSpeed: 0.018,
+    gullLandChance: 0.45,
+    gullRestMs: [8_000, 18_000],
+    catSpeed: 0.006,
+    catPauseMs: [3_000, 9_000],
+    whaleEveryMs: [150_000, 320_000],
+    whaleMs: 5200,
+    whaleWaters: ['cove', 'reef', 'sky_lake'],
+  },
+  /** A lantern on every boat lights up at dusk, with a little flicker as it catches. */
+  lantern: { fadeMs: 1600 },
+  /** Rain leaves small rings where it meets the water. */
+  rainRings: { lifeMs: 450, max: 40 },
+  /** The fishing line sways gently while you wait (sag in pixels). */
+  lineSway: { sag: 6, amp: 1.5, periodMs: 1100, windAmp: 1.5 },
+  /** Confetti when a Logbook task is claimed. */
+  confetti: { count: 16, lifeMs: 900, spread: 0.09, gravity: 0.00035 },
+  /** The journal turns a page when you open a fish or go back. */
+  pageTurnMs: 260,
   /** Coins fly from the boat to the coin counter when you sell. */
   coins: { min: 2, max: 6, flyMs: 650, staggerMs: 55, liftPx: 18 },
 };

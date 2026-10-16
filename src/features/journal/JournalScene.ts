@@ -11,13 +11,17 @@ import { ProgressBar } from '../../ui/ProgressBar';
 import { RarityBanner } from '../../ui/RarityBanner';
 import { ScrollArea } from '../../ui/ScrollArea';
 import { addText } from '../../ui/text';
-import { color } from '../../design/tokens';
+import { color, UI_COLORS } from '../../design/tokens';
+import { FX } from '../../config/tuning';
+import { uiSignals } from '../../ui/uiSignals';
 import { completion, type JournalSlice } from './state';
 
 const CELL = 30;
 
 interface JournalData {
   fishId?: string;
+  /** Turning a page: forward into a fish, back to the grid. */
+  turn?: 1 | -1;
 }
 
 export class JournalScene extends PanelScene<JournalData> {
@@ -42,6 +46,30 @@ export class JournalScene extends PanelScene<JournalData> {
   protected build(area: Rect, data?: JournalData): void {
     if (data?.fishId) this.buildDetail(area, data.fishId);
     else this.buildGrid(area);
+    if (data?.turn) this.pageTurn(area, data.turn);
+  }
+
+  /** The old page lifts away to one side, showing the new one underneath. */
+  private pageTurn(area: Rect, dir: 1 | -1): void {
+    if (uiSignals.reducedMotion()) return;
+    const g = this.add.graphics();
+    const p = { t: 0 };
+    const draw = () => {
+      g.clear();
+      const w = Math.round(area.w * (1 - p.t));
+      if (w <= 0) return;
+      // Forward turns lift from the right edge toward the left, back turns the other way.
+      const x = dir > 0 ? area.x : area.x + area.w - w;
+      g.fillStyle(color(UI_COLORS.panelFill), 1);
+      g.fillRect(x, area.y, w, area.h);
+      const edge = dir > 0 ? x + w - 1 : x;
+      g.fillStyle(color('slate'), 1);
+      g.fillRect(edge, area.y, 1, area.h);
+      g.fillStyle(color('ink'), 0.35);
+      g.fillRect(dir > 0 ? edge + 1 : edge - 2, area.y, 2, area.h);
+    };
+    draw();
+    this.tweens.add({ targets: p, t: 1, duration: FX.pageTurnMs, ease: 'Sine.easeIn', onUpdate: draw, onComplete: () => g.destroy() });
   }
 
   private buildGrid(area: Rect): void {
@@ -82,7 +110,7 @@ export class JournalScene extends PanelScene<JournalData> {
         w: CELL,
         h: CELL,
         variant: 'ghost',
-        onClick: () => this.scene.restart({ fishId: f.id }),
+        onClick: () => this.refresh({ fishId: f.id, turn: 1 }),
       });
       hit.setAlpha(0.001);
       scroll.add(hit);
@@ -131,8 +159,8 @@ export class JournalScene extends PanelScene<JournalData> {
       h: 22,
       label: 'Back',
       variant: 'secondary',
-      onClick: () => this.scene.restart({}),
+      onClick: () => this.refresh({ turn: -1 }),
     });
-    this.input.keyboard?.on('keydown-BACKSPACE', () => this.scene.restart({}));
+    this.input.keyboard?.on('keydown-BACKSPACE', () => this.refresh({ turn: -1 }));
   }
 }

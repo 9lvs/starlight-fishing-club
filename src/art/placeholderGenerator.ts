@@ -228,6 +228,28 @@ function drawBoatTier(f: FrameCanvas, tier: number): void {
 /** Rig sprites are taller than the hull: RIG_RAISE extra rows above, so sails clear the crew's heads. */
 export const RIG_RAISE = 24;
 
+/**
+ * Where the top of the mast is, in hull sprite coordinates, so gulls can land on
+ * it (tier 0 is the starter boat). Matches the drawing below and art/boatsHigh.ts.
+ */
+export function mastTop(tier: number, w: number): { x: number; y: number } {
+  if (tier <= 0) return { x: 17, y: 3 };
+  const rig = (y: number) => y - RIG_RAISE;
+  const deck = RIG_RAISE + 20;
+  switch (tier) {
+    case 7:
+      return { x: w - 15, y: rig(4) };
+    case 8:
+      return { x: w - 15, y: rig(deck - 18) };
+    case 9:
+      return { x: w - 15, y: rig(deck - 30) };
+    case 10:
+      return { x: 26, y: rig(4) };
+  }
+  const s = BOAT_STYLES[tier - 1]!;
+  return { x: w - 15, y: s.sail === 2 ? -14 : s.sail === 1 ? -8 : 3 };
+}
+
 function drawRig(f: FrameCanvas, tier: number): void {
   if (tier >= HIGH_BOAT_TIER) return drawHighRig(f, tier, BOAT_WIDTHS[tier - 1]!, RIG_RAISE);
   const s = BOAT_STYLES[tier - 1]!;

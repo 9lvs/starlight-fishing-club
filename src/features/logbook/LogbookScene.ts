@@ -8,12 +8,15 @@ import { drawPanelBox } from '../../ui/pixelDraw';
 import { ProgressBar } from '../../ui/ProgressBar';
 import { ScrollArea } from '../../ui/ScrollArea';
 import { addText } from '../../ui/text';
+import { confettiBurst } from '../../ui/confetti';
 import { getLogbook } from './service';
 
 const BTN_W = 46;
 
 interface LogbookData {
   scroll?: number;
+  /** Where a task was just claimed: confetti plays there after the rebuild. */
+  confetti?: { x: number; y: number };
 }
 
 interface TaskRow {
@@ -104,6 +107,7 @@ export class LogbookScene extends PanelScene<LogbookData> {
     }
     list.setContentHeight(y);
     if (data?.scroll) list.scrollTo(data.scroll);
+    if (data?.confetti) confettiBurst(this, data.confetti.x, data.confetti.y);
     this.listen('logbookTaskDone', () => this.refresh({ scroll: list.position }));
   }
 
@@ -137,7 +141,8 @@ export class LogbookScene extends PanelScene<LogbookData> {
           variant: 'primary',
           onClick: () => {
             t.claim();
-            this.refresh({ scroll: list.position });
+            const p = this.input.activePointer;
+            this.refresh({ scroll: list.position, confetti: { x: Math.round(p.worldX), y: Math.round(p.worldY) } });
           },
         }),
       );

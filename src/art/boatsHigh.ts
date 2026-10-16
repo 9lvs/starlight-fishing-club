@@ -15,8 +15,11 @@ export interface BoatLight {
   x: number;
   y: number;
   color: PaletteName;
-  /** lamp: a warm glow at night; twinkle: a sparkle; thruster: a glow under the hull; blink: a slow on and off. */
-  kind: 'lamp' | 'twinkle' | 'thruster' | 'blink';
+  /**
+   * lamp: a warm glow at night; lantern: a stern lantern drawn with its post, lit
+   * at dusk; twinkle: a sparkle; thruster: a glow under the hull; blink: a slow on and off.
+   */
+  kind: 'lamp' | 'lantern' | 'twinkle' | 'thruster' | 'blink';
 }
 
 /** Light points per tier, from the bow and stern of each design. Rig y is hull y minus the rig raise. */
@@ -48,7 +51,8 @@ export function boatLights(tier: number, w: number, rigRaise: number): BoatLight
         { x: w - 19, y: r(15), color: 'gold', kind: 'twinkle' },
       ];
     default:
-      return [];
+      // Every smaller boat carries a stern lantern that lights up at dusk.
+      return [{ x: 3, y: 12, color: 'gold', kind: 'lantern' }];
   }
 }
 

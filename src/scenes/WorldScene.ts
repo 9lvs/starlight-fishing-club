@@ -8,7 +8,7 @@ import { deckState, uiState, worldAnchors } from '../core/sceneState';
 import { TIME } from '../config/time';
 import { FISHING, FX, VOYAGE } from '../config/tuning';
 import { MOTION, SCENE_PALETTES, color, type PaletteName, type ScenePalette } from '../design/tokens';
-import { FISHER_HAND, RIG_RAISE } from '../art/placeholderGenerator';
+import { FISHER_HAND, RIG_RAISE, mastTop } from '../art/placeholderGenerator';
 import { phaseAt } from '../systems/timeOfDay';
 import type { VoyageData } from './VoyageScene';
 import { uiSignals } from '../ui/uiSignals';
@@ -18,8 +18,10 @@ import { SceneEffects } from './world/sceneEffects';
 import { DeckLife } from './world/deckLife';
 import { drawRodArt } from './world/rodArt';
 import { BoatGlow } from './world/boatGlow';
+import { AmbientLife } from './world/ambientLife';
 import { boatLights } from '../art/boatsHigh';
 import { boatTier } from '../art/spriteManifest';
+import { drawPixelEllipse } from '../ui/pixelDraw';
 import {
   paintClouds,
   paintForeground,
@@ -97,6 +99,8 @@ interface Mote {
   vx: number;
   vy: number;
   phase: number;
+  /** Rain: where on the water this drop lands. */
+  land?: number;
 }
 
 export class WorldScene extends Phaser.Scene {
@@ -119,6 +123,9 @@ export class WorldScene extends Phaser.Scene {
   private deckCrew: Phaser.GameObjects.Sprite[] = [];
   private deckLife!: DeckLife;
   private boatGlow!: BoatGlow;
+  private ambient!: AmbientLife;
+  /** The mast top in boat container space, for gulls to land on. */
+  private mastLocal: { x: number; y: number } | null = null;
   /** Extra hull length beyond the starter boat, in pixels (the boat grows toward the stern). */
   private extra = 0;
   private decorations: Phaser.GameObjects.Image[] = [];
@@ -129,6 +136,8 @@ export class WorldScene extends Phaser.Scene {
   private fireflyGfx!: Phaser.GameObjects.Graphics;
   private fireflies: Mote[] = [];
   private rain: Mote[] = [];
+  /** Little rings where rain meets the water. */
+  private rainRings: { x: number; y: number; age: number }[] = [];
   private pose = 0;
   private poseUntil = 0;
   private elapsed = 0;
@@ -178,7 +187,10 @@ export class WorldScene extends Phaser.Scene {
     this.effects = new SceneEffects(this.add.graphics(), this.L);
     this.effects.setShape(this.shapeCache);
     this.shimmer = this.add.graphics();
+    // Jumping fish and the whale swim behind the boat; gulls fly in front of it.
+    const lifeWater = this.add.graphics();
     this.buildBoat();
+    this.ambient = new AmbientLife(this.L, lifeWater, this.add.graphics());
     this.addLayer(0, this.L.menuBar.y - 56, W, 60, paintForeground, 0.3, true);
     this.weatherGfx = this.add.graphics();
     this.fog = FOG.banks.map((b, i) => {
@@ -537,7 +549,9 @@ export class WorldScene extends Phaser.Scene {
     this.rig.setVisible(!!rig);
     if (rig) this.rig.setTexture(rig);
     // The top boats carry lamps and sparkles that glimmer (art/boatsHigh.ts).
-    this.boatGlow.setLights(sprite === 'boat' ? [] : boatLights(boatTier(sprite), this.hull.width, RIG_RAISE));
+    const tier = sprite === 'boat' ? 0 : boatTier(sprite);
+    this.boatGlow.setLights(boatLights(tier, this.hull.width, RIG_RAISE));
+    this.mastLocal = mastTop(tier, this.hull.width);
     this.applyDecorations();
     this.layoutDeck();
   }
@@ -545,6 +559,7 @@ export class WorldScene extends Phaser.Scene {
   private applyDecorations(): void {
     this.decorations.forEach((d) => d.destroy());
     this.decorations = [];
+    this.ambient?.setCat(null);
     for (const id of this.ctx.world.activeDecorations()) {
       const def = this.ctx.registries.decorations.tryGet(id);
       if (!def || def.anchor === 'club' || !this.textures.exists(def.spriteKey)) continue;
@@ -555,6 +570,8 @@ export class WorldScene extends Phaser.Scene {
         .setOrigin(a.ox, a.oy);
       this.boat.add(img);
       this.decorations.push(img);
+      // The ship cat strolls the deck instead of sitting at the bow.
+      if (id === 'ship_cat') this.ambient?.setCat(img, 10, this.hull.width - 4);
     }
   }
 
@@ -580,6 +597,7 @@ export class WorldScene extends Phaser.Scene {
       vx: 0.012 + this.wind * 0.05,
       vy: 0.09 + Math.random() * 0.03,
       phase: 0,
+      land: this.L.horizonY + 2 + Math.random() * (this.L.height - this.L.horizonY - 2),
     };
   }
 
@@ -650,6 +668,13 @@ export class WorldScene extends Phaser.Scene {
     this.deckLife.update(delta, { night: dozing, reduced });
     const dark = dozing || this.ctx.world.phase === 'dusk' || this.shapeCache.hills === 'cave';
     this.boatGlow.update(delta, { dark, reduced });
+    const m = this.mastLocal;
+    this.ambient.update(delta, {
+      reduced,
+      mast: m && !uiState.voyaging ? { x: this.boat.x + m.x, y: this.boat.y + m.y } : null,
+      waterId: this.ctx.world.waterId,
+      cave: this.shapeCache.hills === 'cave',
+    });
     this.drawRod();
 
     if (Math.floor(this.elapsed / 250) !== Math.floor((this.elapsed - delta) / 250)) {
@@ -755,15 +780,25 @@ export class WorldScene extends Phaser.Scene {
   private updateWeather(delta: number, W: number, H: number): void {
     const g = this.weatherGfx;
     g.clear();
+    // Rings first, so drops fall in front of them.
+    this.rainRings = this.rainRings.filter((r) => (r.age += delta) < FX.rainRings.lifeMs);
+    for (const r of this.rainRings) {
+      const t = r.age / FX.rainRings.lifeMs;
+      drawPixelEllipse(g, r.x, r.y, 1 + t * 3, Math.max(1, (1 + t * 3) * 0.35), 'sky', t < 0.5 ? 0.55 : 0.25);
+    }
     if (this.rain.length === 0) return;
     g.fillStyle(color('sky'), 0.8);
     for (let i = 0; i < this.rain.length; i++) {
       const d = this.rain[i]!;
       d.x += d.vx * delta;
       d.y += d.vy * delta;
-      if (d.y > H || d.x > W + 4) {
-        // Small splash where a drop meets the water.
-        if (d.y > this.L.horizonY) g.fillRect(Math.round(d.x) - 1, Math.round(Math.min(d.y, H - 1)), 3, 1);
+      if (d.y > (d.land ?? H) || d.x > W + 4) {
+        // A small ring where a drop meets the water (reduced motion keeps the old dash).
+        if (d.y > this.L.horizonY) {
+          const y = Math.round(Math.min(d.y, H - 1));
+          if (uiSignals.reducedMotion()) g.fillRect(Math.round(d.x) - 1, y, 3, 1);
+          else if (this.rainRings.length < FX.rainRings.max) this.rainRings.push({ x: Math.round(d.x), y, age: 0 });
+        }
         this.rain[i] = this.newDrop(false);
         continue;
       }
