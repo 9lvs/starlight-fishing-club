@@ -18,6 +18,8 @@ export interface FishingSlice {
   /** Rested bonus: catches left that pay double, and time away toward the next one. */
   rested: number;
   restedMs: number;
+  /** Fights already explained: after the first, only the ! cues show. */
+  taught?: { dips?: boolean; hold?: boolean };
 }
 
 /**

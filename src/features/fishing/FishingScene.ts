@@ -224,7 +224,9 @@ export class FishingScene extends Phaser.Scene {
         this.fightMarks = Array.from({ length: e.dips }, () => 'todo' as const);
         this.fightHold = e.hold;
         this.bobber.setVisible(true).setFrame(0);
-        this.say(e.hold ? 'A legendary! Tap each dip, then hold.' : 'It is fighting! Tap each time it dips.', 'gold');
+        // Explained the first time only; after that the ! cues and the button say enough.
+        if (!this.teach(e.hold ? 'hold' : 'dips')) this.say('');
+        else this.say(e.hold ? 'A legendary! Tap each dip, then hold.' : 'It is fighting! Tap each time it dips.', 'gold');
         this.ctx.bus.emit('audio:play', { key: 'tug' });
         break;
       case 'dip':
@@ -243,10 +245,10 @@ export class FishingScene extends Phaser.Scene {
         this.clearBite();
         this.fightMarks[e.index] = 'miss';
         this.addRipple(bobber.x, bobber.y + 2, 8, 600, 'sky');
-        this.say(e.fumble ? 'Too soon! Wait for the dip.' : 'It pulled free a little. Keep going!', 'sky');
+        if (this.learning) this.say(e.fumble ? 'Too soon! Wait for the dip.' : 'It pulled free a little. Keep going!', 'sky');
         break;
       case 'hold':
-        this.say('Hold to reel it in!', 'gold');
+        if (this.learning) this.say('Hold to reel it in!', 'gold');
         break;
       case 'fightDone':
         this.fightMarks = [];
@@ -268,6 +270,17 @@ export class FishingScene extends Phaser.Scene {
         break;
     }
     this.refreshButtons();
+  }
+
+  /** True while the first fight of its kind is being explained. */
+  private learning = false;
+
+  /** Mark a fight kind as explained; returns true the first time (show the words). */
+  private teach(kind: 'dips' | 'hold'): boolean {
+    const t = (this.ctl.state.taught ??= {});
+    this.learning = !t[kind];
+    t[kind] = true;
+    return this.learning;
   }
 
   private clearBite(): void {

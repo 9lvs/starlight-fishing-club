@@ -49,7 +49,8 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     const branch = data?.branch && r.branches.has(data.branch) ? data.branch : (branches[0]?.id ?? '');
     const svc = getUpgradeService();
     const nodes = r.upgrades.list().filter((u) => u.branch === branch);
-    const selected = data?.selected && nodes.some((n) => n.id === data.selected) ? data.selected : this.pickDefault(nodes);
+    // Nothing is selected until you tap an upgrade, so the tree gets the whole panel to scroll.
+    const selected = data?.selected && nodes.some((n) => n.id === data.selected) ? data.selected : undefined;
 
     // Branch tabs. With many branches the open tab keeps its name and the rest show icons.
     const gap = 2;
@@ -135,8 +136,9 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     }
     for (const u of nodes) {
       const p = pos.get(u.id)!;
+      // Tapping the selected upgrade again closes its card.
       const node = new TreeNode(this, p.x, p.y, u.icon ?? 'icon_star', () =>
-        this.refresh({ branch, selected: u.id, scroll: scroll.position }),
+        this.refresh({ branch, selected: u.id === selected ? undefined : u.id, scroll: scroll.position }),
       );
       node.setNode(svc.state(u), svc.level(u.id), u.maxLevel, u.id === selected, u.label, r.currencies.tryGet(u.currency ?? ECONOMY.defaultCurrency)?.icon);
       scroll.add(node);
@@ -153,7 +155,7 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     const maxRow = Math.max(0, ...slots.map((s) => s.row));
     scroll.setContentHeight(8 + (maxRow + 1) * (TREE_NODE.h + ROW_GAP));
     // Come back to the same place after a rebuild; on first open, show the selected node.
-    const selY = pos.get(selected ?? '')?.y ?? 0;
+    const selY = pos.get(selected ?? this.pickDefault(nodes) ?? '')?.y ?? 0;
     scroll.scrollTo(data?.scroll ?? selY - TREE_NODE.h);
 
 
@@ -238,7 +240,7 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     // Rows are created first, then stacked once their heights are known.
     const text = (t: string, c: PaletteName, dx = 4) => addText(this, x + dx, 0, t, { color: c, shadow: false, maxWidth: w - dx - 4 });
     const name = addText(this, x + 4, 0, u.name, { color: 'mist', shadow: false });
-    const lv = addText(this, x + w - 4, 0, u.maxLevel > 1 ? `Lv ${level}/${u.maxLevel}` : maxed ? 'Owned' : '', { color: 'slate', shadow: false, originX: 1 });
+    const lv = addText(this, x + w - 18, 0, u.maxLevel > 1 ? `Lv ${level}/${u.maxLevel}` : maxed ? 'Owned' : '', { color: 'slate', shadow: false, originX: 1 });
     const desc = text(u.description, 'sky');
 
     // What it does: current value > value after the next level.
@@ -327,6 +329,16 @@ export class UpgradesScene extends PanelScene<UpgradesData> {
     drawPanelBox(g, x, y, w, h, { fill: 'ink', border: state === 'affordable' ? 'gold' : 'dusk' });
     name.setY(y + 3);
     lv.setY(y + 3);
+    // Close the card and give the tree its room back.
+    new Button(this, {
+      x: x + w - 15,
+      y: y + 1,
+      w: 13,
+      h: 13,
+      icon: 'icon_close',
+      variant: 'ghost',
+      onClick: () => this.refresh({ branch, scroll: scrollPos() }),
+    });
     if (by <= bodyH) {
       for (const o of body) (o as unknown as { y: number }).y += y + head;
     } else {
