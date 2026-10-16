@@ -177,7 +177,7 @@ export const FX = {
   /** The fishing line sways gently while you wait (sag in pixels). */
   lineSway: { sag: 6, amp: 1.5, periodMs: 1100, windAmp: 1.5 },
   /** Confetti when a Logbook task is claimed. */
-  confetti: { count: 16, lifeMs: 900, spread: 0.09, gravity: 0.00035 },
+  confetti: { count: 22, lifeMs: 1000, spread: 0.11, gravity: 0.00035 },
   /** The journal turns a page when you open a fish or go back. */
   pageTurnMs: 260,
   /** Coins fly from the boat to the coin counter when you sell. */

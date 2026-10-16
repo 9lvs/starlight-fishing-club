@@ -233,7 +233,9 @@ export const RIG_RAISE = 24;
  * it (tier 0 is the starter boat). Matches the drawing below and art/boatsHigh.ts.
  */
 export function mastTop(tier: number, w: number): { x: number; y: number } {
-  if (tier <= 0) return { x: 17, y: 3 };
+  // Boats with no sail: the gull perches on the stern lantern post, clear of the angler.
+  const post = { x: 3, y: 12 };
+  if (tier <= 0) return post;
   const rig = (y: number) => y - RIG_RAISE;
   const deck = RIG_RAISE + 20;
   switch (tier) {
@@ -247,7 +249,7 @@ export function mastTop(tier: number, w: number): { x: number; y: number } {
       return { x: 26, y: rig(4) };
   }
   const s = BOAT_STYLES[tier - 1]!;
-  return { x: w - 15, y: s.sail === 2 ? -14 : s.sail === 1 ? -8 : 3 };
+  return s.sail ? { x: w - 15, y: s.sail === 2 ? -14 : -8 } : post;
 }
 
 function drawRig(f: FrameCanvas, tier: number): void {

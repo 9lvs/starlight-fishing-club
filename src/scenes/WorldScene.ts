@@ -571,7 +571,11 @@ export class WorldScene extends Phaser.Scene {
       this.boat.add(img);
       this.decorations.push(img);
       // The ship cat strolls the deck instead of sitting at the bow.
-      if (id === 'ship_cat') this.ambient?.setCat(img, 10, this.hull.width - 4);
+      if (id === 'ship_cat') {
+        // Behind the angler, so it strolls past their legs rather than over them.
+        this.boat.moveBelow(img, this.fisher);
+        this.ambient?.setCat(img, 10, this.hull.width - 4);
+      }
     }
   }
 

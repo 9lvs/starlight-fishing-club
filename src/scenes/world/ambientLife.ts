@@ -55,7 +55,8 @@ export class AmbientLife {
   private rings: Ring[] = [];
   private gull: Gull | null = null;
   private whale: Whale | null = null;
-  private cat: { img: Phaser.GameObjects.Image; min: number; max: number; dir: number; pause: number } | null = null;
+  /** `x` is kept unrounded: a step is smaller than the quarter pixel the image snaps to. */
+  private cat: { img: Phaser.GameObjects.Image; x: number; min: number; max: number; dir: number; pause: number } | null = null;
 
   constructor(
     private readonly L: Layout,
@@ -67,7 +68,7 @@ export class AmbientLife {
 
   /** The ship cat walks between these x positions on the deck (boat container space). */
   setCat(img: Phaser.GameObjects.Image | null, min = 0, max = 0): void {
-    this.cat = img ? { img, min, max, dir: -1, pause: rand(A.catPauseMs) } : null;
+    this.cat = img ? { img, x: img.x, min, max, dir: -1, pause: rand(A.catPauseMs) } : null;
   }
 
   update(delta: number, o: AmbientOpts): void {
@@ -95,17 +96,18 @@ export class AmbientLife {
       c.pause -= delta;
       return;
     }
-    c.img.x += c.dir * A.catSpeed * delta;
+    c.x += c.dir * A.catSpeed * delta;
     c.img.setFlipX(c.dir < 0);
-    if (c.img.x <= c.min || c.img.x >= c.max) {
-      c.img.x = Math.max(c.min, Math.min(c.max, c.img.x));
+    // Turn only at the end it is walking toward: it may start past either end (the bow seat).
+    if ((c.dir < 0 && c.x <= c.min) || (c.dir > 0 && c.x >= c.max)) {
+      c.x = Math.max(c.min, Math.min(c.max, c.x));
       c.dir = -c.dir;
       c.pause = rand(A.catPauseMs);
     } else if (Math.random() < delta / 6000) {
       // Now and then it stops mid-deck to look at the water.
       c.pause = rand(A.catPauseMs) / 2;
     }
-    c.img.x = Math.round(c.img.x * 4) / 4;
+    c.img.x = Math.round(c.x);
   }
 
   // ---------------------------------------------------------------- jumping fish
@@ -162,7 +164,7 @@ export class AmbientLife {
       this.nextWhale -= delta;
       if (this.nextWhale <= 0) {
         this.nextWhale = rand(A.whaleEveryMs);
-        this.whale = { x: Math.round(W * (0.2 + Math.random() * 0.6)), y: horizonY + 5, age: 0 };
+        this.whale = { x: Math.round(W * (0.2 + Math.random() * 0.6)), y: horizonY + 8, age: 0 };
       }
     }
     const w = this.whale;
@@ -181,10 +183,11 @@ export class AmbientLife {
     // The back rises, blows, sinks; then the tail lifts and slips under.
     const back = t < 0.25 ? t / 0.25 : t < 0.55 ? 1 : t < 0.7 ? 1 - (t - 0.55) / 0.15 : 0;
     if (back > 0) {
-      const h = Math.round(back * 2);
-      for (let dx = -5; dx <= 5; dx++) {
-        const top = Math.round(h * (1 - (dx / 6) ** 2));
-        for (let dy = 0; dy < top; dy++) px(w.x + dx, w.y - dy - 1, dy === top - 1 ? 'slate' : 'dusk');
+      // Dark enough to read on the bright water near the horizon.
+      const h = Math.round(back * 3);
+      for (let dx = -7; dx <= 7; dx++) {
+        const top = Math.round(h * (1 - (dx / 8) ** 2));
+        for (let dy = 0; dy < top; dy++) px(w.x + dx, w.y - dy - 1, dy === top - 1 ? 'slate' : 'midnight');
       }
     }
     if (t > 0.2 && t < 0.5) {
@@ -195,13 +198,14 @@ export class AmbientLife {
       const s = (t - 0.72) / 0.23;
       const lift = Math.round(Math.sin(s * Math.PI) * 4);
       const x = w.x + 4;
-      px(x, w.y - lift, 'dusk');
-      px(x - 1, w.y - lift - 1, 'dusk');
-      px(x + 1, w.y - lift - 1, 'dusk');
+      px(x, w.y - lift, 'midnight');
+      px(x, w.y - lift + 1, 'midnight');
+      px(x - 1, w.y - lift - 1, 'midnight');
+      px(x + 1, w.y - lift - 1, 'midnight');
       px(x - 2, w.y - lift - 2, 'slate');
       px(x + 2, w.y - lift - 2, 'slate');
     }
-    if (t < 0.7 || t > 0.9) drawPixelEllipse(g, w.x, w.y, 7, 1, 'mist', 0.25);
+    if (t < 0.7 || t > 0.9) drawPixelEllipse(g, w.x, w.y, 9, 1, 'mist', 0.5);
   }
 
   // ---------------------------------------------------------------- gulls
