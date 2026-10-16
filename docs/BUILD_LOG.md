@@ -149,3 +149,10 @@
 - Changed: the crew panel's water button is gone; crew always fish where the club is.
 - Process: designs were reviewed on a design board with Keep, Change, or Drop per idea, over three rounds.
 - Verified: 159 tests, typecheck, and build pass. All rods and the four boats checked in the game by day and at night.
+
+## v0.11.0: Life around the boat, quieter fights, an easier upgrade tree
+- Built: small touches of life (`scenes/world/ambientLife.ts`, `FX.ambient`): a fish jumps now and then (every 16 to 40 s, away from the bobber), gulls cross the sky and about half the time rest on the mast (the stern lantern post on boats with no sail), and a whale surfaces far out about every 4 minutes on Moonlit Cove, Sunlit Reef, and Sky Lake. Every boat below the top four has a stern lantern that flickers on at dusk and glows through the night. Rain leaves small rings where each drop meets the water. Reduced motion turns the motion off.
+- Changed: the fight words show only the first time (the first rare fight explains the dips, the first legendary the hold); after that only the ! cues show. Saved in the fishing slice as `taught`.
+- Changed: Upgrades opens with nothing selected, so the tree scrolls freely. Tap a node to see its card, tap it again or the x to close it.
+- Process: nine animations were filmed and reviewed one by one. The cat walking the deck, line sway, Logbook confetti, and a journal page turn were dropped.
+- Verified: 159 tests, typecheck, and build pass. Each animation recorded in the browser at 390x844.

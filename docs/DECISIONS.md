@@ -78,3 +78,6 @@ One line per decision, with the reason. Newest at the bottom.
 - Rod looks are data (shaft pattern, grip, reel, guides, tip style, glow) on each rod's `look` effect, drawn by one module, so a new rod needs no code.
 - The top boats are drawn per design in `art/boatsHigh.ts` with a light list per tier; owner approved each over three design rounds. Crew always fish at the club's water (the per-helper water button was confusing once earlier waters paid less).
 - Local gear, animation polish, logins, and friends are parked for their own passes (see `docs/ROADMAP.md`), owner's order.
+- Animation polish was reviewed clip by clip (owner's call): kept jumping fish, gulls on the mast, the dusk lantern, rain rings, and a rare whale (about every 4 minutes, open waters only). Dropped the cat walking, line sway, Logbook confetti, and the journal page turn.
+- Fight instructions show once per kind (owner's request): players learn the ! cues on the first fight and are trusted after that.
+- The upgrade tree opens with nothing selected so the card never blocks scrolling (owner's request).

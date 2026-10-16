@@ -4,7 +4,7 @@ Ideas the architecture is ready for. None are built yet; each note says where it
 
 ## Next passes (owner's order, each on its own so it is done right)
 
-1. **Animation polish.** Walk through each piece with the owner: fish that jump now and then, gulls landing on the mast, the ship cat walking the deck, lanterns lighting at dusk, a whale far out at sea, rain rings on the water, a little line wobble, Logbook confetti, journal pages that turn.
+1. **Animation polish.** Done in v0.11.0: jumping fish, gulls on the mast, the dusk lantern, rain rings, and a rare whale. The cat walking, line wobble, Logbook confetti, and page turns were tried and dropped.
 2. **Logins and cloud saves.** Keep GitHub Pages hosting; Supabase for sign in (Google or email link) and the save. Playing signed out keeps working. Needs the owner's OK for the library and a free Supabase account in the owner's name, plus a short privacy note.
 3. **Friends and a friendly leaderboard.** After logins: add friends by a short club code, weekly boards among friends only (Daily Catch luck, biggest fish of the week, journal %, fastest to Sky Lake), reset every Monday, no public lists or chat.
 4. **Local gear (later).** Three upgrades per later water, sold only there (Snorkel Mask, Coral Charm, Glass Bottom at the reef; Mushroom Lamps, Echo Bell, Glow-worm Line in the cave; Cloud Nets, Wind Vane, Star Chart at Sky Lake). The owner likes the idea but wants it on the roadmap for now.

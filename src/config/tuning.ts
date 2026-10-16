@@ -163,7 +163,7 @@ export const FX = {
     gullSpeed: 0.018,
     gullLandChance: 0.45,
     gullRestMs: [8_000, 18_000],
-    whaleEveryMs: [150_000, 320_000],
+    whaleEveryMs: [210_000, 270_000],
     whaleMs: 5200,
     whaleWaters: ['cove', 'reef', 'sky_lake'],
   },

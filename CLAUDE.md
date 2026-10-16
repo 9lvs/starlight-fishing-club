@@ -114,6 +114,8 @@ comments that explain *why*. Small files.
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
 upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 159 unit tests.
+v0.11.0 adds life around the boat (`scenes/world/ambientLife.ts`: jumping fish, gulls on the mast, a rare whale), a stern lantern
+that lights at dusk, and rain rings; fight words show only the first time, and Upgrades opens with nothing selected.
 v0.10.0 gives every rod its own shape (`scenes/world/rodArt.ts`, looks in `upgrades.json`), redraws the top four boats for
 their waters with lights (`art/boatsHigh.ts`, `scenes/world/boatGlow.ts`), and has crew always fish at the club water.
 v0.9.0 makes the club bonus small (+5% to +80%, later fish simply cost more), has every boat need gear from
