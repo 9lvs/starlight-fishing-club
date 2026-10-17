@@ -81,3 +81,4 @@ One line per decision, with the reason. Newest at the bottom.
 - Animation polish was reviewed clip by clip (owner's call): kept jumping fish, gulls on the mast, the dusk lantern, rain rings, and a rare whale (about every 4 minutes, open waters only). Dropped the cat walking, line sway, Logbook confetti, and the journal page turn.
 - Fight instructions show once per kind (owner's request): players learn the ! cues on the first fight and are trusted after that.
 - The upgrade tree opens with nothing selected so the card never blocks scrolling (owner's request).
+- Feature stats are declared on the feature (`stats`) and defined before any init, so feature order in `features/index.ts` never decides whether a saved upgrade can load.

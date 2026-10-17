@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bootstrap } from '../src/core/bootstrap';
+import type { GameFeature } from '../src/core/feature';
 import { parseContent } from '../src/core/content/parseContent';
 import { DailyGiftService } from '../src/features/dailyGift/service';
 import { canClaim, dayKey } from '../src/features/dailyGift/state';
@@ -44,5 +45,16 @@ describe('feature-gated content packs', () => {
     expect(without.content.upgrades.some((u) => u.id === 'club_mailbox')).toBe(false);
     const withIt = parseContent(files, {}, ['fishing', 'dailyGift']);
     expect(withIt.content.upgrades.some((u) => u.id === 'club_mailbox')).toBe(true);
+  });
+});
+
+describe('feature stats', () => {
+  it('are defined before any feature inits, so an earlier feature can use a later one\'s stat', () => {
+    // Mirrors upgrades (listed first) re-applying an owned Club Mailbox on load.
+    const upgrades: GameFeature = { id: 'a', init: (ctx) => ctx.stats.setSource('upgrade:club_mailbox', [{ stat: 'dailyGiftCoins', op: 'add', value: 40 }]) };
+    const gift: GameFeature = { id: 'b', stats: [{ id: 'dailyGiftCoins', base: 60, min: 0, integer: true }], init: () => {} };
+    const r = bootstrap({ features: [upgrades, gift], loadContent: () => parseContent(readContentFiles()), storage: new MemoryStorage(), debug: false });
+    expect(r.errors).toEqual([]);
+    expect(r.ctx!.stats.get('dailyGiftCoins')).toBe(100);
   });
 });

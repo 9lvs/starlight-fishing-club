@@ -170,6 +170,9 @@ export function bootstrap(opts: BootOptions): BootResult {
   setContext(ctx);
 
   const initErrors: string[] = [];
+  // Feature stats first: features init in list order, and an owned upgrade can name
+  // a stat from a feature later in the list (the Club Mailbox and the daily gift).
+  for (const f of opts.features) for (const def of f.stats ?? []) ctx.stats.define(def);
   for (const f of opts.features) {
     try {
       f.init(ctx);

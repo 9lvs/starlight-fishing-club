@@ -18,7 +18,7 @@ own folder, implements `GameFeature` (`src/core/feature.ts`), and is listed in
 3. **Talk through the core, never to other features.**
    - Events: `ctx.bus.on(...)` and `ctx.bus.emit(...)`. Add new events with declaration
      merging (see below).
-   - Stats: `ctx.stats.define(...)` for new numbers, `ctx.stats.setSource(...)` for
+   - Stats: list new numbers in the feature's `stats` (defined before any init), `ctx.stats.setSource(...)` for
      effects. Data can then reference your stat in upgrade `modifiers`.
    - Content: declare `contentTypes: { myType: zodSchema }` and read
      `ctx.content.extra.myType`. Files named `myType.json` in any pack are validated.
@@ -141,13 +141,15 @@ export const dailyGiftFeature: GameFeature = {
   id: 'dailyGift',
   contentTypes: { gifts: giftNoteSchema },
   saveSlice: dailyGiftSlice,
+  // New stats go here, not in init: they are defined before any feature inits,
+  // so the upgrades feature can re-apply an owned upgrade on this stat at load.
+  stats: [{ id: 'dailyGiftCoins', base: 60, min: 0, integer: true, label: 'Daily gift', format: 'int' }],
   scenes: [{ key: 'DailyGift', scene: DailyGiftScene, kind: 'panel' }],
   menuEntries: [
     { id: 'dailyGift', label: 'Club gift', icon: 'icon_gift', order: 50, sceneKey: 'DailyGift',
       badge: () => getDailyGift().available() },
   ],
   init(ctx) {
-    ctx.stats.define({ id: 'dailyGiftCoins', base: 60, min: 0, integer: true, label: 'Daily gift', format: 'int' });
     setDailyGift(new DailyGiftService(ctx, ctx.save.slice<DailyGiftSlice>('dailyGift')));
     ctx.bus.on('dailyGiftClaimed', ({ coins }) => ctx.ui.toast(`Opened the club gift: +${coins}`, { icon: 'icon_gift' }));
   },

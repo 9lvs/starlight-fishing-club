@@ -16,6 +16,8 @@ export const dailyGiftFeature: GameFeature = {
   id: 'dailyGift',
   contentTypes: { gifts: giftNoteSchema },
   saveSlice: dailyGiftSlice,
+  // Upgrades in JSON can modify "dailyGiftCoins" (the Club Mailbox).
+  stats: [{ id: 'dailyGiftCoins', base: 60, min: 0, integer: true, label: 'Daily gift', format: 'int' }],
   scenes: [{ key: 'DailyGift', scene: DailyGiftScene, kind: 'panel' }],
   menuEntries: [
     {
@@ -28,8 +30,6 @@ export const dailyGiftFeature: GameFeature = {
     },
   ],
   init(ctx) {
-    // A new stat; upgrades in JSON can now modify "dailyGiftCoins".
-    ctx.stats.define({ id: 'dailyGiftCoins', base: 60, min: 0, integer: true, label: 'Daily gift', format: 'int' });
     setDailyGift(new DailyGiftService(ctx, ctx.save.slice<DailyGiftSlice>('dailyGift')));
     ctx.bus.on('dailyGiftClaimed', ({ coins }) => {
       ctx.ui.toast(`Opened the club gift: +${coins}`, { icon: 'icon_gift', color: 'gold' });

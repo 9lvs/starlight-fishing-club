@@ -3,6 +3,7 @@
 import type Phaser from 'phaser';
 import type { ZodType } from 'zod';
 import type { GameContext } from './context';
+import type { StatDef } from './stats';
 import type { OfflineReport } from './types';
 
 export interface MenuEntry {
@@ -53,6 +54,11 @@ export interface GameFeature {
   id: string;
   /** Extra content types this feature reads from src/content/<pack>/<type>.json. */
   contentTypes?: Record<string, ZodType>;
+  /**
+   * Stats this feature adds. They are defined before any feature's init, so an
+   * upgrade on one of them (applied when the upgrades feature inits) always finds it.
+   */
+  stats?: StatDef[];
   init(ctx: GameContext): void;
   /** Runs after every feature has initialised and the save is loaded. */
   start?(ctx: GameContext): void;

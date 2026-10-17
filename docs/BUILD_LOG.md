@@ -156,3 +156,7 @@
 - Changed: Upgrades opens with nothing selected, so the tree scrolls freely. Tap a node to see its card, tap it again or the x to close it.
 - Process: nine animations were filmed and reviewed one by one. The cat walking the deck, line sway, Logbook confetti, and a journal page turn were dropped.
 - Verified: 159 tests, typecheck, and build pass. Each animation recorded in the browser at 390x844.
+
+## v0.11.1: The game starts again with the Club Mailbox
+- Fixed: a player who owned the Club Mailbox saw "feature upgrades failed to start: Unknown stat dailyGiftCoins" and could not play. The upgrades feature re-applies owned upgrades when it inits, which was before the daily gift feature (later in the list) defined its stat. Features now list their stats in `GameFeature.stats`, and bootstrap defines every feature's stats before any feature inits. Owner report.
+- Verified: a new test boots a feature that uses a stat from a feature listed after it (it fails with the same error without the fix). 160 tests, typecheck, and build pass.
