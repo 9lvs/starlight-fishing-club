@@ -25,6 +25,8 @@ describe('water moments', () => {
     const g = bootstrap({ features: [], loadContent: () => parseContent(readContentFiles()), storage: new MemoryStorage(), debug: false });
     const ctx = g.ctx!;
     (ctx.content.extra as Record<string, unknown>).moments = defs;
+    // Daytime, so only the minnow run fits (the real clock would make this vary).
+    (ctx.world as unknown as { _phase: string })._phase = 'day';
     const svc = new MomentsService(ctx);
     const base = ctx.stats.get('waitMaxMs');
     svc.tick(MOMENTS.firstMs + 1);
