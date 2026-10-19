@@ -60,7 +60,7 @@ export class BottlesScene extends PanelScene<BottlesData> {
       scroll.add(this.add.image(11, y + ROW_H / 2, 'icon_bottle'));
       const where = n.water ? (this.ctx.registries.waters.tryGet(n.water)?.name ?? '') : 'Washed up';
       scroll.add(addText(this, 22, y + 3, `From ${n.from}`, { color: unread ? 'gold' : 'mist', shadow: false }));
-      scroll.add(addText(this, 22, y + 14, n.hintFor ? `${where} · a clue` : where, { color: 'slate', shadow: false }));
+      scroll.add(addText(this, 22, y + 14, n.hintFor ? `${where}, a clue` : where, { color: 'slate', shadow: false }));
       const hit = new Button(this, { x: 0, y, w: area.w, h: ROW_H, variant: 'ghost', onClick: () => this.refresh({ noteId: n.id }) });
       hit.setAlpha(0.001);
       scroll.add(hit);
