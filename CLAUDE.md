@@ -116,6 +116,8 @@ comments that explain *why*. Small files.
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
 moments, upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 170 unit tests.
+v0.12.0 adds fishing spots (`features/fishing/spots.ts`), a secret fish per water (`fish.secrets.json`), message bottles in the Journal,
+and water moments (`features/moments`).
 v0.11.1 fixes boot for Club Mailbox owners: feature stats go in `GameFeature.stats`, defined before any init.
 v0.11.0 adds life around the boat (`scenes/world/ambientLife.ts`: jumping fish, gulls on the mast, a rare whale), a stern lantern
 that lights at dusk, and rain rings; fight words show only the first time, and Upgrades opens with nothing selected.

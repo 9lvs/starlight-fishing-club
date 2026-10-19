@@ -160,3 +160,12 @@
 ## v0.11.1: The game starts again with the Club Mailbox
 - Fixed: a player who owned the Club Mailbox saw "feature upgrades failed to start: Unknown stat dailyGiftCoins" and could not play. The upgrades feature re-applies owned upgrades when it inits, which was before the daily gift feature (later in the list) defined its stat. Features now list their stats in `GameFeature.stats`, and bootstrap defines every feature's stats before any feature inits. Owner report.
 - Verified: a new test boots a feature that uses a stat from a feature listed after it (it fails with the same error without the fix). 160 tests, typecheck, and build pass.
+
+## v0.12.0: Fishing spots, secret fish, message bottles, water moments
+- Built: fishing spots (`features/fishing/spots.ts`, `SPOTS`): about once a minute a patch of water in front of the boat stirs; tap it to cast there for +6 luck. Spots drift and fade after a minute or so; missing one costs nothing. A tip explains them the first time.
+- Built: a secret fish in every water (`fish.secrets.json`, `secret: true`): Lantern Koi (pond, dusk), Mist Ferryman (river, fog), Tide Oracle (cove, night), Sunken Crown (reef, rain), Echo Eel (cave, dawn), Aurora Ray (Sky Lake, wind). Only a cast into a spot at the right time or weather can bring one up (1 in 5). They never slip the hook, never come to crew or offline catch-up, and the Journal shows a sealed page until caught. The catch card gets a SECRET tag.
+- Built: message bottles in the Journal (a Bottles tab): now and then a hand catch brings up a bottle with a note from an old club member (18 notes, a clue for each secret fish) or a little chest with a gem or coins. Never two within 3 minutes; 15 dry catches guarantee one. Shown after the catch card closes. Journal slice v2.
+- Built: water moments (`features/moments`, `src/content/moments/moments.json`): every 4 to 7 minutes a bright moon (night, +5 luck) or golden hour (dusk and dawn, sell +25%) lasts a minute or two, with a picture on the water and its name and time left under the water's name.
+- Fixed: a panel opened from the menu started on the page it showed last time (Phaser keeps a scene's data when launched without any).
+- Process: brainstorm on the design board (round 5), then the four kept ideas built and reviewed (round 6). Dropped after review: the minnow run and lantern drift moments.
+- Verified: 170 tests, typecheck, and build pass. Each piece checked in the browser at 390x844.
