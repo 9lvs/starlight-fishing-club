@@ -35,6 +35,13 @@ export const GUIDE: TipDef[] = [
 
 /** One-time tips that appear when they become useful. */
 export const TIPS: Record<string, TipDef> = {
+  spot: {
+    id: 'spot',
+    text: 'The water is stirring! Tap it to cast there. Spots bring luck, and now and then a secret.',
+    anchor: { kind: 'center' },
+    dismissable: true,
+    autoHideMs: 9000,
+  },
   creel: {
     id: 'creel',
     text: 'Kept fish are prepped in your creel, then sell together for a bonus, and more for 3, 5, or 10 of a rarity.',

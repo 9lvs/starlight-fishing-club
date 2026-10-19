@@ -1,13 +1,15 @@
 // Glue between the pure fishing session and the rest of the game: rolls the
 // catch, emits bus events, and handles selling and keeping.
 import { ECONOMY } from '../../config/balance';
-import { CATCH, CREEL, FIGHT, FISHING, FX, RESTED } from '../../config/tuning';
+import { CATCH, CREEL, FIGHT, FISHING, FX, RESTED, SPOTS } from '../../config/tuning';
 import { bundleBonus, matchingSets, type SetResult } from '../../systems/economy';
-import { conditionWeight, fishValue, makeCatch, rarityBoosts } from '../../core/catching';
+import { conditionWeight, fishValue, lootFish, makeCatch, rarityBoosts } from '../../core/catching';
+import { secretPool } from '../../systems/lootTable';
 import { escapeChance, quickBonus } from '../../systems/catchOdds';
 import type { GameContext } from '../../core/context';
 import type { CatchResult } from '../../core/types';
 import { FishingSession, type SessionEvent } from './fishingSession';
+import { SpotField, type Spot } from './spots';
 import { addRest, type CreelItem, type FishingSlice } from './state';
 
 export interface CreelSale {
@@ -41,6 +43,10 @@ export class FishingController {
   rested: { coins: number } | null = null;
   /** A rare fish on the line, fighting, with what is needed to land it after. */
   private fighting: { plan: Plan; reactionMs: number; windowMs: number } | null = null;
+  /** Patches of stirring water to cast into. */
+  readonly spots: SpotField;
+  /** The fishing spot the current cast went into, if any. */
+  castSpot: Spot | null = null;
   /** Easy reel (Settings): rare fish land with one tap, no fight. */
   easyReel = false;
   private listeners = new Set<ControllerListener>();
@@ -62,6 +68,7 @@ export class FishingController {
       (e) => this.onSession(e),
       FIGHT,
     );
+    this.spots = new SpotField(SPOTS, ctx.rng);
   }
 
   /** Lift a finger or a key (legendary fish need a hold). */
@@ -81,12 +88,19 @@ export class FishingController {
     return () => this.listeners.delete(fn);
   }
 
-  tap(): void {
+  /** A tap: casts (into `spot` when the tap was on one), hooks, or fights. */
+  tap(spot: Spot | null = null): void {
+    const p = this.session.phase;
+    if (p === 'idle' || p === 'missed') this.castSpot = spot;
     this.session.tap();
   }
 
   update(dt: number): void {
     this.session.update(dt);
+    const before = this.spots.spots.length;
+    this.spots.update(dt);
+    const s = this.spots.spots[this.spots.spots.length - 1];
+    if (s && this.spots.spots.length > before) this.ctx.bus.emit('spotAppeared', { x: s.x, y: s.y });
   }
 
   private onSession(e: SessionEvent): void {
@@ -103,6 +117,7 @@ export class FishingController {
         // Roll now, so the water can hint at a rare fish while you wait.
         this.planned = this.plan(waterId);
         bus.emit('cast', { waterId });
+        if (this.castSpot) bus.emit('spotCast', { waterId });
         if (this.upcomingTier >= FISHING.glowMinTier) bus.emit('rareNearby', { rarityId: this.upcomingRarity! });
         break;
       case 'bite':
@@ -201,18 +216,31 @@ export class FishingController {
     this.quick = tier && result ? { label: tier.label, coins: Math.max(1, Math.round(result.value * tier.bonus)) } : null;
   }
 
-  /** Roll the next fish with everything the player has: luck, lures, bait. */
+  /** Roll the next fish with everything the player has: luck, lures, bait, and the spot. */
   private plan(waterId: string): Plan | null {
+    const spot = this.castSpot !== null;
+    const secret = spot ? this.secretFor(waterId) : null;
     const made = makeCatch(this.ctx, {
       waterId,
-      luck: this.ctx.stats.get('luck'),
+      luck: this.ctx.stats.get('luck') + (spot ? SPOTS.luck : 0),
+      ...(secret ? { fishId: secret } : {}),
       valueMult: this.ctx.stats.get('sellValueMult'),
       pity: this.state.pity,
       boosts: rarityBoosts(this.ctx),
       sizeMult: this.ctx.stats.get('fishSizeMult'),
       fishWeight: conditionWeight(this.ctx),
     });
-    return made ? { made, escape: this.escapeChance(made.result) } : null;
+    if (!made) return null;
+    // A secret fish found after a hunt never slips the hook.
+    if (secret) made.result.flags.secret = true;
+    return { made, escape: secret ? 0 : this.escapeChance(made.result) };
+  }
+
+  /** Sometimes a cast into a spot brings up the secret fish, when its time and weather are here. */
+  private secretFor(waterId: string): string | null {
+    const pool = secretPool(lootFish(this.ctx), this.ctx.world.conditions(waterId));
+    if (pool.length === 0 || this.ctx.rng() >= SPOTS.secretChance) return null;
+    return pool[Math.floor(this.ctx.rng() * pool.length)]!.id;
   }
 
   /** Chance this fish slips away, from its rarity, the water, and the player's tackle. */

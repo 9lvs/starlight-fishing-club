@@ -14,6 +14,7 @@ import { uiSignals } from '../../ui/uiSignals';
 import { CatchPopup, type CatchPopupHandlers } from './CatchPopup';
 import { getFishingController, type FishingController } from './controller';
 import type { SessionEvent } from './fishingSession';
+import type { SpotArea } from './spots';
 
 interface Ripple {
   x: number;
@@ -69,6 +70,9 @@ export class FishingScene extends Phaser.Scene {
   private popupHandlers: CatchPopupHandlers | null = null;
   private elapsed = 0;
   private offs: (() => void)[] = [];
+  /** Where this cast's bobber floats: the usual place, or a fishing spot that was tapped. */
+  private target = { x: 0, y: 0 };
+  private spotGfx!: Phaser.GameObjects.Graphics;
 
   constructor() {
     super('Fishing');
@@ -83,9 +87,14 @@ export class FishingScene extends Phaser.Scene {
     const { fishingZone: z, castButton: cb, bobber } = this.L;
 
     // Tapping anywhere on the water counts, so the bite window feels generous.
+    // A tap on a fishing spot casts there.
     const zone = this.add.zone(z.x, z.y, z.w, z.h).setOrigin(0, 0).setInteractive();
-    zone.on('pointerdown', () => this.tap());
+    zone.on('pointerdown', (p: Phaser.Input.Pointer) => this.tap(p.worldX, p.worldY));
+    this.ctl.spots.setArea(spotArea(this.L));
+    const cast = this.ctl.castSpot;
+    this.target = cast && this.ctl.session.phase !== 'idle' ? { x: Math.round(cast.x), y: cast.y } : { ...bobber };
 
+    this.spotGfx = this.add.graphics();
     this.shadow = this.add.graphics();
     this.glow = this.add.graphics();
     this.fightGfx = this.add.graphics().setDepth(5);
@@ -177,13 +186,69 @@ export class FishingScene extends Phaser.Scene {
     this.tap();
   }
 
-  private tap(): void {
+  private tap(x?: number, y?: number): void {
     if (uiState.openPanel || uiState.modal || uiState.voyaging) return;
+    const p = this.ctl.session.phase;
+    if (p === 'idle' || p === 'missed') {
+      const spot = x !== undefined && y !== undefined ? this.ctl.spots.hit(x, y) : null;
+      this.target = spot ? { x: Math.round(spot.x), y: spot.y } : { ...this.L.bobber };
+      this.ctl.tap(spot);
+      return;
+    }
     this.ctl.tap();
   }
 
+  /**
+   * Stirring water: small rings that spread and fade, a fish flicking at the
+   * surface now and then, and a few sparkles at dusk and night.
+   */
+  private drawSpots(reduced: boolean): void {
+    const g = this.spotGfx;
+    g.clear();
+    const dark = ['dusk', 'night'].includes(this.ctx.world.phase);
+    for (const s of this.ctl.spots.spots) {
+      const k = this.ctl.spots.strength(s);
+      if (k <= 0) continue;
+      const x = Math.round(s.x);
+      const y = s.y;
+      // A lighter patch where the fish are stirring, then rings spreading out.
+      g.fillStyle(color('sky'), 0.18 * k);
+      for (let dy = -2; dy <= 2; dy++) {
+        const half = Math.round(9 * Math.sqrt(1 - (dy / 3) ** 2));
+        g.fillRect(x - half, y + dy, half * 2 + 1, 1);
+      }
+      const ring = (t: number, c: PaletteName, a: number) => {
+        const rx = 3 + t * 11;
+        drawPixelEllipse(g, x, y, rx, Math.max(1, rx * 0.35), c, a * k * (1 - t));
+      };
+      if (reduced) {
+        ring(0.3, 'mist', 0.8);
+        ring(0.7, 'mist', 0.8);
+      } else {
+        // Three rings out of step, so the water keeps stirring.
+        for (let i = 0; i < 3; i++) ring(((this.elapsed / 1400 + i / 3 + s.id * 0.37) % 1), i === 0 ? 'mist' : 'sky', 0.9);
+        // A small fish flicks at the surface every couple of seconds.
+        const flick = (this.elapsed + s.id * 700) % 2300;
+        if (flick < 260) {
+          const fx = x + (s.id % 2 === 0 ? -4 : 4) + Math.round(flick / 80) * (s.id % 2 === 0 ? 1 : -1);
+          const fy = y - Math.round(Math.sin((flick / 260) * Math.PI) * 3);
+          g.fillStyle(color('mist'), k);
+          g.fillRect(fx, fy, 2, 1);
+        }
+      }
+      if (dark) {
+        for (let i = 0; i < 3; i++) {
+          const on = reduced || Math.floor(this.elapsed / 400 + i * 1.7 + s.id) % 3 === 0;
+          if (!on) continue;
+          g.fillStyle(color('gold'), 0.8 * k);
+          g.fillRect(x - 6 + i * 6, y - 2 + ((i * 5 + s.id) % 4), 1, 1);
+        }
+      }
+    }
+  }
+
   private onSession(e: SessionEvent): void {
-    const { bobber } = this.L;
+    const bobber = this.target;
     switch (e.type) {
       case 'cast':
         this.say('');
@@ -290,7 +355,7 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private throwBobber(): void {
-    const { bobber } = this.L;
+    const bobber = this.target;
     const from = { x: worldAnchors.rodTip.x, y: worldAnchors.rodTip.y };
     this.bobber.setVisible(true).setPosition(from.x, from.y).setFrame(0);
     const t = { p: 0 };
@@ -313,7 +378,7 @@ export class FishingScene extends Phaser.Scene {
   }
 
   private reelIn(): void {
-    const { bobber } = this.L;
+    const bobber = this.target;
     const pending = this.ctl.pending;
     this.addRipple(bobber.x, bobber.y + 2, 14, 700, 'mist');
     if (this.textures.exists('fx_splash')) {
@@ -368,7 +433,8 @@ export class FishingScene extends Phaser.Scene {
     this.endMoment();
     const cfg = FX.legendary;
     const sparks = this.add.graphics().setDepth(46);
-    const { bobber, boat } = this.L;
+    const bobber = this.target;
+    const { boat } = this.L;
     this.ctx.bus.emit('camera:zoom', { x: Math.round((bobber.x + boat.x) / 2), y: Math.round(Math.min(bobber.y, boat.y) - cfg.arcPx / 2), scale: cfg.zoom, inMs: cfg.zoomInMs, glow: `#${PALETTE[tint].toString(16).padStart(6, '0')}` });
     this.moment = { sparks, motes: [] };
   }
@@ -444,7 +510,7 @@ export class FishingScene extends Phaser.Scene {
     if (left > cfg.leadMs) return;
     const p = 1 - left / cfg.leadMs;
     const ease = 1 - (1 - p) ** 2;
-    const { bobber } = this.L;
+    const bobber = this.target;
     const { len, h } = this.shadowShape;
     const dx = reduced ? 0 : Math.round(this.shadowSide * cfg.startDx * (1 - ease));
     const wiggle = reduced || phase === 'bite' ? 0 : Math.round(Math.sin(this.elapsed / 160));
@@ -461,7 +527,7 @@ export class FishingScene extends Phaser.Scene {
 
   /** The fish leaps, twists off the hook, and splashes back. */
   private slipAway(): void {
-    const { bobber } = this.L;
+    const bobber = this.target;
     const c = this.ctl.escaped!.result;
     const fish = this.ctx.registries.fish.tryGet(c.fishId);
     this.addRipple(bobber.x, bobber.y + 2, 14, 700, 'mist');
@@ -565,7 +631,7 @@ export class FishingScene extends Phaser.Scene {
 
   /** The bobber tugs during the fight; marks above it show each dip, and a ring fills while you hold. */
   private updateFight(reduced: boolean): void {
-    const { bobber } = this.L;
+    const bobber = this.target;
     const f = this.ctl.session.fight;
     const g = this.fightGfx;
     g.clear();
@@ -630,7 +696,7 @@ export class FishingScene extends Phaser.Scene {
     if ((phase !== 'waiting' && phase !== 'bite') || tier < FISHING.glowMinTier) return;
     const rarity = this.ctx.registries.rarities.tryGet(this.ctl.upcomingRarity ?? '');
     if (!rarity) return;
-    const { bobber } = this.L;
+    const bobber = this.target;
     const pulse = reduced ? 0.5 : (Math.sin(this.elapsed / 700) + 1) / 2;
     const strength = FISHING.glowAlpha * (0.6 + 0.4 * pulse) * (0.7 + 0.15 * (tier - FISHING.glowMinTier));
     // A soft filled pool of light with a clearer rim.
@@ -664,7 +730,7 @@ export class FishingScene extends Phaser.Scene {
   override update(_t: number, delta: number): void {
     this.elapsed += delta;
     const phase = this.ctl.session.phase;
-    const { bobber } = this.L;
+    const bobber = this.target;
     const reduced = uiSignals.reducedMotion();
 
     if (phase === 'waiting') {
@@ -691,6 +757,7 @@ export class FishingScene extends Phaser.Scene {
       drawSaggingLine(this.line, worldAnchors.rodTip.x, worldAnchors.rodTip.y, this.jumper.x, this.jumper.y, 1, 'mist');
     }
 
+    this.drawSpots(reduced);
     this.drawShadow(phase, reduced);
     this.drawRareGlow(phase, reduced);
     if (this.moment) {
@@ -709,4 +776,13 @@ export class FishingScene extends Phaser.Scene {
       drawPixelEllipse(this.fx, r.x, r.y, rad, Math.max(1, rad * 0.35), r.color, alpha);
     }
   }
+}
+
+/** Open water in front of the boat, clear of the sky, the boat, and the Cast button. */
+function spotArea(L: Layout): SpotArea {
+  const left = L.boat.x + 22;
+  const right = L.width - L.safe.right - 12;
+  const top = L.horizonY + 16;
+  const bottom = L.castButton.y - 24;
+  return { x: left, y: top, w: Math.max(0, right - left), h: Math.max(0, bottom - top), avoid: { x: L.boat.x, y: L.boat.y, r: 34 } };
 }

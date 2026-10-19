@@ -98,6 +98,11 @@ export const fishSchema = z.object({
   size: z.tuple([z.number().positive(), z.number().positive()]).optional(),
   /** Relative chance among fish of the same rarity. */
   weight: z.number().positive().default(1),
+  /**
+   * A water's secret: never in a normal roll, only from a cast into a fishing
+   * spot while its time and weather match. Message bottles hint at it.
+   */
+  secret: z.boolean().default(false),
   /** Placeholder art hints, ignored once a real sprite exists. */
   art: z
     .object({

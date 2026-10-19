@@ -1,0 +1,26 @@
+[
+  {"id": "pond_hint", "from": "Old Mara", "water": "pond", "hintFor": "lantern_koi", "text": "When the sky over Willow Pond turns orange, watch the stirring water. Something down there carries a little lantern home. I have seen it twice in forty years."},
+  {"id": "pond_first", "from": "Pip, age 9", "water": "pond", "text": "Today I caught my first fish. It was very small and I let it go. Dad says that counts. I think it counts too."},
+  {"id": "pond_whisker", "from": "Old Mara", "water": "pond", "text": "If you meet Old Whisker, say hello for me. He took my best hook in the spring of '62 and I have forgiven him."},
+
+  {"id": "river_hint", "from": "Ferry Tom", "water": "river", "hintFor": "mist_ferryman", "text": "On foggy days the old ferry crosses with no one aboard. Cast where the water stirs in the fog and you may meet who steers it."},
+  {"id": "river_bridge", "from": "Ines", "water": "river", "text": "Whisper River is named for the reeds, not the fish. The fish do not whisper. I have listened very carefully."},
+
+  {"id": "cove_hint", "from": "Captain Odile", "water": "cove", "hintFor": "tide_oracle", "text": "The Oracle only answers at night, and only in water that is already moving. Ask your question quietly and cast."},
+  {"id": "cove_light", "from": "the keeper", "water": "cove", "text": "I keep the lighthouse lit for boats, but I think the fish like it too. They gather under the beam on cold nights."},
+
+  {"id": "reef_hint", "from": "a diver", "water": "reef", "hintFor": "sunken_crown", "text": "There is a crown on the old wreck, and a fish who wears it. It only shows off in the rain, where the reef water stirs."},
+  {"id": "reef_colors", "from": "Lu", "water": "reef", "text": "I tried to paint the reef and ran out of colors by lunch. Bring more paint than you think."},
+
+  {"id": "cave_hint", "from": "a miner", "water": "glowing_cave", "hintFor": "echo_eel", "text": "Deep in the cave there is no sky, but the eel still knows when dawn comes outside. It hums then, wherever the water stirs."},
+  {"id": "cave_glow", "from": "Ren", "water": "glowing_cave", "text": "The mushrooms glow brighter when you speak kindly to them. I have no proof. I just know."},
+
+  {"id": "sky_hint", "from": "a kite maker", "water": "sky_lake", "hintFor": "aurora_ray", "text": "When the wind blows hard over Sky Lake, the colors come down from the clouds to play in the stirring water. Be there."},
+  {"id": "sky_top", "from": "the founder", "water": "sky_lake", "text": "If you are reading this up here, you made it all the way. I am proud of you. Now go slowly and enjoy the view."},
+
+  {"id": "any_rules", "from": "the founder", "text": "Club rules: be kind to fish, be kind to each other, and never rush a cup of tea."},
+  {"id": "any_rain", "from": "June", "text": "Rain is the best fishing weather. Everyone else stays home, and the fish get curious about the noise."},
+  {"id": "any_cook", "from": "the club cook", "text": "Whoever keeps borrowing my big pot for bait: I know it is you, and it smells like worms now."},
+  {"id": "any_stars", "from": "Sol", "text": "I counted the stars from the boat one night and got to two hundred before I fell asleep. Woke up with a fish in the bucket. No idea how."},
+  {"id": "any_map", "from": "Captain Odile", "text": "Every water has one fish that does not show up in any book. Watch for stirring water, and keep the bottles you find."}
+]

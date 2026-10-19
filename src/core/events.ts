@@ -23,6 +23,10 @@ export interface GameEvents {
   creelSetsSold: { sets: { rarityId: string; size: number; bonus: number }[] };
   /** A hooked fish slipped away (rarer fish, or not enough tackle). Nothing is lost. */
   fishEscaped: { fishId: string; rarityId: string; waterId: string; chance: number };
+  /** A patch of water started to stir (a fishing spot). */
+  spotAppeared: { x: number; y: number };
+  /** A cast went into a fishing spot. */
+  spotCast: { waterId: string };
   /** A rarer fish is coming to this cast (it glows in the water). */
   rareNearby: { rarityId: string };
   /** Reeled in soon after the bite: bonus coins. */

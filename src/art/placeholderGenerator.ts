@@ -868,6 +868,24 @@ function drawIcon(f: FrameCanvas, name: string): void {
     case 'arrow':
       f.poly([[3, 1], [9, 6], [3, 11]], 'mist');
       return;
+    case 'bottle':
+      // A message in a bottle, lying on its side with a cork and a rolled note.
+      f.ellipse(6, 7, 4.5, 2.6, 'sky');
+      f.rect(9, 6, 2, 3, 'sky');
+      f.outline('dusk');
+      f.rect(11, 6, 1, 3, 'bark');
+      f.rect(4, 6, 4, 2, 'sand');
+      f.px(3, 5, 'mist');
+      f.px(4, 5, 'mist');
+      return;
+    case 'chest':
+      f.rect(1, 5, 10, 6, 'bark');
+      f.rect(1, 3, 10, 3, 'sand');
+      f.outline('ink');
+      f.rect(1, 6, 10, 1, 'gold');
+      f.rect(5, 5, 2, 3, 'gold');
+      f.px(6, 6, 'ink');
+      return;
     case 'motion':
       f.disc(4, 6, 2.5, 'sky');
       f.line(7, 4, 11, 4, 'slate');

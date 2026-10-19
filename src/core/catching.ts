@@ -44,6 +44,8 @@ export interface MakeCatchOptions {
   sizeMult?: number;
   /** Bait for night or storm fish: weight multiplier within a rarity. */
   fishWeight?: (fish: FishDef) => number;
+  /** Land this fish instead of rolling (a secret fish from a fishing spot). */
+  fishId?: string;
   rng?: Rng;
 }
 
@@ -71,7 +73,8 @@ export function makeCatch(ctx: GameContext, o: MakeCatchOptions): { result: Catc
   const rng = o.rng ?? ctx.rng;
   const conditions = ctx.world.conditions(o.waterId);
   const forced = o.pity !== undefined ? debugOverrides.forceRarity : null;
-  const roll = rollCatch({
+  const picked = o.fishId ? ctx.registries.fish.tryGet(o.fishId) : undefined;
+  const roll = picked ? pickedRoll(ctx, picked, o.pity) : rollCatch({
     rarities: lootRarities(ctx).filter((r) => !forced || r.id === forced),
     fish: lootFish(ctx),
     conditions,
@@ -99,4 +102,11 @@ export function makeCatch(ctx: GameContext, o: MakeCatchOptions): { result: Catc
     flags: {},
   };
   return { result, pity: roll.pity };
+}
+
+/** A chosen fish as if it had been rolled: a rare-or-better catch resets the pity counter. */
+function pickedRoll(ctx: GameContext, fish: FishDef, pity: number | undefined) {
+  const tier = ctx.registries.rarities.tryGet(fish.rarity)?.tier ?? 0;
+  const next = pity === undefined ? undefined : tier >= LOOT.pityMinTier ? 0 : pity + 1;
+  return { fish, rarityId: fish.rarity, rolledRarityId: fish.rarity, pityTriggered: false, pity: next };
 }

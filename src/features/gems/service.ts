@@ -48,7 +48,7 @@ export class GemService {
   private priceScale(): number {
     const r = this.ctx.registries;
     const avg = (waterId: string) => {
-      const vals = r.fish.list().filter((f) => f.waters[0] === waterId).map((f) => f.baseValue);
+      const vals = r.fish.list().filter((f) => f.waters[0] === waterId && !f.secret).map((f) => f.baseValue);
       return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
     };
     const first = avg(this.ctx.world.firstWater());

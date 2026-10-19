@@ -62,6 +62,53 @@ export const FISHING = {
   biteDipPx: 2,
 } as const;
 
+/**
+ * Fishing spots: a patch of stirring water now and then. Tap it to cast there.
+ * A cast into a spot gets extra luck, and while the time and weather are right
+ * it may bring up the water's secret fish. Missing a spot costs nothing.
+ */
+export const SPOTS = {
+  firstMs: 25_000,
+  everyMs: [45_000, 90_000],
+  lifeMs: [60_000, 90_000],
+  fadeMs: 2500,
+  radius: 16,
+  max: 1,
+  driftPxPerSec: 1.2,
+  /** Luck added to a cast into a spot. */
+  luck: 6,
+  /** Chance a cast into a spot brings up the secret fish, when it is in season. */
+  secretChance: 0.2,
+};
+
+/**
+ * Finds: now and then the line brings up a message bottle or a little chest
+ * along with the fish. Bottles hold notes from past club members (some hint at
+ * secret fish); chests hold a gem or some coins. Hand catches only.
+ */
+export const FINDS = {
+  chance: 0.04,
+  /** Never two finds closer than this. */
+  minGapMs: 3 * 60_000,
+  /** A player who has not found anything in this many catches finds something on the next. */
+  guaranteeAfter: 15,
+  /** Share of finds that are bottles while unread notes remain (the rest are chests). */
+  bottleShare: 0.65,
+  chestGemChance: 0.5,
+  /** A chest without a gem holds this many times the fish's value in coins. */
+  chestCoinsMult: 4,
+};
+
+/**
+ * Water moments: now and then something small happens on the water for a
+ * minute or two (a school of minnows, a bright moon) and changes the next few
+ * casts a little. Never needed for progress. The moments are in content.
+ */
+export const MOMENTS = {
+  firstMs: 2 * 60_000,
+  everyMs: [4 * 60_000, 7 * 60_000],
+};
+
 export const SAVE = {
   storageKey: 'starlight-fishing-club/save',
   backupKeyPrefix: 'starlight-fishing-club/backup-',

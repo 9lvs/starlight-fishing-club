@@ -73,9 +73,14 @@ export class JournalScene extends PanelScene<JournalData> {
         g.fillRect(x + 4, y + CELL - 4, 2, 1);
       }
       scroll.add(g);
-      const img = this.add.image(x + CELL / 2, y + CELL / 2 + 1, f.spriteKey);
-      if (!entry) img.setTintFill(color('midnight'));
-      scroll.add(img);
+      // An uncaught secret shows a sealed page, not even its outline.
+      if (f.secret && !entry) {
+        scroll.add(addText(this, x + CELL / 2, y + CELL / 2 - 5, '?', { color: 'gold', scale: 2, originX: 0.5, shadow: false }));
+      } else {
+        const img = this.add.image(x + CELL / 2, y + CELL / 2 + 1, f.spriteKey);
+        if (!entry) img.setTintFill(color('midnight'));
+        scroll.add(img);
+      }
       const hit = new Button(this, {
         x,
         y,
@@ -98,17 +103,30 @@ export class JournalScene extends PanelScene<JournalData> {
     const cx = area.x + area.w / 2;
     let y = area.y;
 
+    const sealed = f.secret && !entry;
     const g = this.add.graphics();
-    drawPanelBox(g, cx - 34, y, 68, 54, { fill: 'ink', border: entry ? rarity.frame : 'midnight' });
-    const img = this.add.image(cx, y + 27, f.spriteKey).setScale(3);
-    if (!entry) img.setTintFill(color('midnight'));
+    drawPanelBox(g, cx - 34, y, 68, 54, { fill: 'ink', border: entry ? rarity.frame : sealed ? 'gold' : 'midnight' });
+    if (sealed) addText(this, cx, y + 17, '?', { color: 'gold', scale: 3, originX: 0.5, shadow: false });
+    else {
+      const img = this.add.image(cx, y + 27, f.spriteKey).setScale(3);
+      if (!entry) img.setTintFill(color('midnight'));
+    }
     y += 60;
-    addText(this, cx, y, entry ? f.name : '???', { originX: 0.5 });
+    addText(this, cx, y, entry ? f.name : '???', { originX: 0.5, color: f.secret ? 'gold' : 'mist' });
     y += 14;
     new RarityBanner(this, cx, y, { name: rarity.name, color: rarity.color, frame: rarity.frame, glow: rarity.glow, pips: rarity.pips, shape: rarity.shape }, !!entry);
     y += 20;
 
     const lines: string[] = [];
+    const home = r.waters.tryGet(f.waters[0] ?? '')?.name ?? 'this water';
+    if (sealed) {
+      // Where and when stay a mystery: bottles and spots are how you find it.
+      lines.push(`A secret of ${home}.`, '', 'It only rises in stirring water, at the right time or weather.', '', 'Message bottles hold clues.');
+      addText(this, area.x, y, lines.join('\n'), { maxWidth: area.w, color: 'sky', shadow: false });
+      this.backButton(area);
+      return;
+    }
+    if (f.secret) lines.push(`A secret of ${home}!`);
     if (entry) {
       lines.push(f.description, '');
       lines.push(`Caught: ${entry.count}`);
@@ -124,6 +142,10 @@ export class JournalScene extends PanelScene<JournalData> {
     if (f.weather.length) lines.push(`Weather: ${f.weather.map((w) => r.weather.tryGet(w)?.name ?? w).join(', ')}`);
     addText(this, area.x, y, lines.join('\n'), { maxWidth: area.w, color: 'sky', shadow: false });
 
+    this.backButton(area);
+  }
+
+  private backButton(area: Rect): void {
     new Button(this, {
       x: area.x,
       y: area.y + area.h - 24,

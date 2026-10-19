@@ -118,6 +118,10 @@ export const SOUNDS: Record<string, SoundDef> = {
   rested: { volume: 0.35, tone: { notes: [G5, C6, E6], wave: 'triangle', noteMs: 70, gapMs: 20, gain: 0.04 } },
   coin: { volume: 0.4, tone: { notes: [A5, C6], wave: 'sine', noteMs: 60, gapMs: 10, gain: 0.05 } },
   gem: { volume: 0.55, tone: { notes: [E6, C6, E6], wave: 'sine', noteMs: 60, gapMs: 30, gain: 0.05, release: 5 } },
+  /** A bottle or a little chest comes up with the line. */
+  find: { volume: 0.5, tone: { notes: [G5, C6, E6, C6], wave: 'triangle', noteMs: 70, gapMs: 25, gain: 0.05, release: 4 } },
+  /** A water moment begins (a school of minnows, a bright moon...). */
+  moment: { volume: 0.35, tone: { notes: [C6, G5, E6], wave: 'sine', noteMs: 160, gapMs: 60, gain: 0.03, release: 6 } },
   set: { volume: 0.6, tone: { notes: [C5, E5, G5, C6, G5, C6, E6], wave: 'triangle', noteMs: 70, gapMs: 15, gain: 0.06 } },
   bundle: { volume: 0.5, tone: { notes: [C5, E5, G5, C6, E6], wave: 'sine', noteMs: 60, gapMs: 15, gain: 0.05 } },
   // Menus and buying.

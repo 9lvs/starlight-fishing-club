@@ -27,7 +27,7 @@ export class DailyCatchService {
   fish(): FishDef | null {
     const r = this.ctx.registries;
     const pool = candidates(
-      r.fish.list().map((f) => ({ ...f, rarityTier: r.rarities.tryGet(f.rarity)?.tier ?? 0 })),
+      r.fish.list().filter((f) => !f.secret).map((f) => ({ ...f, rarityTier: r.rarities.tryGet(f.rarity)?.tier ?? 0 })),
       this.waterId(),
       DAILY_CATCH.tiers,
     );

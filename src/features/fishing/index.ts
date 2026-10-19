@@ -40,6 +40,14 @@ export const fishingFeature: GameFeature = {
   },
   debugCommands: [
     {
+      id: 'fishing.spot',
+      label: 'Start a fishing spot',
+      run: () => {
+        const s = getFishingController().spots.spawnNow();
+        return s ? `Spot at ${s.x}, ${s.y}` : 'No room for a spot';
+      },
+    },
+    {
       id: 'fishing.pity',
       label: 'Set pity counter',
       args: [{ name: 'value', type: 'number', default: 39 }],

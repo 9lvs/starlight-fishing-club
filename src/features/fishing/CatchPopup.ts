@@ -74,6 +74,13 @@ export class CatchPopup extends Phaser.GameObjects.Container {
       card.add(scene.add.container(5, 5, [tag, t]));
     }
 
+    if (c.flags.secret) {
+      const tag = scene.add.graphics();
+      drawPanelBox(tag, 0, 0, 40, 13, { fill: 'lavender', border: 'gold' });
+      const t = addText(scene, 20, 1, 'SECRET', { color: 'ink', shadow: false, originX: 0.5 });
+      card.add(scene.add.container(POPUP.w - 45, 5, [tag, t]));
+    }
+
     card.add(addText(scene, POPUP.w / 2, 66, fish.name, { originX: 0.5, color: 'mist' }));
     card.add(
       new RarityBanner(scene, POPUP.w / 2, 80, {

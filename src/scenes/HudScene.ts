@@ -194,7 +194,9 @@ export class HudScene extends Phaser.Scene {
         return;
       }
     }
-    this.scene.launch(sceneKey, data as object | undefined);
+    // Phaser keeps a scene's last data when launched without any, so always pass some:
+    // a panel opened from the menu starts fresh, not on the page it showed last time.
+    this.scene.launch(sceneKey, (data as object | undefined) ?? {});
   }
 
   /** A few coins arc up from the boat to the coin counter, more for a bigger sale. */

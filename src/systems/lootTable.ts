@@ -18,6 +18,8 @@ export interface LootFish {
   timeOfDay: readonly string[];
   weather: readonly string[];
   weight: number;
+  /** Secret fish never come up in a normal roll, only from a cast into a fishing spot. */
+  secret?: boolean;
 }
 
 export interface Conditions {
@@ -120,14 +122,22 @@ export function rarityChances(
   return new Map(weights.map((w) => [w.id, w.weight / total]));
 }
 
-/** Fish catchable right now. Empty timeOfDay or weather lists mean "any". */
-export function filterPool<F extends LootFish>(fish: readonly F[], c: Conditions): F[] {
-  return fish.filter(
-    (f) =>
-      f.waters.includes(c.waterId) &&
-      (f.timeOfDay.length === 0 || f.timeOfDay.includes(c.phase)) &&
-      (f.weather.length === 0 || f.weather.includes(c.weather)),
+function fits(f: LootFish, c: Conditions): boolean {
+  return (
+    f.waters.includes(c.waterId) &&
+    (f.timeOfDay.length === 0 || f.timeOfDay.includes(c.phase)) &&
+    (f.weather.length === 0 || f.weather.includes(c.weather))
   );
+}
+
+/** Fish catchable right now. Empty timeOfDay or weather lists mean "any". Secret fish are left out. */
+export function filterPool<F extends LootFish>(fish: readonly F[], c: Conditions): F[] {
+  return fish.filter((f) => !f.secret && fits(f, c));
+}
+
+/** Secret fish whose water, time, and weather match right now (a fishing spot can bring one up). */
+export function secretPool<F extends LootFish>(fish: readonly F[], c: Conditions): F[] {
+  return fish.filter((f) => f.secret === true && fits(f, c));
 }
 
 /**
