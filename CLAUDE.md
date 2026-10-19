@@ -101,6 +101,8 @@ comments that explain *why*. Small files.
 - **Sound**: drop files in `public/audio/` and set `files` in `src/config/audio.ts`. Music is
   composed live (`MUSIC` in that file); list a file in `MUSIC_FILES` to replace it.
 - **Logbook task**: add to `src/content/logbook/tasks.json` (kinds: catch, species, keep, set, clean, buy, hire, move). Daily tasks go in `dailies.json` there.
+- **Bottle note**: add to `src/content/bottles/notes.json` (`hintFor` names a secret fish). **Secret fish**: a fish with `"secret": true` and a time or weather (`fish.secrets.json`).
+- **Water moment**: add to `src/content/moments/moments.json` (phases, weather, waters, modifiers, a visual).
 - **Tip**: add to `TIPS` in `src/features/tutorial/tips.ts` and queue it from an event in the
   feature's `index.ts`.
 
@@ -113,7 +115,7 @@ comments that explain *why*. Small files.
 ## Status
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
-upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 160 unit tests.
+moments, upgrades, journal, logbook, crew, map, offline, settings, dailyGift, dailyCatch, gems, tutorial. 170 unit tests.
 v0.11.1 fixes boot for Club Mailbox owners: feature stats go in `GameFeature.stats`, defined before any init.
 v0.11.0 adds life around the boat (`scenes/world/ambientLife.ts`: jumping fish, gulls on the mast, a rare whale), a stern lantern
 that lights at dusk, and rain rings; fight words show only the first time, and Upgrades opens with nothing selected.

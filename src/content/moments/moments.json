@@ -1,10 +1,6 @@
 [
-  {"id": "minnow_run", "name": "Minnow run", "text": "A school of minnows passes by. Bites come quicker for a little while.", "durationMs": 90000, "visual": "minnows",
-   "modifiers": [{"stat": "waitMinMs", "op": "mult", "value": 0.6}, {"stat": "waitMaxMs", "op": "mult", "value": 0.6}]},
   {"id": "bright_moon", "name": "Bright moon", "text": "The moon comes out bright. Rarer fish rise to see it.", "durationMs": 120000, "phases": ["night"], "visual": "moon",
    "modifiers": [{"stat": "luck", "op": "add", "value": 5}]},
   {"id": "golden_hour", "name": "Golden hour", "text": "Golden light on the water. Fish sell for a little more.", "durationMs": 90000, "phases": ["dusk", "dawn"], "visual": "golden",
-   "modifiers": [{"stat": "sellValueMult", "op": "mult", "value": 1.25}]},
-  {"id": "lantern_drift", "name": "Lantern drift", "text": "Paper lanterns drift over from the village. Fish come up a little bigger.", "durationMs": 120000, "phases": ["dusk", "night"], "visual": "lanterns",
-   "modifiers": [{"stat": "fishSizeMult", "op": "mult", "value": 1.2}]}
+   "modifiers": [{"stat": "sellValueMult", "op": "mult", "value": 1.25}]}
 ]

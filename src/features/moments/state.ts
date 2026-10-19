@@ -18,7 +18,7 @@ export const momentSchema = z.object({
   waters: z.array(z.string()).default([]),
   weight: z.number().positive().default(1),
   /** How the layer scene draws it. */
-  visual: z.enum(['minnows', 'moon', 'golden', 'lanterns', 'none']).default('none'),
+  visual: z.enum(['moon', 'golden', 'none']).default('none'),
   /** Stat changes while it lasts (a temporary source). */
   modifiers: z.array(modifierSchema).min(1),
 });

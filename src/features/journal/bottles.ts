@@ -1,19 +1,19 @@
-// Finds: rolls a bottle or chest on a hand catch and shows it once the catch
-// card closes, so it never covers the fish.
+// Bottles and chests: rolls a find on a hand catch and shows it once the catch
+// card closes, so it never covers the fish. Bottles are read in the Journal.
 import { FINDS } from '../../config/tuning';
 import type { GameContext } from '../../core/context';
 import type { CatchResult } from '../../core/types';
-import { pickNote, rollFind, type FindsSlice, type NoteDef } from './state';
+import { pickNote, rollFind, type BottlesState, type NoteDef } from './bottlesState';
 
 export type Find = { kind: 'bottle'; noteId: string } | { kind: 'chest'; gems: number; coins: number; currency: string };
 
-export class FindsService {
+export class BottlesService {
   /** Rolled with the catch, shown after its card closes. */
   private waiting: Find | null = null;
 
   constructor(
     private readonly ctx: GameContext,
-    readonly slice: FindsSlice,
+    readonly slice: BottlesState,
   ) {}
 
   notes(): NoteDef[] {
@@ -59,7 +59,7 @@ export class FindsService {
     if (!f) return;
     this.ctx.bus.emit('audio:play', { key: 'find' });
     if (f.kind === 'bottle') {
-      this.ctx.ui.openPanel('Bottles', { noteId: f.noteId, found: true });
+      this.ctx.ui.openPanel('Journal', { tab: 'bottles', noteId: f.noteId, found: true });
       return;
     }
     const what = f.gems > 0 ? `a gem` : `${f.coins} coins`;
@@ -71,11 +71,11 @@ export class FindsService {
   }
 }
 
-let current: FindsService | null = null;
-export function setFinds(s: FindsService): void {
+let current: BottlesService | null = null;
+export function setBottles(s: BottlesService): void {
   current = s;
 }
-export function getFinds(): FindsService {
-  if (!current) throw new Error('Finds feature not initialised');
+export function getBottles(): BottlesService {
+  if (!current) throw new Error('Journal feature not initialised');
   return current;
 }

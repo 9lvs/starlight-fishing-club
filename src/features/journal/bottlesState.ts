@@ -1,13 +1,13 @@
-// Finds save slice and the pure rules: when the line brings up a find, and
-// which note a bottle holds. Notes stay found when the club moves.
+// Message bottles: the notes as data, what the journal saves about them, and
+// the pure rules for when the line brings up a find and which note it holds.
+// Found notes stay when the club moves.
 import { z } from 'zod';
-import type { SaveSliceDef } from '../../core/feature';
 import type { Rng } from '../../core/rng';
 
-export interface FindsSlice {
+export interface BottlesState {
   /** Note ids found so far, oldest first. */
   found: string[];
-  /** Found but not opened yet (the menu badge). */
+  /** Found but not opened yet (the dot on the Journal button). */
   unread: string[];
   /** Wall clock of the last find. */
   lastAt: number;
@@ -15,11 +15,7 @@ export interface FindsSlice {
   dry: number;
 }
 
-export const findsSlice: SaveSliceDef<FindsSlice> = {
-  key: 'finds',
-  version: 1,
-  defaults: () => ({ found: [], unread: [], lastAt: 0, dry: 0 }),
-};
+export const emptyBottles = (): BottlesState => ({ found: [], unread: [], lastAt: 0, dry: 0 });
 
 /** Bottle notes live in content: src/content/<pack>/notes.json. */
 export const noteSchema = z.object({
@@ -42,7 +38,7 @@ export interface FindRules {
 }
 
 /** Does this catch bring up a find? Never twice in a short while; never a long dry spell. */
-export function rollFind(s: Pick<FindsSlice, 'lastAt' | 'dry'>, now: number, rng: Rng, r: FindRules): boolean {
+export function rollFind(s: Pick<BottlesState, 'lastAt' | 'dry'>, now: number, rng: Rng, r: FindRules): boolean {
   if (s.lastAt > 0 && now - s.lastAt < r.minGapMs) return false;
   if (s.dry >= r.guaranteeAfter) return true;
   return rng() < r.chance;

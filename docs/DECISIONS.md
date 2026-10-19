@@ -82,3 +82,7 @@ One line per decision, with the reason. Newest at the bottom.
 - Fight instructions show once per kind (owner's request): players learn the ! cues on the first fight and are trusted after that.
 - The upgrade tree opens with nothing selected so the card never blocks scrolling (owner's request).
 - Feature stats are declared on the feature (`stats`) and defined before any init, so feature order in `features/index.ts` never decides whether a saved upgrade can load.
+- Engagement (owner's picks, round 5 and 6 boards): small choices while fishing (spots), surprises worth finding (secret fish, bottles), and short moments. No pressure: a missed spot or moment costs nothing, and a secret fish never slips the hook.
+- Secret fish are content (`secret: true`) and never enter a normal roll, so crew, offline catch-up, the Daily Catch, and the gem price ignore them. Only a cast into a fishing spot, at the fish's time or weather, can bring one up.
+- Bottles live in the Journal (owner's call), not their own menu button: the journal feature owns the notes and its slice v2 saves them. Finds show after the catch card closes so they never cover the fish.
+- Moments are data (`src/content/moments/moments.json`) with a temporary stat source. Kept: bright moon and golden hour. The minnow run and lantern drift were dropped; a lantern drift may come back as a location event.

@@ -13,12 +13,21 @@ import { ScrollArea } from '../../ui/ScrollArea';
 import { addText } from '../../ui/text';
 import { color } from '../../design/tokens';
 import { completion, type JournalSlice } from './state';
+import { getBottles } from './bottles';
+import { buildBottleList, buildBottleNote, type BottlesHost } from './bottlesPage';
 
 const CELL = 30;
 
 interface JournalData {
   fishId?: string;
+  tab?: 'fish' | 'bottles';
+  /** A bottle note to show on the Bottles tab. */
+  noteId?: string;
+  /** The note was just found: say so, and close on Lovely. */
+  found?: boolean;
 }
+
+const TAB_H = 20;
 
 export class JournalScene extends PanelScene<JournalData> {
   readonly title = 'Journal';
@@ -40,8 +49,48 @@ export class JournalScene extends PanelScene<JournalData> {
   }
 
   protected build(area: Rect, data?: JournalData): void {
-    if (data?.fishId) this.buildDetail(area, data.fishId);
-    else this.buildGrid(area);
+    const tab = data?.tab ?? 'fish';
+    this.buildTabs(area, tab);
+    const body = { x: area.x, y: area.y + TAB_H + 4, w: area.w, h: area.h - TAB_H - 4 };
+    if (tab === 'bottles') {
+      const host: BottlesHost = {
+        scene: this,
+        ctx: this.ctx,
+        open: (noteId) => this.refresh({ tab: 'bottles', ...(noteId ? { noteId } : {}) }),
+        close: () => this.close(),
+      };
+      const note = data?.noteId ? getBottles().note(data.noteId) : undefined;
+      if (note) buildBottleNote(host, body, note, data?.found === true);
+      else buildBottleList(host, body);
+      return;
+    }
+    if (data?.fishId) this.buildDetail(body, data.fishId);
+    else this.buildGrid(body);
+  }
+
+  /** Fish and Bottles, side by side; a dot on Bottles while a note is unread. */
+  private buildTabs(area: Rect, open: 'fish' | 'bottles'): void {
+    const w = Math.floor((area.w - 2) / 2);
+    const tabs = [
+      { id: 'fish' as const, label: 'Fish', icon: 'icon_journal' },
+      { id: 'bottles' as const, label: 'Bottles', icon: 'icon_bottle' },
+    ];
+    tabs.forEach((t, i) => {
+      const x = area.x + i * (w + 2);
+      new Button(this, {
+        x,
+        y: area.y,
+        w,
+        h: TAB_H,
+        label: t.label,
+        icon: t.icon,
+        variant: t.id === open ? 'primary' : 'secondary',
+        onClick: () => this.refresh({ tab: t.id }),
+      });
+      if (t.id === 'bottles' && open !== 'bottles' && getBottles().slice.unread.length > 0) {
+        this.add.rectangle(x + w - 5, area.y + 3, 2, 2, color('coral')).setOrigin(0, 0);
+      }
+    });
   }
 
   private buildGrid(area: Rect): void {

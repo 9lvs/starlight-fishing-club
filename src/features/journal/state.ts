@@ -1,5 +1,6 @@
-// Journal save slice: one entry per fish ever caught.
+// Journal save slice: one entry per fish ever caught, and the bottles found.
 import type { SaveSliceDef } from '../../core/feature';
+import { emptyBottles, type BottlesState } from './bottlesState';
 
 export interface JournalEntry {
   count: number;
@@ -12,12 +13,19 @@ export interface JournalEntry {
 
 export interface JournalSlice {
   entries: Record<string, JournalEntry>;
+  bottles: BottlesState;
 }
 
+/** v2 adds message bottles. */
 export const journalSlice: SaveSliceDef<JournalSlice> = {
   key: 'journal',
-  version: 1,
-  defaults: () => ({ entries: {} }),
+  version: 2,
+  defaults: () => ({ entries: {}, bottles: emptyBottles() }),
+  migrate: (old, from) => {
+    const o = (old ?? {}) as Partial<JournalSlice>;
+    const entries = o.entries ?? {};
+    return from < 2 ? { entries, bottles: emptyBottles() } : { entries, bottles: o.bottles ?? emptyBottles() };
+  },
 };
 
 /** Pure: record a catch. Returns true when it is the first of its kind. */

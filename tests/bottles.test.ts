@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { FINDS } from '../src/config/tuning';
 import { parseContent } from '../src/core/content/parseContent';
 import { seededRng } from '../src/core/rng';
-import { noteSchema, pickNote, rollFind, type NoteDef } from '../src/features/finds/state';
+import { noteSchema, pickNote, rollFind, type NoteDef } from '../src/features/journal/bottlesState';
 import { readContentFiles } from './helpers/content';
-import notesJson from '../src/content/finds/notes.json';
+import notesJson from '../src/content/bottles/notes.json';
 
 const files = readContentFiles();
 const notes = (notesJson as unknown[]).map((n) => noteSchema.parse(n));

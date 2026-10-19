@@ -37,7 +37,7 @@ export const momentsFeature: GameFeature = {
     {
       id: 'moments.start',
       label: 'Start a water moment',
-      args: [{ name: 'id', type: 'string', default: 'minnow_run' }],
+      args: [{ name: 'id', type: 'string', default: 'golden_hour' }],
       run: (ctx, a) => {
         const def = ((ctx.content.extra.moments ?? []) as MomentDef[]).find((m) => m.id === a.id);
         if (!def) return `No moment "${a.id}"`;

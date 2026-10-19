@@ -4,7 +4,6 @@ import type { GameFeature } from '../core/feature';
 import { crewFeature } from './crew';
 import { dailyCatchFeature } from './dailyCatch';
 import { dailyGiftFeature } from './dailyGift';
-import { findsFeature } from './finds';
 import { fishingFeature } from './fishing';
 import { gemsFeature } from './gems';
 import { journalFeature } from './journal';
@@ -22,7 +21,6 @@ export const FEATURES: GameFeature[] = [
   fishingFeature,
   upgradesFeature,
   journalFeature,
-  findsFeature,
   logbookFeature,
   crewFeature,
   mapFeature,

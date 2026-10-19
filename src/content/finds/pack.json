@@ -1,1 +1,0 @@
-{ "id": "finds", "name": "Bottles and Finds", "order": 0, "enabled": true, "requires": ["finds"] }

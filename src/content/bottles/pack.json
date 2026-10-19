@@ -1,0 +1,1 @@
+{ "id": "bottles", "name": "Message Bottles", "order": 0, "enabled": true, "requires": ["journal"] }

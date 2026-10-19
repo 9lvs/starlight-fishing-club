@@ -7,7 +7,9 @@ Ideas the architecture is ready for. None are built yet; each note says where it
 1. **Animation polish.** Done in v0.11.0: jumping fish, gulls on the mast, the dusk lantern, rain rings, and a rare whale. The cat walking, line wobble, Logbook confetti, and page turns were tried and dropped.
 2. **Logins and cloud saves.** Keep GitHub Pages hosting; Supabase for sign in (Google or email link) and the save. Playing signed out keeps working. Needs the owner's OK for the library and a free Supabase account in the owner's name, plus a short privacy note.
 3. **Friends and a friendly leaderboard.** After logins: add friends by a short club code, weekly boards among friends only (Daily Catch luck, biggest fish of the week, journal %, fastest to Sky Lake), reset every Monday, no public lists or chat.
-4. **Local gear (later).** Three upgrades per later water, sold only there (Snorkel Mask, Coral Charm, Glass Bottom at the reef; Mushroom Lamps, Echo Bell, Glow-worm Line in the cave; Cloud Nets, Wind Vane, Star Chart at Sky Lake). The owner likes the idea but wants it on the roadmap for now.
+2a. **Engagement pass (v0.12.0).** Done: fishing spots, a secret fish per water, message bottles (in the Journal), and two water moments (bright moon, golden hour). Dropped after review: size records, fights that differ by fish family, dock requests, weekly themes, the minnow run moment.
+4. **Later, owner's picks from the engagement brainstorm.** A club aquarium and trophy wall; crew with names and stories; naming the club and boat; location events such as a lantern drift on one water (a moment with `waters` set).
+5. **Local gear (later).** Three upgrades per later water, sold only there (Snorkel Mask, Coral Charm, Glass Bottom at the reef; Mushroom Lamps, Echo Bell, Glow-worm Line in the cave; Cloud Nets, Wind Vane, Star Chart at Sky Lake). The owner likes the idea but wants it on the roadmap for now.
 
 | Idea | Status | How it fits |
 |---|---|---|

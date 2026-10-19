@@ -47,36 +47,16 @@ export class MomentsScene extends Phaser.Scene {
     if (this.k <= 0) return;
     const reduced = uiSignals.reducedMotion();
     switch (this.visual) {
-      case 'minnows':
-        return this.minnows(reduced);
       case 'moon':
         return this.glints(reduced, ['mist', 'sky'], 0.5);
       case 'golden':
         return this.glints(reduced, ['gold', 'sand'], 0.75);
-      case 'lanterns':
-        return this.lanterns(reduced);
     }
   }
 
   private px(x: number, y: number, c: PaletteName, a = 1, w = 1): void {
     this.g.fillStyle(color(c), a * this.k);
     this.g.fillRect(Math.round(x), Math.round(y), w, 1);
-  }
-
-  /** A loose school of small fish crossing the water, looping round. */
-  private minnows(reduced: boolean): void {
-    const { width: W, horizonY, waterlineY } = this.L;
-    const t = reduced ? 0.4 : (this.elapsed / 14000) % 1;
-    const cx = -30 + t * (W + 60);
-    const cy = horizonY + (waterlineY - horizonY) * 0.55;
-    for (let i = 0; i < 22; i++) {
-      const ox = ((i * 37) % 41) - 20;
-      const oy = ((i * 23) % 13) - 6;
-      const wig = reduced ? 0 : Math.round(Math.sin(this.elapsed / 180 + i) * 1);
-      // A dark back with a silver glint, so the school reads on any water.
-      this.px(cx + ox, cy + oy + wig, 'ink', 0.55, 3);
-      this.px(cx + ox + 1, cy + oy + wig - 1, i % 3 === 0 ? 'mist' : 'sky', 0.9, 1);
-    }
   }
 
   /** Light on the water: short dashes that twinkle on and off. */
@@ -94,23 +74,4 @@ export class MomentsScene extends Phaser.Scene {
     }
   }
 
-  /** Paper lanterns drifting up from the far shore, with a soft warm glow. */
-  private lanterns(reduced: boolean): void {
-    const { width: W, horizonY } = this.L;
-    for (let i = 0; i < 7; i++) {
-      const life = 16000 + i * 1300;
-      const t = reduced ? 0.3 + i * 0.08 : ((this.elapsed + i * 2900) % life) / life;
-      const x = ((i * 47) % 100) / 100 * (W - 20) + 10 + (reduced ? 0 : Math.sin(this.elapsed / 1500 + i) * 3);
-      const y = horizonY - 4 - t * horizonY * 0.7;
-      const fade = Math.min(1, t * 6, (1 - t) * 4);
-      this.g.fillStyle(color('gold'), 0.2 * fade * this.k);
-      this.g.fillRect(Math.round(x) - 3, Math.round(y) - 3, 9, 10);
-      this.g.fillStyle(color('gold'), 0.25 * fade * this.k);
-      this.g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 5, 6);
-      this.px(x, y, i % 2 ? 'coral' : 'gold', fade, 3);
-      this.px(x, y + 1, i % 2 ? 'coral' : 'gold', fade, 3);
-      this.px(x, y + 2, i % 2 ? 'coral' : 'gold', fade, 3);
-      this.px(x + 1, y + 3, 'sand', fade * 0.8, 1);
-    }
-  }
 }
