@@ -15,6 +15,7 @@
     "package:itch": "npm run build && cd dist && rm -f ../starlight-fishing-club-itch.zip && zip -qr ../starlight-fishing-club-itch.zip ."
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "phaser": "^3.90.0",
     "zod": "^4.6.5"
   },

@@ -1,0 +1,36 @@
+/* The privacy page, in the game's colors. A separate file so the strict
+   Content-Security-Policy in _headers can stay strict. */
+:root {
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  background: #0b1026;
+  color: #e4eef0;
+  font: 17px/1.6 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 18px 64px;
+}
+h1 {
+  color: #ffd166;
+  margin: 0 0 4px;
+}
+h2 {
+  color: #e8c9a0;
+  font-size: 1.15rem;
+  margin: 28px 0 6px;
+}
+p,
+li {
+  max-width: 65ch;
+}
+.muted {
+  color: #9aa8bd;
+  margin: 0;
+}
+a {
+  color: #8fd3ff;
+}

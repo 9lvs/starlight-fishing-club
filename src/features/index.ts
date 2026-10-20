@@ -1,6 +1,7 @@
 // THE feature registry. This is the only file that lists features. Removing a
 // line here removes that feature cleanly; the core never imports a feature.
 import type { GameFeature } from '../core/feature';
+import { cloudFeature } from './cloud';
 import { crewFeature } from './crew';
 import { dailyCatchFeature } from './dailyCatch';
 import { dailyGiftFeature } from './dailyGift';
@@ -26,6 +27,7 @@ export const FEATURES: GameFeature[] = [
   mapFeature,
   offlineFeature,
   settingsFeature,
+  cloudFeature,
   dailyGiftFeature,
   dailyCatchFeature,
   gemsFeature,

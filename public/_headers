@@ -1,0 +1,13 @@
+# Security headers for Cloudflare Pages (other hosts ignore this file).
+# The game only loads its own files and only talks to its Supabase project.
+# If the Supabase project changes, update connect-src below.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https://kkfxlklaqcoixykicvwo.supabase.co wss://kkfxlklaqcoixykicvwo.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# The service worker must always be fresh so updates reach players.
+/sw.js
+  Cache-Control: no-cache

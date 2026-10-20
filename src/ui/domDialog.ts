@@ -7,6 +7,9 @@ export interface DialogOptions {
   text?: string;
   value?: string;
   readOnly?: boolean;
+  /** A one-line field (with the right phone keyboard) instead of the big text box. */
+  input?: 'email';
+  placeholder?: string;
   confirmLabel?: string;
   onConfirm?: (value: string, setError: (msg: string) => void) => void;
 }
@@ -44,10 +47,16 @@ export function openDomDialog(o: DialogOptions): () => void {
     Object.assign(p.style, { color: cssColor('sky'), marginBottom: '8px' });
     box.appendChild(p);
   }
-  const ta = document.createElement('textarea');
+  const ta: HTMLTextAreaElement | HTMLInputElement = o.input ? document.createElement('input') : document.createElement('textarea');
+  if (ta instanceof HTMLInputElement) {
+    ta.type = o.input!;
+    ta.autocomplete = o.input!;
+    ta.inputMode = o.input!;
+    Object.assign(ta.style, { padding: '8px', fontSize: '16px' });
+  } else ta.rows = 5;
+  if (o.placeholder) ta.placeholder = o.placeholder;
   ta.value = o.value ?? '';
   ta.readOnly = !!o.readOnly;
-  ta.rows = 5;
   Object.assign(ta.style, {
     width: '100%',
     boxSizing: 'border-box',
@@ -95,7 +104,9 @@ export function openDomDialog(o: DialogOptions): () => void {
   }
   if (o.onConfirm) {
     const ok = button(o.confirmLabel ?? 'OK', true);
-    ok.addEventListener('click', () => o.onConfirm!(ta.value, (m) => (err.textContent = m)));
+    const confirm = () => o.onConfirm!(ta.value, (m) => (err.textContent = m));
+    ok.addEventListener('click', confirm);
+    if (o.input) ta.addEventListener('keydown', (e) => (e as KeyboardEvent).key === 'Enter' && confirm());
   }
   button('Close', false).addEventListener('click', close);
   box.appendChild(row);

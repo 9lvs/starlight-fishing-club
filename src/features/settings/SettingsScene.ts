@@ -113,6 +113,22 @@ export class SettingsScene extends PanelScene {
     addText(this, x, y, 'Your save', { color: 'gold' });
     y += 14;
     const half = Math.floor((area.w - 4) / 2);
+    // Sign in and cloud saves live in their own panel, when that feature is on.
+    if (this.ctx.features.has('cloud')) {
+      new Button(this, {
+        x,
+        y,
+        w: area.w,
+        label: 'Account and cloud save',
+        icon: 'icon_crew',
+        variant: 'primary',
+        onClick: () => {
+          this.close();
+          this.ctx.ui.openPanel('Account');
+        },
+      });
+      y += ROW;
+    }
     new Button(this, { x, y, w: half, label: 'Export', onClick: () => this.exportSave() });
     new Button(this, { x: x + half + 4, y, w: half, label: 'Import', onClick: () => this.importSave() });
     y += ROW;
