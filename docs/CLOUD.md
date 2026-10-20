@@ -1,6 +1,7 @@
 # Hosting, sign in, and cloud saves
 
-The game is a static site on Cloudflare Pages. Sign in and cloud saves use
+The game is a static site on Cloudflare (Workers with static assets,
+`wrangler.jsonc`) at https://starlight-fishing-club.sofcb2004.workers.dev. Sign in and cloud saves use
 Supabase. Playing without an account always works: the save on the device
 comes first, and the cloud keeps a copy (`src/features/cloud`).
 
@@ -35,20 +36,21 @@ comes first, and the cloud keeps a copy (`src/features/cloud`).
    `supabase/migrations/001_cloud_saves.sql` and Run. It is safe to run again.
 2. Table Editor > `saves`: it should show "RLS enabled" with 4 policies.
 
-### 2. Cloudflare Pages
-1. Workers & Pages > Create > Pages > Connect to Git > `9lvs/starlight-fishing-club`.
-2. Production branch `main`, build command `npm run build`, output `dist`,
-   environment variable `NODE_VERSION` = `22`.
-3. Other branches get preview addresses (for example the work branch), handy
-   for testing sign in before it ships.
+### 2. Cloudflare (done)
+1. Workers & Pages > Create > Import a repository > `9lvs/starlight-fishing-club`.
+2. Build command `npm run build`, deploy command `npx wrangler deploy`, preview
+   builds on, Cloudflare Access off, build variable `NODE_VERSION` = `22`.
+   `wrangler.jsonc` points it at `dist/`.
+3. Other branches get preview addresses such as
+   `https://main-5zwqb9-starlight-fishing-club.sofcb2004.workers.dev`, handy for
+   testing sign in before it ships.
 
 ### 3. Supabase sign-in addresses
 Authentication > URL Configuration:
-- **Site URL:** the Cloudflare address, for example `https://starlight-fishing-club.pages.dev`
-  (later the custom domain).
+- **Site URL:** `https://starlight-fishing-club.sofcb2004.workers.dev` (later the custom domain).
 - **Redirect URLs:** add each place the game runs:
-  - `https://starlight-fishing-club.pages.dev/**`
-  - `https://*.starlight-fishing-club.pages.dev/**` (preview builds)
+  - `https://starlight-fishing-club.sofcb2004.workers.dev/**`
+  - `https://*-starlight-fishing-club.sofcb2004.workers.dev/**` (preview builds)
   - `http://localhost:5173/**` (development)
   - the custom domain, once there is one.
 
@@ -57,11 +59,12 @@ Authentication > URL Configuration:
    ("Starlight Fishing Club").
 2. APIs & Services > OAuth consent screen (Google Auth Platform): External, app
    name, support email, app logo optional. Add the privacy page
-   (`https://<your site>/privacy.html`) and your site under authorized domains.
+   (`https://starlight-fishing-club.sofcb2004.workers.dev/privacy.html`). Under authorized
+   domains add `sofcb2004.workers.dev` and `kkfxlklaqcoixykicvwo.supabase.co`.
    Scopes: only email, profile, openid. Publish the app (Testing mode only lets
    listed test users sign in).
 3. Credentials > Create credentials > OAuth client ID > Web application.
-   - Authorized JavaScript origins: the Cloudflare address (and custom domain).
+   - Authorized JavaScript origins: `https://starlight-fishing-club.sofcb2004.workers.dev` (and the custom domain later).
    - Authorized redirect URI: `https://kkfxlklaqcoixykicvwo.supabase.co/auth/v1/callback`
 4. Copy the Client ID and Client Secret into Supabase: Authentication >
    Sign In / Providers > Google > enable, paste both, save. The secret stays in

@@ -65,7 +65,7 @@ The build is fully static with relative paths, so `dist/` works from any folder.
 
 ### GitHub Pages
 
-Live at **https://9lvs.github.io/starlight-fishing-club/**. Every push to `main` runs
+Live at **https://starlight-fishing-club.sofcb2004.workers.dev/** (Cloudflare; the GitHub Pages copy at https://9lvs.github.io/starlight-fishing-club/ also updates). Every push to `main` runs
 `.github/workflows/deploy.yml` (install, `npm run check`, publish `dist/`). One-time setup,
 already done: Settings > Pages > Build and deployment > Source: **GitHub Actions**.
 

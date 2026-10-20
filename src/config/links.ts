@@ -5,7 +5,7 @@ export const GAME_VERSION = '0.12.0';
 
 export const LINKS = {
   /** The game's public address, used in share text. Empty: use the page's own address. */
-  gameUrl: '',
+  gameUrl: 'https://starlight-fishing-club.sofcb2004.workers.dev/',
   /**
    * Where the Feedback button goes. The GitHub form gets the game version and device
    * filled in. A Google Form or any other page works too (nothing is added to it).
