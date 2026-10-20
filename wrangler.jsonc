@@ -1,0 +1,10 @@
+// Cloudflare (Workers with static assets): serve the built game from dist/.
+// Build command: npm run build. Deploy command: npx wrangler deploy.
+// public/_headers (copied into dist) sets the security headers.
+{
+  "name": "starlight-fishing-club",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
