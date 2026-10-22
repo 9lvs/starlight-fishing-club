@@ -169,3 +169,9 @@
 - Fixed: a panel opened from the menu started on the page it showed last time (Phaser keeps a scene's data when launched without any).
 - Process: brainstorm on the design board (round 5), then the four kept ideas built and reviewed (round 6). Dropped after review: the minnow run and lantern drift moments.
 - Verified: 170 tests, typecheck, and build pass. Each piece checked in the browser at 390x844.
+
+## v0.13.0: Cloudflare hosting, sign in, and cloud saves
+- Built: the game is served by Cloudflare (`wrangler.jsonc`, static assets) at https://starlight-fishing-club.sofcb2004.workers.dev; GitHub Pages keeps a copy. Share links and link previews point at the new address.
+- Built: optional sign in with Google or an email link, and a cloud copy of the save (`features/cloud`, Supabase, loaded lazily). Settings > Account and cloud save: save now, sign out, delete the cloud save, delete the account. Sync on sign in, every 2 minutes, and when the tab is hidden; a new device takes the cloud save, and when both sides changed the player chooses (the other copy is kept as a backup on the device). Inside a frame (itch.io) the panel points to the game's own site.
+- Security: row level security limits each player to their own row (`supabase/migrations/001_cloud_saves.sql`), the database caps save size, downloads pass the Import checks, and `public/_headers` sets a strict Content-Security-Policy, HSTS, nosniff, and a referrer policy. A privacy page at `privacy.html`.
+- Verified: 176 tests, typecheck, and build pass. The production build with its headers loads with no policy violations; the Account panel, email dialog, and privacy page checked in the browser. Live sign in could not be tested from the build sandbox (its network blocks Supabase); the owner tests it on the live site.

@@ -116,7 +116,7 @@ comments that explain *why*. Small files.
 
 v0.1.0: phases 0 to 9 done (see `docs/BUILD_LOG.md`). Features registered: fishing,
 moments, upgrades, journal, logbook, crew, map, offline, settings, cloud, dailyGift, dailyCatch, gems, tutorial. 176 unit tests.
-Hosting (Cloudflare Pages), sign in, and cloud saves (Supabase): see `docs/CLOUD.md`.
+v0.13.0: hosting on Cloudflare, optional sign in, and cloud saves (Supabase): see `docs/CLOUD.md`.
 v0.12.0 adds fishing spots (`features/fishing/spots.ts`), a secret fish per water (`fish.secrets.json`), message bottles in the Journal,
 and water moments (`features/moments`).
 v0.11.1 fixes boot for Club Mailbox owners: feature stats go in `GameFeature.stats`, defined before any init.
