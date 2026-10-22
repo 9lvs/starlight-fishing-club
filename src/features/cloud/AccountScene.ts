@@ -65,11 +65,11 @@ export class AccountScene extends PanelScene {
     y += 12;
     addText(this, x, y, cloud.email ?? 'your account', { color: 'gold', maxWidth: w, shadow: false });
     y += 16;
-    const when = cloud.busy ? 'Saving...' : cloud.lastUpload > 0 ? `Saved to the cloud ${ago(cloud.lastUpload)}.` : 'Your club is kept in the cloud.';
+    const when = cloud.busy ? 'Saving...' : cloud.lastSynced > 0 ? `Cloud save up to date ${ago(cloud.lastSynced)}.` : 'Your club is kept in the cloud.';
     addText(this, x, y, when, { color: 'sky', maxWidth: w, shadow: false });
     y += 18;
     const half = Math.floor((w - 4) / 2);
-    new Button(this, { x, y, w: half, label: 'Save now', variant: 'primary', onClick: () => void getCloud().sync() });
+    new Button(this, { x, y, w: half, label: 'Save now', variant: 'primary', onClick: () => void getCloud().sync(true) });
     new Button(this, { x: x + half + 4, y, w: half, label: 'Sign out', onClick: () => void getCloud().signOut() });
     y += ROW + 10;
 

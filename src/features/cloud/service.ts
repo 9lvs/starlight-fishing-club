@@ -21,8 +21,10 @@ const MARKER_KEY = 'starlight-fishing-club/cloud-sync';
 export class CloudService {
   state: CloudState = 'starting';
   email: string | null = null;
-  /** When this device last saved to the cloud (wall clock), for the Account panel. */
+  /** When this device last uploaded (wall clock); keeps automatic uploads spaced out. */
   lastUpload = 0;
+  /** When this device last matched the cloud, by upload or a check, for the Account panel. */
+  lastSynced = 0;
   /** Waiting on the player: keep this device's save or the cloud's. */
   conflict: Conflict | null = null;
   busy = false;
@@ -79,14 +81,17 @@ export class CloudService {
 
   /**
    * Compare with the cloud and do what the rules say: upload, download (the
-   * game reloads), or ask. Quietly does nothing when offline.
+   * game reloads), or ask. Automatic syncs stay quiet; Save now (`manual`)
+   * skips the spacing between uploads and always says how it went.
    */
-  async sync(): Promise<void> {
+  async sync(manual = false): Promise<void> {
     const c = this.client;
     const uid = this.userId;
     if (!c || !uid || this.busy || this.conflict) return;
     this.busy = true;
     this.sinceSync = 0;
+    this.changed();
+    let said = '';
     try {
       this.ctx.save.save();
       const local = summarize(this.ctx.save.snapshot());
@@ -94,18 +99,26 @@ export class CloudService {
       if (error) throw error;
       const cloud = data ? readSummary(data.progress) : null;
       const action = decide(local, cloud, readMarker(), uid);
-      if (action === 'upload') await this.upload(local);
-      else if (action === 'download') await this.download();
+      if (action === 'upload') {
+        const sent = await this.upload(local, { force: manual });
+        said = sent ? 'Saved to the cloud.' : 'Saved to the cloud a moment ago.';
+      } else if (action === 'download') await this.download();
       else if (action === 'ask' && cloud) {
         this.conflict = { local, cloud };
         this.ctx.ui.openPanel('Account');
-      } else if (action === 'none') writeMarker({ userId: uid, hash: local.hash });
+      } else if (action === 'none') {
+        writeMarker({ userId: uid, hash: local.hash });
+        this.lastSynced = Date.now();
+        said = 'Your cloud save is up to date.';
+      }
     } catch (err) {
       console.warn('[cloud] sync failed', err);
+      said = 'Could not reach the cloud. Your club is still saved on this device.';
     } finally {
       this.busy = false;
       this.changed();
     }
+    if (manual && said) this.ctx.ui.toast(said, { icon: 'icon_check', color: said.startsWith('Could') ? 'coral' : 'sage' });
   }
 
   /** The player chose in a conflict. */
@@ -116,7 +129,7 @@ export class CloudService {
     this.busy = true;
     try {
       if (keep === 'cloud') await this.download();
-      else await this.upload(summarize(this.ctx.save.snapshot()), true);
+      else await this.upload(summarize(this.ctx.save.snapshot()), { force: true, backup: true });
     } finally {
       this.busy = false;
       this.changed();
@@ -129,6 +142,7 @@ export class CloudService {
     if (!error) {
       localStorage.removeItem(MARKER_KEY);
       this.lastUpload = 0;
+      this.lastSynced = 0;
     }
     this.changed();
     return !error;
@@ -144,18 +158,16 @@ export class CloudService {
     return true;
   }
 
-  private async upload(local: SaveSummary, overwrite = false): Promise<void> {
+  /** Returns false when skipped (an upload happened moments ago). */
+  private async upload(local: SaveSummary, o: { force?: boolean; backup?: boolean } = {}): Promise<boolean> {
     const c = this.client;
     const uid = this.userId;
-    if (!c || !uid) return;
-    if (!overwrite && Date.now() - this.lastUpload < CLOUD.minUploadGapMs) return;
+    if (!c || !uid) return false;
+    if (!o.force && Date.now() - this.lastUpload < CLOUD.minUploadGapMs) return false;
     const data = this.ctx.save.exportString();
-    if (data.length > CLOUD.maxSaveBytes) {
-      console.warn('[cloud] save too large to upload');
-      return;
-    }
+    if (data.length > CLOUD.maxSaveBytes) throw new Error('save too large to upload');
     // Keep the cloud copy this replaces on the device, just in case.
-    if (overwrite) {
+    if (o.backup) {
       const { data: old } = await c.from(CLOUD.table).select('data').eq('user_id', uid).maybeSingle();
       if (old?.data) safeSet(`${SAVE.backupKeyPrefix}cloud`, old.data);
     }
@@ -163,6 +175,8 @@ export class CloudService {
     if (error) throw error;
     writeMarker({ userId: uid, hash: local.hash });
     this.lastUpload = Date.now();
+    this.lastSynced = this.lastUpload;
+    return true;
   }
 
   private async download(): Promise<void> {
