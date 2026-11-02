@@ -179,3 +179,8 @@
 ## v0.13.1: Save now says how it went
 - Fixed: Save now was silent. It also did nothing when an automatic upload had happened in the last 20 seconds (always true right after signing in) or when nothing had changed. Save now now skips the spacing and shows a message: saved, already up to date, or could not reach the cloud. The Account panel shows when the cloud copy was last confirmed up to date. Owner report.
 - Verified: 176 tests, typecheck, and build pass.
+
+## v0.13.2: Dependency security update
+- Fixed: zod 4.6.5 had a high severity advisory (GHSA-mrhx-c7xc-m3w5, memory exhaustion when validating oversized collections). The game validates save codes with zod, so a huge pasted or downloaded save could freeze the tab. Updated to 4.6.7; vite and vitest patch updates too. `npm audit` is clean.
+- Reviewed: no secrets in the repo, CI has minimal permissions, row level security and the save size caps are in place.
+- Verified: 176 tests, typecheck, and build pass.
