@@ -1,15 +1,27 @@
 # Roadmap
 
-Ideas the architecture is ready for. None are built yet; each note says where it plugs in.
+Ideas the architecture is ready for, and where the project stands. Each note in the table says where an idea plugs in.
+
+## Where we left off (paused November 2026, v0.13.2)
+
+The game is live at https://starlight-fishing-club.sofcb2004.workers.dev (Cloudflare; a GitHub Pages copy also updates).
+Sign in and cloud saves work (see `docs/CLOUD.md`). `npm audit` was clean and all 176 tests passed at the pause.
+
+To pick it back up, in rough order:
+1. **Check dependencies:** `npm audit` and `npm outdated`; apply patch updates, run `npm run check`.
+2. **Supabase:** a free project pauses after a week with no visits. Restore it in the dashboard if sign in stops working, and glance at the security advisor.
+3. **Play for a week**, alone or with a couple of friends, and fix what feels off (the playtest checklist is in `docs/LAUNCH.md`).
+4. **Small next steps:** retire the GitHub Pages copy so there is one address; crash reports into a small Supabase table.
+5. **Bigger, when wanted:** friends and a weekly leaderboard (never trust client data for scores: compute or validate them on the server); the itch.io launch; Cloudflare Turnstile on email sign in if it is ever abused.
 
 ## Next passes (owner's order, each on its own so it is done right)
 
-1. **Animation polish.** Done in v0.11.0: jumping fish, gulls on the mast, the dusk lantern, rain rings, and a rare whale. The cat walking, line wobble, Logbook confetti, and page turns were tried and dropped.
-2. **Logins and cloud saves.** Keep GitHub Pages hosting; Supabase for sign in (Google or email link) and the save. Playing signed out keeps working. Needs the owner's OK for the library and a free Supabase account in the owner's name, plus a short privacy note.
-3. **Friends and a friendly leaderboard.** After logins: add friends by a short club code, weekly boards among friends only (Daily Catch luck, biggest fish of the week, journal %, fastest to Sky Lake), reset every Monday, no public lists or chat.
-2a. **Engagement pass (v0.12.0).** Done: fishing spots, a secret fish per water, message bottles (in the Journal), and two water moments (bright moon, golden hour). Dropped after review: size records, fights that differ by fish family, dock requests, weekly themes, the minnow run moment.
-4. **Later, owner's picks from the engagement brainstorm.** A club aquarium and trophy wall; crew with names and stories; naming the club and boat; location events such as a lantern drift on one water (a moment with `waters` set).
-5. **Local gear (later).** Three upgrades per later water, sold only there (Snorkel Mask, Coral Charm, Glass Bottom at the reef; Mushroom Lamps, Echo Bell, Glow-worm Line in the cave; Cloud Nets, Wind Vane, Star Chart at Sky Lake). The owner likes the idea but wants it on the roadmap for now.
+1. **Animation polish.** Done in v0.11.0.
+2. **Logins and cloud saves.** Done in v0.13.0 (Cloudflare hosting, Supabase sign in with Google or an email link).
+3. **Engagement pass.** Done in v0.12.0: fishing spots, a secret fish per water, message bottles (in the Journal), and two water moments (bright moon, golden hour). Dropped after review: size records, fights that differ by fish family, dock requests, weekly themes, the minnow run moment.
+4. **Friends and a friendly leaderboard.** Add friends by a short club code, weekly boards among friends only (Daily Catch luck, biggest fish of the week, journal %, fastest to Sky Lake), reset every Monday, no public lists or chat.
+5. **Later, owner's picks from the engagement brainstorm.** A club aquarium and trophy wall; crew with names and stories; naming the club and boat; location events such as a lantern drift on one water (a moment with `waters` set).
+6. **Local gear (later).** Three upgrades per later water, sold only there (Snorkel Mask, Coral Charm, Glass Bottom at the reef; Mushroom Lamps, Echo Bell, Glow-worm Line in the cave; Cloud Nets, Wind Vane, Star Chart at Sky Lake). The owner likes the idea but wants it on the roadmap for now.
 
 | Idea | Status | How it fits |
 |---|---|---|
